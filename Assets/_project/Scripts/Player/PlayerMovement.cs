@@ -1,6 +1,6 @@
 using UnityEngine;
 
-public class playerTA : MonoBehaviour
+public class PlayerMovement : MonoBehaviour
 {
     public float moveSpeed = 5f;
 
@@ -14,6 +14,7 @@ public class playerTA : MonoBehaviour
         animator = GetComponent<Animator>();
     }
 
+
     void Update()
     {
         movement.x = Input.GetAxisRaw("Horizontal");
@@ -21,6 +22,7 @@ public class playerTA : MonoBehaviour
 
         if (animator != null)
         {
+            // Mengatur animasi berdasarkan pergerakan
             animator.SetFloat("Speed", movement.sqrMagnitude);
         }
     }
