@@ -1,141 +1,88 @@
-using System.Collections;
 using UnityEngine;
-using TMPro;
 
 public class NPCCutscene : MonoBehaviour
 {
-    public enum Pembicara { Kaprodi, Player }
-
-    [System.Serializable]
-    public struct DialogLine
-    {
-        public Pembicara pembicara;
-        [TextArea(2, 4)]
-        public string isiKalimat;
-    }
-
-    [Header("Pengaturan Pergerakan NPC")]
-    public Transform targetPosition;    // Titik berdiri saat bicara
-    public Transform exitPosition;      // Titik pintu keluar
+    [Header("Pengaturan Pergerakan")]
+    public Transform targetPoint; // Titik Kaprodi datang (TargetKaprodi)
+    public Transform exitPoint;   // Titik Kaprodi keluar (ExitKaprodi)
     public float moveSpeed = 2f;
 
-    [Header("Pengaturan Box Dialog Kaprodi")]
-    public GameObject dialogBoxKaprodi;
-    public TextMeshProUGUI isiTextKaprodi;
+    [Header("Pengaturan Dialog Manager")]
+    public DialogueManager dialogueManager;
 
-    [Header("Pengaturan Box Dialog Player")]
-    public GameObject dialogBoxPlayer;
-    public TextMeshProUGUI isiTextPlayer;
+    [Header("Pengaturan Animator")]
+    public string isWalkingParam = "isWalking";
 
-    [Header("Daftar Percakapan")]
-    public DialogLine[] daftarDialog;
+    private Transform currentTarget;
+    private bool isWalking = false;
+    private Animator animator;
 
-    private int indexDialog = 0;
-    private bool isTalking = false;
-    private Animator anim;
-
-    void Start()
+    void Awake()
     {
-        anim = GetComponent<Animator>();
-        SembunyikanSemuaDialog();
-        StartCoroutine(MulaiJalanMasuk());
-    }
-
-    IEnumerator MulaiJalanMasuk()
-    {
-        if (anim != null) anim.SetBool("isWalking", true);
-
-        while (Vector2.Distance(transform.position, targetPosition.position) > 0.05f)
-        {
-            transform.position = Vector2.MoveTowards(
-                transform.position,
-                targetPosition.position,
-                moveSpeed * Time.deltaTime
-            );
-            yield return null;
-        }
-
-        transform.position = targetPosition.position;
-        if (anim != null) anim.SetBool("isWalking", false);
-
-        MulaiBicara();
-    }
-
-    void MulaiBicara()
-    {
-        if (daftarDialog == null || daftarDialog.Length == 0) return;
-
-        isTalking = true;
-        indexDialog = 0;
-        TampilkanKalimat();
-    }
-
-    void TampilkanKalimat()
-    {
-        SembunyikanSemuaDialog();
-        DialogLine line = daftarDialog[indexDialog];
-
-        if (line.pembicara == Pembicara.Kaprodi)
-        {
-            if (dialogBoxKaprodi != null) dialogBoxKaprodi.SetActive(true);
-            if (isiTextKaprodi != null) isiTextKaprodi.text = line.isiKalimat;
-        }
-        else if (line.pembicara == Pembicara.Player)
-        {
-            if (dialogBoxPlayer != null) dialogBoxPlayer.SetActive(true);
-            if (isiTextPlayer != null) isiTextPlayer.text = line.isiKalimat;
-        }
+        animator = GetComponent<Animator>();
     }
 
     void Update()
     {
-        if (isTalking && (Input.GetMouseButtonDown(0) || Input.GetKeyDown(KeyCode.Space)))
+        if (isWalking && currentTarget != null)
         {
-            LanjutKalimat();
-        }
-    }
+            // Gerakkan Kaprodi menuju titik sasaran
+            transform.position = Vector3.MoveTowards(transform.position, currentTarget.position, moveSpeed * Time.deltaTime);
 
-    void LanjutKalimat()
-    {
-        if (indexDialog < daftarDialog.Length - 1)
-        {
-            indexDialog++;
-            TampilkanKalimat();
-        }
-        else
-        {
-            // DIALOG HABIS: Tutup UI dan jalankan Kaprodi keluar
-            SembunyikanSemuaDialog();
-            isTalking = false;
-            StartCoroutine(JalanKeluar());
-        }
-    }
-
-    IEnumerator JalanKeluar()
-    {
-        if (anim != null) anim.SetBool("isWalking", true);
-
-        // Kaprodi berjalan menuju exitPosition (pintu)
-        if (exitPosition != null)
-        {
-            while (Vector2.Distance(transform.position, exitPosition.position) > 0.05f)
+            // Jika sudah sampai di titik tujuan
+            if (Vector3.Distance(transform.position, currentTarget.position) < 0.05f)
             {
-                transform.position = Vector2.MoveTowards(
-                    transform.position,
-                    exitPosition.position,
-                    moveSpeed * Time.deltaTime
-                );
-                yield return null;
+                isWalking = false;
+
+                if (animator != null)
+                {
+                    animator.SetBool(isWalkingParam, false);
+                }
+
+                // Jika titik sasarannya adalah targetPoint (berarti baru sampai di meja)
+                if (currentTarget == targetPoint)
+                {
+                    if (dialogueManager != null)
+                    {
+                        dialogueManager.StartDialogue();
+                    }
+                }
+                // Jika titik sasarannya adalah exitPoint (berarti sudah keluar)
+                else if (currentTarget == exitPoint)
+                {
+                    Debug.Log("Kaprodi telah keluar ruangan.");
+                    gameObject.SetActive(false); // Sembunyikan Kaprodi
+                }
             }
         }
-
-        // Sembunyikan Kaprodi dari Scene
-        gameObject.SetActive(false);
     }
 
-    void SembunyikanSemuaDialog()
+    public void MulaiJalanMasuk()
     {
-        if (dialogBoxKaprodi != null) dialogBoxKaprodi.SetActive(false);
-        if (dialogBoxPlayer != null) dialogBoxPlayer.SetActive(false);
+        gameObject.SetActive(true);
+        currentTarget = targetPoint;
+        isWalking = true;
+
+        if (animator != null)
+        {
+            animator.SetBool(isWalkingParam, true);
+        }
+    }
+
+    // Fungsi ini dipanggil dari DialogueManager setelah dialog terakhir selesai
+    public void MulaiJalanKeluar()
+    {
+        if (exitPoint != null)
+        {
+            currentTarget = exitPoint;
+            isWalking = true;
+
+            if (animator != null)
+            {
+                animator.SetBool(isWalkingParam, true);
+            }
+
+            Debug.Log("Kaprodi mulai berjalan keluar...");
+        }
     }
 }
