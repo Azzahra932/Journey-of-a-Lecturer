@@ -2,10 +2,19 @@ using UnityEngine;
 
 public class NPCCutscene : MonoBehaviour
 {
-    [Header("Pengaturan Pergerakan")]
-    public Transform targetPoint; // Titik Kaprodi datang (TargetKaprodi)
-    public Transform exitPoint;   // Titik Kaprodi keluar (ExitKaprodi)
+    [Header("Jalur Masuk (Waypoints)")]
+    public Transform[] waypointsMasuk;
+
+    [Header("Jalur Keluar (Waypoints)")]
+    public Transform[] waypointsKeluar;
+
     public float moveSpeed = 2f;
+
+    [Header("Pengaturan Posisi & Sprite Duduk Kaprodi")]
+    public Transform sitPointKaprodi;   // Drag SitPointKaprodi ke sini
+    public Sprite kaprodiSitSprite;     // Sprite Kaprodi tampak belakang / duduk
+    public int sittingSortingOrder = 1; // Layer saat duduk (di belakang meja)
+    public int defaultSortingOrder = 3; // Layer saat jalan/berdiri
 
     [Header("Pengaturan Dialog Manager")]
     public DialogueManager dialogueManager;
@@ -13,45 +22,63 @@ public class NPCCutscene : MonoBehaviour
     [Header("Pengaturan Animator")]
     public string isWalkingParam = "isWalking";
 
-    private Transform currentTarget;
+    private int currentWaypointIndex = 0;
     private bool isWalking = false;
+    private bool isExiting = false;
+
     private Animator animator;
+    private SpriteRenderer spriteRenderer;
+    private Sprite originalSprite;
 
     void Awake()
     {
         animator = GetComponent<Animator>();
+        spriteRenderer = GetComponent<SpriteRenderer>();
     }
 
     void Update()
     {
-        if (isWalking && currentTarget != null)
+        if (!isWalking) return;
+
+        Transform[] currentPath = isExiting ? waypointsKeluar : waypointsMasuk;
+
+        if (currentPath != null && currentPath.Length > 0 && currentWaypointIndex < currentPath.Length)
         {
-            // Gerakkan Kaprodi menuju titik sasaran
-            transform.position = Vector3.MoveTowards(transform.position, currentTarget.position, moveSpeed * Time.deltaTime);
+            Transform target = currentPath[currentWaypointIndex];
 
-            // Jika sudah sampai di titik tujuan
-            if (Vector3.Distance(transform.position, currentTarget.position) < 0.05f)
+            // 1. Jalan menuju titik waypoint aktif
+            transform.position = Vector3.MoveTowards(transform.position, target.position, moveSpeed * Time.deltaTime);
+
+            // 2. Jika sudah sampai di titik waypoint aktif
+            if (Vector3.Distance(transform.position, target.position) < 0.05f)
             {
-                isWalking = false;
+                currentWaypointIndex++;
 
-                if (animator != null)
+                // Jika sudah sampai di titik paling ujung/terakhir
+                if (currentWaypointIndex >= currentPath.Length)
                 {
-                    animator.SetBool(isWalkingParam, false);
-                }
+                    isWalking = false;
 
-                // Jika titik sasarannya adalah targetPoint (berarti baru sampai di meja)
-                if (currentTarget == targetPoint)
-                {
-                    if (dialogueManager != null)
+                    if (animator != null)
                     {
-                        dialogueManager.StartDialogue();
+                        animator.SetBool(isWalkingParam, false);
                     }
-                }
-                // Jika titik sasarannya adalah exitPoint (berarti sudah keluar)
-                else if (currentTarget == exitPoint)
-                {
-                    Debug.Log("Kaprodi telah keluar ruangan.");
-                    gameObject.SetActive(false); // Sembunyikan Kaprodi
+
+                    if (!isExiting)
+                    {
+                        // Selesai jalan masuk -> Duduk di kursi & mulai dialog
+                        Duduk();
+
+                        if (dialogueManager != null)
+                        {
+                            dialogueManager.StartDialogue();
+                        }
+                    }
+                    else
+                    {
+                        // Selesai jalan keluar -> Sembunyikan objek
+                        gameObject.SetActive(false);
+                    }
                 }
             }
         }
@@ -60,29 +87,68 @@ public class NPCCutscene : MonoBehaviour
     public void MulaiJalanMasuk()
     {
         gameObject.SetActive(true);
-        currentTarget = targetPoint;
+        isExiting = false;
+        currentWaypointIndex = 0;
         isWalking = true;
+
+        if (spriteRenderer != null)
+        {
+            spriteRenderer.sortingOrder = defaultSortingOrder;
+        }
 
         if (animator != null)
         {
+            animator.enabled = true;
             animator.SetBool(isWalkingParam, true);
         }
     }
 
-    // Fungsi ini dipanggil dari DialogueManager setelah dialog terakhir selesai
+    private void Duduk()
+    {
+        // Pindahkan posisi pas ke titik kursi
+        if (sitPointKaprodi != null)
+        {
+            transform.position = sitPointKaprodi.position;
+        }
+
+        // Matikan animasi jalan
+        if (animator != null)
+        {
+            animator.enabled = false;
+        }
+
+        // Ganti ke sprite duduk & ubah order layer ke belakang meja
+        if (spriteRenderer != null)
+        {
+            originalSprite = spriteRenderer.sprite;
+            if (kaprodiSitSprite != null)
+            {
+                spriteRenderer.sprite = kaprodiSitSprite;
+            }
+            spriteRenderer.sortingOrder = sittingSortingOrder;
+        }
+    }
+
     public void MulaiJalanKeluar()
     {
-        if (exitPoint != null)
+        // Balikkan sprite & order layer ke mode berdiri/jalan
+        if (spriteRenderer != null)
         {
-            currentTarget = exitPoint;
-            isWalking = true;
-
-            if (animator != null)
+            if (originalSprite != null)
             {
-                animator.SetBool(isWalkingParam, true);
+                spriteRenderer.sprite = originalSprite;
             }
-
-            Debug.Log("Kaprodi mulai berjalan keluar...");
+            spriteRenderer.sortingOrder = defaultSortingOrder;
         }
+
+        if (animator != null)
+        {
+            animator.enabled = true;
+            animator.SetBool(isWalkingParam, true);
+        }
+
+        isExiting = true;
+        currentWaypointIndex = 0;
+        isWalking = true;
     }
 }

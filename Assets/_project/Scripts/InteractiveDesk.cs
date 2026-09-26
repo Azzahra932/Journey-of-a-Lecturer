@@ -11,8 +11,8 @@ public class InteractiveDesk : MonoBehaviour
     public KeyCode interactKey = KeyCode.E;
 
     [Header("Pengaturan Sorting Layer Player")]
-    public int defaultSortingOrder = 2; // Order sprite saat berdiri/jalan
-    public int sittingSortingOrder = 0; // Order sprite saat duduk (di belakang meja)
+    public int defaultSortingOrder = 3; // Order sprite saat berdiri/jalan
+    public int sittingSortingOrder = 2; // Order sprite saat duduk (di belakang meja)
 
     [Header("Sprite Khusus Duduk")]
     public Sprite sitSprite; // Asset sprite tampak belakang/duduk

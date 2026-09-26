@@ -3,6 +3,9 @@ using TMPro;
 
 public class DialogueManager : MonoBehaviour
 {
+    [Header("UI Overlay")]
+    public GameObject darkOverlay; // Drag objek DarkOverlay ke sini
+
     [Header("UI Dialog Boxes")]
     public GameObject dialogBoxKaprodi;
     public GameObject boxPlayer;
@@ -33,6 +36,10 @@ public class DialogueManager : MonoBehaviour
     {
         isDialogueActive = true;
         step = 1;
+
+        // Nyalakan background gelap saat dialog mulai
+        if (darkOverlay != null) darkOverlay.SetActive(true);
+
         ShowCurrentStep();
     }
 
@@ -70,9 +77,11 @@ public class DialogueManager : MonoBehaviour
                 break;
 
             default:
-                // Dialog Selesai -> Sembunyikan UI Dialog
+                // Dialog Selesai -> Sembunyikan UI Dialog & Background Gelap
                 if (dialogBoxKaprodi != null) dialogBoxKaprodi.SetActive(false);
                 if (boxPlayer != null) boxPlayer.SetActive(false);
+                if (darkOverlay != null) darkOverlay.SetActive(false); // Matikan background gelap
+
                 isDialogueActive = false;
 
                 // Perintahkan Kaprodi untuk berjalan keluar!
