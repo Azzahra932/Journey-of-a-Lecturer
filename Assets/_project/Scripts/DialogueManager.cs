@@ -1,97 +1,107 @@
 using UnityEngine;
+using UnityEngine.UI;
 using TMPro;
+
+[System.Serializable]
+public class DialogueData
+{
+    [TextArea(2, 5)]
+    public string sentence;         // Teks kalimat dialog
+    public Sprite customBoxSprite;   // Sprite Box Dialog (Box Kaprodi / Box Pemain)
+}
 
 public class DialogueManager : MonoBehaviour
 {
-    [Header("UI Overlay")]
-    public GameObject darkOverlay; // Drag objek DarkOverlay ke sini
+    [Header("UI Elements")]
+    public GameObject dialogueBox;          // Panel Utama Dialog
+    public Image dialogueBoxImage;         // Component Image tempat gambar background box
+    public TextMeshProUGUI dialogueText;     // Component Teks (IsiDialog)
 
-    [Header("UI Dialog Boxes")]
-    public GameObject dialogBoxKaprodi;
-    public GameObject boxPlayer;
-
-    [Header("Komponen Teks")]
-    public TextMeshProUGUI textKaprodi;
-
-    [Header("Daftar Teks Kaprodi")]
-    [TextArea(2, 4)] public string kaprodiTeks1;
-    [TextArea(2, 4)] public string kaprodiTeks3;
-    [TextArea(2, 4)] public string kaprodiTeks4;
+    [Header("Daftar Dialog")]
+    public DialogueData[] dialogueLines;   // Array data dialog
 
     [Header("Referensi NPC Cutscene")]
-    public NPCCutscene kaprodiCutscene; // Drag objek kapdiam ke sini
+    public NPCCutscene kaprodiCutscene;    // Drag GameObject kapdiam ke sini
 
-    private int step = 0;
+    private int currentLineIndex = 0;
     private bool isDialogueActive = false;
+
+    void Start()
+    {
+        if (dialogueBox != null)
+        {
+            dialogueBox.SetActive(false);
+        }
+    }
 
     void Update()
     {
         if (isDialogueActive && Input.GetKeyDown(KeyCode.Space))
         {
-            AdvanceDialogue();
+            NextLine();
         }
     }
 
     public void StartDialogue()
     {
+        if (dialogueLines == null || dialogueLines.Length == 0) return;
+
         isDialogueActive = true;
-        step = 1;
+        currentLineIndex = 0;
 
-        // Nyalakan background gelap saat dialog mulai
-        if (darkOverlay != null) darkOverlay.SetActive(true);
-
-        ShowCurrentStep();
-    }
-
-    void AdvanceDialogue()
-    {
-        step++;
-        ShowCurrentStep();
-    }
-
-    void ShowCurrentStep()
-    {
-        switch (step)
+        if (dialogueBox != null)
         {
-            case 1:
-                if (dialogBoxKaprodi != null) dialogBoxKaprodi.SetActive(true);
-                if (boxPlayer != null) boxPlayer.SetActive(false);
-                if (textKaprodi != null) textKaprodi.text = kaprodiTeks1;
-                break;
+            dialogueBox.SetActive(true);
+        }
 
-            case 2:
-                if (dialogBoxKaprodi != null) dialogBoxKaprodi.SetActive(false);
-                if (boxPlayer != null) boxPlayer.SetActive(true);
-                break;
+        ShowCurrentLine();
+    }
 
-            case 3:
-                if (dialogBoxKaprodi != null) dialogBoxKaprodi.SetActive(true);
-                if (boxPlayer != null) boxPlayer.SetActive(false);
-                if (textKaprodi != null) textKaprodi.text = kaprodiTeks3;
-                break;
+    private void ShowCurrentLine()
+    {
+        if (currentLineIndex >= dialogueLines.Length) return;
 
-            case 4:
-                if (dialogBoxKaprodi != null) dialogBoxKaprodi.SetActive(true);
-                if (boxPlayer != null) boxPlayer.SetActive(false);
-                if (textKaprodi != null) textKaprodi.text = kaprodiTeks4;
-                break;
+        DialogueData currentData = dialogueLines[currentLineIndex];
 
-            default:
-                // Dialog Selesai -> Sembunyikan UI Dialog & Background Gelap
-                if (dialogBoxKaprodi != null) dialogBoxKaprodi.SetActive(false);
-                if (boxPlayer != null) boxPlayer.SetActive(false);
-                if (darkOverlay != null) darkOverlay.SetActive(false); // Matikan background gelap
+        // 1. Set Isi Teks
+        if (dialogueText != null)
+        {
+            dialogueText.text = currentData.sentence;
+        }
 
-                isDialogueActive = false;
+        // 2. Ganti Sprite Box Dialog jika dimasukkan sprite khusus
+        if (dialogueBoxImage != null && currentData.customBoxSprite != null)
+        {
+            dialogueBoxImage.sprite = currentData.customBoxSprite;
+        }
+    }
 
-                // Perintahkan Kaprodi untuk berjalan keluar!
-                if (kaprodiCutscene != null)
-                {
-                    kaprodiCutscene.MulaiJalanKeluar();
-                }
+    public void NextLine()
+    {
+        currentLineIndex++;
 
-                Debug.Log("Percakapan selesai, Kaprodi pergi.");
-                break;
+        if (currentLineIndex < dialogueLines.Length)
+        {
+            ShowCurrentLine();
+        }
+        else
+        {
+            EndDialogue();
+        }
+    }
+
+    private void EndDialogue()
+    {
+        isDialogueActive = false;
+
+        if (dialogueBox != null)
+        {
+            dialogueBox.SetActive(false);
+        }
+
+        if (kaprodiCutscene != null)
+        {
+            kaprodiCutscene.MulaiJalanKeluar();
         }
     }
 }

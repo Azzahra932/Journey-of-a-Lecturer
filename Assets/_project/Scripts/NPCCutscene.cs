@@ -3,18 +3,19 @@ using UnityEngine;
 public class NPCCutscene : MonoBehaviour
 {
     [Header("Jalur Masuk (Waypoints)")]
-    public Transform[] waypointsMasuk;
+    public Transform[] waypointsMasuk; // Point1 -> Point2 -> Point3
 
     [Header("Jalur Keluar (Waypoints)")]
-    public Transform[] waypointsKeluar;
+    public Transform[] waypointsKeluar; // Point2 -> Point1 -> ExitKaprodi
 
+    [Header("Pengaturan Pergerakan")]
     public float moveSpeed = 2f;
 
     [Header("Pengaturan Posisi & Sprite Duduk Kaprodi")]
-    public Transform sitPointKaprodi;   // Drag SitPointKaprodi ke sini
-    public Sprite kaprodiSitSprite;     // Sprite Kaprodi tampak belakang / duduk
-    public int sittingSortingOrder = 1; // Layer saat duduk (di belakang meja)
-    public int defaultSortingOrder = 3; // Layer saat jalan/berdiri
+    public Transform sitPointKaprodi;
+    public float sittingOffsetY = -0.3f;
+    public int sittingSortingOrder = 1;
+    public int defaultSortingOrder = 30;
 
     [Header("Pengaturan Dialog Manager")]
     public DialogueManager dialogueManager;
@@ -28,12 +29,14 @@ public class NPCCutscene : MonoBehaviour
 
     private Animator animator;
     private SpriteRenderer spriteRenderer;
-    private Sprite originalSprite;
 
     void Awake()
     {
         animator = GetComponent<Animator>();
         spriteRenderer = GetComponent<SpriteRenderer>();
+
+        // Sembunyikan Kaprodi saat game baru mulai
+        gameObject.SetActive(false);
     }
 
     void Update()
@@ -46,15 +49,15 @@ public class NPCCutscene : MonoBehaviour
         {
             Transform target = currentPath[currentWaypointIndex];
 
-            // 1. Jalan menuju titik waypoint aktif
+            // Gerakkan NPC menuju waypoint target
             transform.position = Vector3.MoveTowards(transform.position, target.position, moveSpeed * Time.deltaTime);
 
-            // 2. Jika sudah sampai di titik waypoint aktif
+            // Jika sudah sangat dekat dengan titik waypoint
             if (Vector3.Distance(transform.position, target.position) < 0.05f)
             {
                 currentWaypointIndex++;
 
-                // Jika sudah sampai di titik paling ujung/terakhir
+                // Jika sudah mencapai titik waypoint terakhir
                 if (currentWaypointIndex >= currentPath.Length)
                 {
                     isWalking = false;
@@ -66,9 +69,10 @@ public class NPCCutscene : MonoBehaviour
 
                     if (!isExiting)
                     {
-                        // Selesai jalan masuk -> Duduk di kursi & mulai dialog
+                        // 1. Kaprodi Duduk DULU
                         Duduk();
 
+                        // 2. BARU panggil & munculkan dialog setelah Kaprodi duduk
                         if (dialogueManager != null)
                         {
                             dialogueManager.StartDialogue();
@@ -76,7 +80,7 @@ public class NPCCutscene : MonoBehaviour
                     }
                     else
                     {
-                        // Selesai jalan keluar -> Sembunyikan objek
+                        // Selesai jalan keluar -> sembunyikan GameObject Kaprodi
                         gameObject.SetActive(false);
                     }
                 }
@@ -86,6 +90,12 @@ public class NPCCutscene : MonoBehaviour
 
     public void MulaiJalanMasuk()
     {
+        // Pindahkan posisi Kaprodi ke Point1 terlebih dahulu
+        if (waypointsMasuk != null && waypointsMasuk.Length > 0 && waypointsMasuk[0] != null)
+        {
+            transform.position = waypointsMasuk[0].position;
+        }
+
         gameObject.SetActive(true);
         isExiting = false;
         currentWaypointIndex = 0;
@@ -105,39 +115,28 @@ public class NPCCutscene : MonoBehaviour
 
     private void Duduk()
     {
-        // Pindahkan posisi pas ke titik kursi
         if (sitPointKaprodi != null)
         {
-            transform.position = sitPointKaprodi.position;
+            Vector3 targetPos = sitPointKaprodi.position;
+            targetPos.y += sittingOffsetY;
+            transform.position = targetPos;
         }
 
-        // Matikan animasi jalan
         if (animator != null)
         {
-            animator.enabled = false;
+            animator.SetBool(isWalkingParam, false);
         }
 
-        // Ganti ke sprite duduk & ubah order layer ke belakang meja
         if (spriteRenderer != null)
         {
-            originalSprite = spriteRenderer.sprite;
-            if (kaprodiSitSprite != null)
-            {
-                spriteRenderer.sprite = kaprodiSitSprite;
-            }
             spriteRenderer.sortingOrder = sittingSortingOrder;
         }
     }
 
     public void MulaiJalanKeluar()
     {
-        // Balikkan sprite & order layer ke mode berdiri/jalan
         if (spriteRenderer != null)
         {
-            if (originalSprite != null)
-            {
-                spriteRenderer.sprite = originalSprite;
-            }
             spriteRenderer.sortingOrder = defaultSortingOrder;
         }
 
