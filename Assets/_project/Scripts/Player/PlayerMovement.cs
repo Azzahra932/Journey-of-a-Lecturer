@@ -98,7 +98,7 @@ public class PlayerMovement : MonoBehaviour
             transform.position = kursiPemain.position;
         }
 
-        if (rb != null) rb.linearVelocity = Vector2.zero;
+        if (rb != null) rb.velocity = Vector2.zero;
         if (animator != null) animator.SetFloat("Speed", 0f);
 
         if (spriteRenderer != null)

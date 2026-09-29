@@ -140,8 +140,8 @@ public class LaptopInteraction : MonoBehaviour
         isWorking = false;
         isCompleted = true; // Mengunci laptop agar tidak bisa diulang
 
-        // Munculkan panah penunjuk jalan selanjutnya
-        if (panahKeKelas != null)
+        // Munculkan panah penunjuk jalan HANYA BILA pemain belum pernah sampai ke pintu kelas
+        if (panahKeKelas != null && !PintuKelasTrigger.sudahPernahKeKelas)
         {
             panahKeKelas.SetActive(true);
         }
