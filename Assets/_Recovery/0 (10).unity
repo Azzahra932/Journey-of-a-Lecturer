@@ -6817,13 +6817,10 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::PlayerMovement
   moveSpeed: 5
-  animator: {fileID: 796029507}
   kursiPemain: {fileID: 558640734}
   sortingOrderDuduk: 1
   sortingOrderJalan: 3
   kaprodiCutscene: {fileID: 677828738}
-  isSitting: 0
-  isInChairArea: 0
 --- !u!1 &803587968
 GameObject:
   m_ObjectHideFlags: 0

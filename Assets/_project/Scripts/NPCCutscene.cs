@@ -20,20 +20,21 @@ public class NPCCutscene : MonoBehaviour
     [Header("Pengaturan Dialog Manager")]
     public DialogueManager dialogueManager;
 
-    [Header("Pengaturan Animator")]
+    [Header("Pengaturan Animator NPC")]
     public string isWalkingParam = "isWalking";
 
     private int currentWaypointIndex = 0;
     private bool isWalking = false;
     private bool isExiting = false;
 
-    private Animator animator;
-    private SpriteRenderer spriteRenderer;
+    private Animator npcAnimator;
+    private SpriteRenderer npcSpriteRenderer;
 
     void Awake()
     {
-        animator = GetComponent<Animator>();
-        spriteRenderer = GetComponent<SpriteRenderer>();
+        // Menggunakan komponen khusus milik GameObject NPC ini sahaja
+        npcAnimator = GetComponent<Animator>();
+        npcSpriteRenderer = GetComponent<SpriteRenderer>();
 
         // Sembunyikan Kaprodi saat game baru mulai
         gameObject.SetActive(false);
@@ -62,9 +63,9 @@ public class NPCCutscene : MonoBehaviour
                 {
                     isWalking = false;
 
-                    if (animator != null)
+                    if (npcAnimator != null)
                     {
-                        animator.SetBool(isWalkingParam, false);
+                        npcAnimator.SetBool(isWalkingParam, false);
                     }
 
                     if (!isExiting)
@@ -101,15 +102,15 @@ public class NPCCutscene : MonoBehaviour
         currentWaypointIndex = 0;
         isWalking = true;
 
-        if (spriteRenderer != null)
+        if (npcSpriteRenderer != null)
         {
-            spriteRenderer.sortingOrder = defaultSortingOrder;
+            npcSpriteRenderer.sortingOrder = defaultSortingOrder;
         }
 
-        if (animator != null)
+        if (npcAnimator != null)
         {
-            animator.enabled = true;
-            animator.SetBool(isWalkingParam, true);
+            npcAnimator.enabled = true;
+            npcAnimator.SetBool(isWalkingParam, true);
         }
     }
 
@@ -122,28 +123,28 @@ public class NPCCutscene : MonoBehaviour
             transform.position = targetPos;
         }
 
-        if (animator != null)
+        if (npcAnimator != null)
         {
-            animator.SetBool(isWalkingParam, false);
+            npcAnimator.SetBool(isWalkingParam, false);
         }
 
-        if (spriteRenderer != null)
+        if (npcSpriteRenderer != null)
         {
-            spriteRenderer.sortingOrder = sittingSortingOrder;
+            npcSpriteRenderer.sortingOrder = sittingSortingOrder;
         }
     }
 
     public void MulaiJalanKeluar()
     {
-        if (spriteRenderer != null)
+        if (npcSpriteRenderer != null)
         {
-            spriteRenderer.sortingOrder = defaultSortingOrder;
+            npcSpriteRenderer.sortingOrder = defaultSortingOrder;
         }
 
-        if (animator != null)
+        if (npcAnimator != null)
         {
-            animator.enabled = true;
-            animator.SetBool(isWalkingParam, true);
+            npcAnimator.enabled = true;
+            npcAnimator.SetBool(isWalkingParam, true);
         }
 
         isExiting = true;
