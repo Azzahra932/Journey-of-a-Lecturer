@@ -97,19 +97,21 @@ public class PlayerMovement : MonoBehaviour
 
         movement = new Vector2(inputX, inputY);
 
-        // 4. Send Parameters to Animator Controller
+        // 4. Send Parameters to Animator Controller (Diberi .normalized agar aman untuk Blend Tree 2D)
         if (animator != null)
         {
             // Jika ada arah pergerakan yang aktif
             if (movement.x != 0f || movement.y != 0f)
             {
-                // Simpan arah hadap terakhir
-                lastMoveDirection = movement.normalized;
+                Vector2 animDir = movement.normalized;
 
-                // Aktifkan animasi jalan & kirim nilai realtime
+                // Simpan arah hadap terakhir
+                lastMoveDirection = animDir;
+
+                // Aktifkan animasi jalan & kirim nilai realtime yang ternormalisasi
                 animator.SetBool("IsMoving", true);
-                animator.SetFloat("MoveX", movement.x);
-                animator.SetFloat("MoveY", movement.y);
+                animator.SetFloat("MoveX", animDir.x);
+                animator.SetFloat("MoveY", animDir.y);
                 animator.SetFloat("LastMoveX", lastMoveDirection.x);
                 animator.SetFloat("LastMoveY", lastMoveDirection.y);
             }
