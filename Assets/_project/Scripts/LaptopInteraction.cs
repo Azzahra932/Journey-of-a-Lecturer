@@ -25,6 +25,9 @@ public class LaptopInteraction : MonoBehaviour
     public GameObject petunjukTekanE;           // UI petunjuk "Tekan [E]"
     public GameObject panahKeKelas;             // Panah penunjuk jalan setelah tugas selesai
 
+    [Header("Referensi Pilihan Laptop (Baru)")]
+    public LaptopChoiceHandler choiceHandler;   // Drag objek LaptopChoiceManager ke sini
+
     private bool isWorking = false;
     private bool isCompleted = false;
 
@@ -56,6 +59,12 @@ public class LaptopInteraction : MonoBehaviour
                 if (taggedPlayer != null) playerTransform = taggedPlayer.transform;
             }
         }
+
+        // Cari otomatis LaptopChoiceHandler jika belum didrag di Inspector
+        if (choiceHandler == null)
+        {
+            choiceHandler = FindObjectOfType<LaptopChoiceHandler>();
+        }
     }
 
     void Update()
@@ -71,15 +80,36 @@ public class LaptopInteraction : MonoBehaviour
         {
             if (petunjukTekanE != null) petunjukTekanE.SetActive(true);
 
-            // Tekan E untuk mulai membuat RPS
+            // Tekan E untuk memunculkan pilihan box1 dan box2
             if (Input.GetKeyDown(interactKey))
             {
-                StartCoroutine(ProsesMengerjakanRencanaKerja());
+                if (petunjukTekanE != null) petunjukTekanE.SetActive(false);
+
+                // Panggil fungsi untuk memunculkan box pilihan di layar
+                if (choiceHandler != null)
+                {
+                    choiceHandler.OpenChoices();
+                }
+                else
+                {
+                    Debug.LogWarning("[Laptop] LaptopChoiceHandler belum dihubungkan!");
+                    // Fallback langsung kerja jika manajer pilihan tidak ada
+                    StartCoroutine(ProsesMengerjakanRencanaKerja());
+                }
             }
         }
         else
         {
             if (petunjukTekanE != null) petunjukTekanE.SetActive(false);
+        }
+    }
+
+    // Fungsi ini bisa dipanggil setelah pemain mengeklik salah satu pilihan (box1 / box2)
+    public void MulaiPekerjaanDariPilihan()
+    {
+        if (!isWorking && !isCompleted)
+        {
+            StartCoroutine(ProsesMengerjakanRencanaKerja());
         }
     }
 
