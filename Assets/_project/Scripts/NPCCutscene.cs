@@ -15,7 +15,7 @@ public class NPCCutscene : MonoBehaviour
     public Transform sitPointKaprodi;
     public float sittingOffsetY = -0.3f;
     public int sittingSortingOrder = 1;
-    public int defaultSortingOrder = 30;
+    public int defaultSortingOrder = 2;
 
     [Header("Pengaturan Dialog Manager")]
     public DialogueManager dialogueManager;

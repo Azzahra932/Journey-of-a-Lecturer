@@ -3,57 +3,60 @@ using UnityEngine;
 public class LaptopChoiceHandler : MonoBehaviour
 {
     [Header("Referensi Box Pilihan")]
-    public GameObject box1; // Seret box1 ke sini
-    public GameObject box2; // Seret box2 ke sini
+    public GameObject box1;
+    public GameObject box2;
 
     [Header("Referensi Sistem Waktu")]
     public GameTimeManager timeManager;
 
+    [Header("Referensi Interaksi Laptop")]
+    public LaptopInteraction laptopInteraction;
+
     void Start()
     {
-        // Pastikan box1 dan box2 mati/tidak muncul di awal game
         if (box1 != null) box1.SetActive(false);
         if (box2 != null) box2.SetActive(false);
     }
 
-    // Fungsi untuk memunculkan pilihan saat laptop diklik/ditekan E
     public void OpenChoices()
     {
         if (box1 != null) box1.SetActive(true);
         if (box2 != null) box2.SetActive(true);
     }
 
-    // Fungsi saat box1 (Atas) diklik -> Jujur, waktu lebih lama
     public void ChooseHonestOption()
     {
         Debug.Log("Memilih: Menyusun materi secara mandiri (Jujur)");
 
-        if (timeManager != null)
-        {
-            timeManager.AdvanceTime();
-            timeManager.AdvanceTime();
-        }
 
-        CloseChoices();
+        SelesaikanPilihan(20.0f);
     }
 
-    // Fungsi saat box2 (Bawah) diklik -> Pakai AI, cepat, integritas -10%
     public void ChooseAIOption()
     {
         Debug.Log("Memilih: Menggunakan AI Generator (Cepat, Integritas -10%)");
 
-        if (timeManager != null)
+        // Memanggil fungsi pengurangan integritas dari manager khusus
+        if (IntegritasManager.Instance != null)
         {
-            timeManager.AdvanceTime();
+            IntegritasManager.Instance.ReduceIntegritas(10f);
+        }
+        else
+        {
+            Debug.LogWarning("[LaptopChoiceHandler] IntegritasManager.Instance tidak ditemukan di Scene!");
         }
 
-        ReduceIntegritas(10f);
-        CloseChoices();
+        SelesaikanPilihan(3.0f);
     }
 
-    void ReduceIntegritas(float amount)
+    void SelesaikanPilihan(float duration)
     {
-        Debug.Log($"Integritas berkurang sebesar {amount}%");
+        CloseChoices();
+
+        if (laptopInteraction != null)
+        {
+            laptopInteraction.MulaiPekerjaanDariPilihan(duration);
+        }
     }
 
     void CloseChoices()

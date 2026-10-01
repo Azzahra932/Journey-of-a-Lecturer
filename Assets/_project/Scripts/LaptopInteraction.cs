@@ -6,7 +6,7 @@ public class LaptopInteraction : MonoBehaviour
 {
     [Header("Pengaturan Interaksi")]
     public KeyCode interactKey = KeyCode.E;    // Tombol untuk interaksi
-    public float workDuration = 3.0f;           // Lama waktu proses pembuatan RPS (detik)
+    public float workDuration = 3.0f;           // (Default cadangan jika dipanggil langsung)
     public float interactionDistance = 1.2f;    // Jarak jangkauan interaksi (meter)
     public int scoreReward = 15;                // Poin hadiah setelah selesai (+15)
 
@@ -54,7 +54,6 @@ public class LaptopInteraction : MonoBehaviour
             }
             else
             {
-                // Fallback cari berdasarkan Tag
                 GameObject taggedPlayer = GameObject.FindGameObjectWithTag("Player");
                 if (taggedPlayer != null) playerTransform = taggedPlayer.transform;
             }
@@ -69,23 +68,18 @@ public class LaptopInteraction : MonoBehaviour
 
     void Update()
     {
-        // Jika tugas sudah selesai, sedang bekerja, atau player tidak ada, hentikan pengecekan
         if (isCompleted || isWorking || playerTransform == null) return;
 
-        // Hitung jarak dari titik interaksi ke pemain
         float distance = Vector2.Distance(interactionPoint.position, playerTransform.position);
 
-        // SYARAT: Jarak harus dekat DAN dialog percakapan Kaprodi sudah selesai
         if (distance <= interactionDistance && isDialogDone)
         {
             if (petunjukTekanE != null) petunjukTekanE.SetActive(true);
 
-            // Tekan E untuk memunculkan pilihan box1 dan box2
             if (Input.GetKeyDown(interactKey))
             {
                 if (petunjukTekanE != null) petunjukTekanE.SetActive(false);
 
-                // Panggil fungsi untuk memunculkan box pilihan di layar
                 if (choiceHandler != null)
                 {
                     choiceHandler.OpenChoices();
@@ -93,8 +87,7 @@ public class LaptopInteraction : MonoBehaviour
                 else
                 {
                     Debug.LogWarning("[Laptop] LaptopChoiceHandler belum dihubungkan!");
-                    // Fallback langsung kerja jika manajer pilihan tidak ada
-                    StartCoroutine(ProsesMengerjakanRencanaKerja());
+                    StartCoroutine(ProsesMengerjakanRencanaKerja(workDuration));
                 }
             }
         }
@@ -104,20 +97,19 @@ public class LaptopInteraction : MonoBehaviour
         }
     }
 
-    // Fungsi ini bisa dipanggil setelah pemain mengeklik salah satu pilihan (box1 / box2)
-    public void MulaiPekerjaanDariPilihan()
+    // Menerima durasi dinamis dari pilihan box (20s atau 10s)
+    public void MulaiPekerjaanDariPilihan(float customDuration)
     {
         if (!isWorking && !isCompleted)
         {
-            StartCoroutine(ProsesMengerjakanRencanaKerja());
+            StartCoroutine(ProsesMengerjakanRencanaKerja(customDuration));
         }
     }
 
-    private IEnumerator ProsesMengerjakanRencanaKerja()
+    private IEnumerator ProsesMengerjakanRencanaKerja(float duration)
     {
         isWorking = true;
 
-        // Sembunyikan petunjuk [E] dan tampilkan Canvas Progress Bar
         if (petunjukTekanE != null) petunjukTekanE.SetActive(false);
         if (progressBarCanvas != null) progressBarCanvas.SetActive(true);
 
@@ -128,35 +120,31 @@ public class LaptopInteraction : MonoBehaviour
             progressCircleFill.fillAmount = 0f;
         }
 
-        // Animasi bar bulat berputar mengisi 0% -> 100%
-        while (timer < workDuration)
+        // Proses berjalan sesuai durasi pilihan (20 detik atau 10 detik)
+        while (timer < duration)
         {
             timer += Time.deltaTime;
 
             if (progressCircleFill != null)
             {
-                progressCircleFill.fillAmount = timer / workDuration;
+                progressCircleFill.fillAmount = timer / duration;
             }
 
             yield return null;
         }
 
-        // Pastikan visual bar penuh 100%
         if (progressCircleFill != null)
         {
             progressCircleFill.fillAmount = 1f;
         }
 
-        // Jeda sejenak agar pemain melihat indikator penuh
         yield return new WaitForSeconds(0.3f);
 
-        // Sembunyikan Progress Bar
         if (progressBarCanvas != null)
         {
             progressBarCanvas.SetActive(false);
         }
 
-        // --- PANGGIL TAMBAH 15 POIN KE SCORE MANAGER ---
         if (ScoreManager.Instance != null)
         {
             ScoreManager.Instance.AddScore(scoreReward);
@@ -168,9 +156,8 @@ public class LaptopInteraction : MonoBehaviour
         }
 
         isWorking = false;
-        isCompleted = true; // Mengunci laptop agar tidak bisa diulang
+        isCompleted = true;
 
-        // Munculkan panah penunjuk jalan HANYA BILA pemain belum pernah sampai ke pintu kelas
         if (panahKeKelas != null && !PintuKelasTrigger.sudahPernahKeKelas)
         {
             panahKeKelas.SetActive(true);
