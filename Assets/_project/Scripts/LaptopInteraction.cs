@@ -80,14 +80,14 @@ public class LaptopInteraction : MonoBehaviour
             {
                 if (petunjukTekanE != null) petunjukTekanE.SetActive(false);
 
+                // MURNI MEMBUKA PILIHAN BOX SAJA (Tidak ada progress bar otomatis saat tekan E)
                 if (choiceHandler != null)
                 {
                     choiceHandler.OpenChoices();
                 }
                 else
                 {
-                    Debug.LogWarning("[Laptop] LaptopChoiceHandler belum dihubungkan!");
-                    StartCoroutine(ProsesMengerjakanRencanaKerja(workDuration));
+                    Debug.LogWarning("[Laptop] LaptopChoiceHandler belum dihubungkan di Inspector!");
                 }
             }
         }
@@ -97,7 +97,7 @@ public class LaptopInteraction : MonoBehaviour
         }
     }
 
-    // Menerima durasi dinamis dari pilihan box (20s atau 10s)
+    // Menerima durasi dinamis dari pilihan box (20s atau 3s) yang dipanggil oleh LaptopChoiceHandler
     public void MulaiPekerjaanDariPilihan(float customDuration)
     {
         if (!isWorking && !isCompleted)
@@ -120,7 +120,7 @@ public class LaptopInteraction : MonoBehaviour
             progressCircleFill.fillAmount = 0f;
         }
 
-        // Proses berjalan sesuai durasi pilihan (20 detik atau 10 detik)
+        // Proses berjalan sesuai durasi pilihan (20 detik atau 3 detik)
         while (timer < duration)
         {
             timer += Time.deltaTime;
@@ -145,14 +145,15 @@ public class LaptopInteraction : MonoBehaviour
             progressBarCanvas.SetActive(false);
         }
 
+        // Menambahkan poin ke ScoreManager pusat (+15)
         if (ScoreManager.Instance != null)
         {
             ScoreManager.Instance.AddScore(scoreReward);
-            Debug.Log($"[Laptop] Tugas RPS Selesai! Skor bertambah +{scoreReward}");
+            Debug.Log($"[Laptop Scene 1] Tugas RPS Selesai! Skor bertambah +{scoreReward}");
         }
         else
         {
-            Debug.LogWarning("[Laptop] ScoreManager.Instance tidak ditemukan di Scene!");
+            Debug.LogWarning("[Laptop Scene 1] ScoreManager.Instance tidak ditemukan di Scene!");
         }
 
         isWorking = false;

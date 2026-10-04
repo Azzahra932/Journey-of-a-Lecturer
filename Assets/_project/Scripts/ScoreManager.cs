@@ -4,7 +4,6 @@ using TMPro;
 
 public class ScoreManager : MonoBehaviour
 {
-    // Singleton Instance agar bisa dipanggil dari mana saja (misal: LaptopInteraction.cs)
     public static ScoreManager Instance;
 
     [Header("Pengaturan Skor")]
@@ -12,15 +11,16 @@ public class ScoreManager : MonoBehaviour
     public int targetScore = 150;
 
     [Header("Referensi UI")]
-    public Slider scoreSlider; // Komponen Slider pada ScoreBar
-    public TMP_Text scoreText; // Komponen TextMeshPro angka "0/150"
+    public Slider scoreSlider;
+    public TMP_Text scoreText;
 
     private void Awake()
     {
-        // Setup Singleton
+        // Singleton agar ScoreManager hanya ada satu dan bertahan antar scene
         if (Instance == null)
         {
             Instance = this;
+            DontDestroyOnLoad(gameObject); // Agar skor terbawa dari Scene 1 ke Scene 2 tanpa reset
         }
         else
         {
@@ -30,13 +30,11 @@ public class ScoreManager : MonoBehaviour
 
     private void Start()
     {
-        // Jika slot scoreSlider belum di-assign manual di Inspector, otomatis ambil dari objek ini sendiri
         if (scoreSlider == null)
         {
             scoreSlider = GetComponent<Slider>();
         }
 
-        // Inisialisasi nilai Slider
         if (scoreSlider != null)
         {
             scoreSlider.minValue = 0;
@@ -47,12 +45,11 @@ public class ScoreManager : MonoBehaviour
         UpdateScoreUI();
     }
 
-    // Fungsi utama untuk menambah poin skor
+    // Fungsi universal untuk menambah skor dari scene manapun
     public void AddScore(int amount)
     {
         currentScore += amount;
 
-        // Membatasi agar skor tidak melebihi target 150
         if (currentScore > targetScore)
         {
             currentScore = targetScore;
@@ -60,14 +57,12 @@ public class ScoreManager : MonoBehaviour
 
         UpdateScoreUI();
 
-        // Pengecekan jika target skor sudah tercapai
         if (currentScore >= targetScore)
         {
             OnTargetReached();
         }
     }
 
-    // Fungsi memperbarui visual Bar dan Teks Skor
     private void UpdateScoreUI()
     {
         if (scoreSlider != null)
@@ -81,10 +76,8 @@ public class ScoreManager : MonoBehaviour
         }
     }
 
-    // Event saat skor mencapai 150
     private void OnTargetReached()
     {
         Debug.Log("Target skor 150 tercapai!");
-        // Tambahkan logika kelulusan / UI Victory di sini jika ada
     }
 }

@@ -1,22 +1,36 @@
+using System.Collections;
 using UnityEngine;
 
 public class ChairInteraction : MonoBehaviour
 {
     [Header("Pengaturan Kursi & Karakter")]
-    public GameObject playerCharacter;   // Referensi ke GameObject Player utama
-    public GameObject lecturerSitting;   // Referensi ke GameObject karakter dosen yang sedang duduk
-    public GameObject promptUI;          // UI petunjuk (misal "Tekan E untuk Duduk")
+    public GameObject playerCharacter;    // TPdiam (player yang bisa jalan)
+    public GameObject lecturerSitting;    // Tpngajar (player versi duduk)
+    public GameObject promptUI;
+
+    [Header("Referensi Panah & Dialog")]
+    public GameObject panahKeKursi;       // Panah kursi yang akan dimatikan
+    public GameObject dialogueBoxUI;      // Box Teks / Dialogue Manager
+
+    [Header("Pengaturan Berdiri")]
+    public Vector2 offsetBerdiri = new Vector2(0f, -1f);  // Posisi player saat berdiri, relatif dari Tpngajar
+    public bool blokirBerdiriSaatDialog = false;          // true = tidak bisa berdiri selama dialogueBoxUI aktif
+    public float jedaSetelahDuduk = 0.3f;                 // Cegah langsung berdiri tepat setelah duduk
 
     private bool playerIsClose = false;
     private bool isSitting = false;
+    private bool sedangBerdiri = false;
+    private bool sudahPernahDialog = false;   // true setelah dialog muncul di duduk pertama
+    private float waktuDuduk = 0f;
 
     void Start()
     {
-        // Pastikan saat mulai, dosen disembunyikan dan UI petunjuk dimatikan
         if (lecturerSitting != null) lecturerSitting.SetActive(false);
         if (promptUI != null) promptUI.SetActive(false);
 
-        // Jika playerCharacter belum di-assign di Inspector, coba cari otomatis
+        // Pastikan box teks tertutup di awal game
+        if (dialogueBoxUI != null) dialogueBoxUI.SetActive(false);
+
         if (playerCharacter == null)
         {
             GameObject playerObj = GameObject.FindGameObjectWithTag("Player");
@@ -26,54 +40,104 @@ public class ChairInteraction : MonoBehaviour
 
     void Update()
     {
-        // Jika pemain dekat, belum duduk, dan menekan tombol 'E'
+        // Duduk
         if (playerIsClose && !isSitting && Input.GetKeyDown(KeyCode.E))
         {
-            DudukDanGantiKarakter();
+            DudukKeKursi();
+            return;
+        }
+
+        // Berdiri
+        if (isSitting && !sedangBerdiri && TombolGerakDitekan())
+        {
+            if (Time.time - waktuDuduk < jedaSetelahDuduk) return;
+
+            if (blokirBerdiriSaatDialog && dialogueBoxUI != null && dialogueBoxUI.activeInHierarchy) return;
+
+            StartCoroutine(BerdiriDariKursi());
         }
     }
 
-    void OnTriggerEnter2D(Collider2D other)
+    // Berdiri kalau menekan WASD atau tombol panah
+    bool TombolGerakDitekan()
     {
-        // Deteksi jika Player memasuki area pemicu kursi
-        if (other.gameObject == playerCharacter && !isSitting)
+        return Input.GetKeyDown(KeyCode.W) || Input.GetKeyDown(KeyCode.A) ||
+               Input.GetKeyDown(KeyCode.S) || Input.GetKeyDown(KeyCode.D) ||
+               Input.GetKeyDown(KeyCode.UpArrow) || Input.GetKeyDown(KeyCode.DownArrow) ||
+               Input.GetKeyDown(KeyCode.LeftArrow) || Input.GetKeyDown(KeyCode.RightArrow);
+    }
+
+    void DudukKeKursi()
+    {
+        isSitting = true;
+        waktuDuduk = Time.time;
+        if (promptUI != null) promptUI.SetActive(false);
+
+        // 1. Matikan panah kursi
+        if (panahKeKursi != null) panahKeKursi.SetActive(false);
+
+        // 2. Ubah karakter player jadi dosen duduk
+        if (playerCharacter != null) playerCharacter.SetActive(false);
+        if (lecturerSitting != null) lecturerSitting.SetActive(true);
+
+        // 3. Munculkan box teks HANYA saat duduk pertama kali
+        if (!sudahPernahDialog)
+        {
+            sudahPernahDialog = true;
+            if (dialogueBoxUI != null) dialogueBoxUI.SetActive(true);
+            Debug.Log("Player duduk pertama kali, box teks muncul.");
+        }
+        else
+        {
+            Debug.Log("Player duduk lagi, box teks tidak dimunculkan.");
+        }
+    }
+
+    IEnumerator BerdiriDariKursi()
+    {
+        sedangBerdiri = true;
+
+        // Tunggu 1 frame supaya TPdiam aktif dengan bersih setelah Tpngajar dimatikan
+        yield return null;
+
+        if (playerCharacter != null && lecturerSitting != null)
+        {
+            // Posisikan player berdiri di dekat kursi
+            playerCharacter.transform.position = lecturerSitting.transform.position + (Vector3)offsetBerdiri;
+        }
+
+        if (lecturerSitting != null) lecturerSitting.SetActive(false);
+        if (playerCharacter != null)
+        {
+            playerCharacter.SetActive(true);
+
+            PlayerMovement pm = playerCharacter.GetComponent<PlayerMovement>();
+            if (pm != null) pm.Berdiri();   // reset isSitting & sorting order di PlayerMovement
+        }
+
+        isSitting = false;
+
+        Debug.Log("Player berdiri dari kursi kelas.");
+
+        yield return new WaitForSeconds(0.2f);
+        sedangBerdiri = false;
+    }
+
+    private void OnTriggerEnter2D(Collider2D other)
+    {
+        if (other.CompareTag("Player") || other.gameObject == playerCharacter)
         {
             playerIsClose = true;
-            if (promptUI != null) promptUI.SetActive(true);
+            if (promptUI != null && !isSitting) promptUI.SetActive(true);
         }
     }
 
-    void OnTriggerExit2D(Collider2D other)
+    private void OnTriggerExit2D(Collider2D other)
     {
-        // Deteksi jika Player meninggalkan area pemicu kursi
-        if (other.gameObject == playerCharacter)
+        if (other.CompareTag("Player") || other.gameObject == playerCharacter)
         {
             playerIsClose = false;
             if (promptUI != null) promptUI.SetActive(false);
         }
-    }
-
-    void DudukDanGantiKarakter()
-    {
-        isSitting = true;
-        if (promptUI != null) promptUI.SetActive(false);
-
-        // 1. Sembunyikan karakter pemain utama
-        if (playerCharacter != null)
-        {
-            playerCharacter.SetActive(false);
-        }
-
-        // 2. Aktifkan karakter dosen yang sedang duduk
-        if (lecturerSitting != null)
-        {
-            // Posisikan dosen tepat di kursi (opsional, sebaiknya sudah diatur posisinya sebelumnya)
-            // lecturerSitting.transform.position = transform.position; // Kalau titik duduknya sama persis dengan pusat kursi
-            lecturerSitting.SetActive(true);
-        }
-
-        Debug.Log("[ChairInteraction] Karakter diganti dengan dosen yang sedang duduk.");
-
-        // (Opsional) Di sini bisa ditambahkan logika lain, misalnya memulai dialog atau cutscene
     }
 }
