@@ -7,6 +7,12 @@ public class InteractiveDesk : MonoBehaviour
     public Transform sitPoint;          // Drag objek 'SitPoint' ke sini
     public NPCCutscene kaprodiScript;   // Drag objek Kaprodi (kapdiam) ke sini
 
+    [Header("Panah Tambahan yang Dimatikan Saat Duduk")]
+    public GameObject[] panahDimatikanSaatDuduk;
+
+    [Header("Scene 3 - Bimbingan Mahasiswa")]
+    public NPCBimbingan bimbinganScript;   // Drag objek yang memasang NPCBimbingan (boleh kosong)   // Panah yang harus hilang tiap kali player duduk (mis. panahKeKursiDosen)
+
     [Header("Pengaturan Interaksi")]
     public KeyCode interactKey = KeyCode.E;
 
@@ -71,6 +77,21 @@ public class InteractiveDesk : MonoBehaviour
     private void SitDown()
     {
         isSitting = true;
+
+        // Matikan panah tambahan SETIAP kali duduk (bukan hanya yang pertama)
+        if (panahDimatikanSaatDuduk != null)
+        {
+            foreach (GameObject p in panahDimatikanSaatDuduk)
+            {
+                if (p != null) p.SetActive(false);
+            }
+        }
+
+        // Scene 3: coba mulai bimbingan mahasiswa (hanya jalan kalau syaratnya terpenuhi)
+        if (bimbinganScript != null)
+        {
+            bimbinganScript.CobaMulai();
+        }
 
         // Onboarding / Kaprodi cuma jalan di interaksi pertama
         if (!hasSatOnce)

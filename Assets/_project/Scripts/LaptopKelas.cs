@@ -16,6 +16,9 @@ public class LaptopKelas : MonoBehaviour
     public GameObject teksIstirahat;       // teks "Laptop sedang istirahat" saat E ditekan, opsional
     public float lamaTeksIstirahat = 1.5f;
 
+    [Header("Petunjuk Arah Setelah Dapat Poin")]
+    public GameObject panahKeRuangDosen;   // panah penunjuk jalan ke ruang dosen, muncul setelah dapat poin
+
     [Header("Efek Layar Laptop")]
     public SpriteRenderer spriteLaptop;    // kosong = ambil dari objek ini
     public Color warnaNormal = Color.white;
@@ -41,8 +44,16 @@ public class LaptopKelas : MonoBehaviour
     private Status status = Status.Siap;
 
     private float progressTimer = 0f;
+
+    // True setelah player pertama kali menyelesaikan tugas mengajar (dipakai Scene 3)
+    public bool SudahMengajar { get; private set; } = false;
     private float cooldownSelesaiPada = 0f;
     private float teksSembunyiPada = 0f;
+
+    // Cegah tombol E untuk DUDUK ikut terbaca sebagai E untuk laptop
+    private bool dudukSebelumnya = false;
+    private float waktuMulaiDuduk = 0f;
+    private const float jedaSetelahDuduk = 0.3f;
 
     void Start()
     {
@@ -51,6 +62,7 @@ public class LaptopKelas : MonoBehaviour
         if (ikonBateraiLemah != null) ikonBateraiLemah.SetActive(false);
         if (teksCountdown != null) teksCountdown.gameObject.SetActive(false);
         if (teksIstirahat != null) teksIstirahat.SetActive(false);
+        if (panahKeRuangDosen != null) panahKeRuangDosen.SetActive(false);
 
         if (interactionPoint == null) interactionPoint = transform;
         if (spriteLaptop == null) spriteLaptop = GetComponent<SpriteRenderer>();
@@ -83,8 +95,19 @@ public class LaptopKelas : MonoBehaviour
         return true;
     }
 
+    // Tombol E boleh dipakai untuk laptop hanya setelah jeda singkat sejak player duduk
+    bool BolehTekanE()
+    {
+        return Time.time - waktuMulaiDuduk >= jedaSetelahDuduk;
+    }
+
     void Update()
     {
+        // Catat saat player baru saja duduk (Tpngajar baru aktif)
+        bool dudukSekarang = playerTransform != null && playerTransform.gameObject.activeInHierarchy;
+        if (dudukSekarang && !dudukSebelumnya) waktuMulaiDuduk = Time.time;
+        dudukSebelumnya = dudukSekarang;
+
         // Teks "istirahat" hilang otomatis
         if (teksIstirahat != null && teksIstirahat.activeSelf && Time.time >= teksSembunyiPada)
             teksIstirahat.SetActive(false);
@@ -103,7 +126,7 @@ public class LaptopKelas : MonoBehaviour
         bool boleh = PlayerBolehInteraksi();
         if (promptPressE != null) promptPressE.SetActive(boleh);
 
-        if (boleh && Input.GetKeyDown(tombolInteraksi))
+        if (boleh && BolehTekanE() && Input.GetKeyDown(tombolInteraksi))
             MulaiMengajar();
     }
 
@@ -142,7 +165,7 @@ public class LaptopKelas : MonoBehaviour
             indikatorBaterai.SetProgress(Mathf.Clamp01(1f - (sisa / durasiCooldown)));
 
         // Player tekan E saat laptop masih istirahat
-        if (PlayerBolehInteraksi() && Input.GetKeyDown(tombolInteraksi))
+        if (PlayerBolehInteraksi() && BolehTekanE() && Input.GetKeyDown(tombolInteraksi))
         {
             if (teksIstirahat != null)
             {
@@ -192,6 +215,11 @@ public class LaptopKelas : MonoBehaviour
         }
 
         if (canvasProgressBar != null) canvasProgressBar.SetActive(false);
+
+        SudahMengajar = true;
+
+        // Munculkan panah penunjuk arah ke ruang dosen
+        if (panahKeRuangDosen != null) panahKeRuangDosen.SetActive(true);
 
         MulaiCooldown();
     }
