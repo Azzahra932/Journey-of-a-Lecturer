@@ -40,7 +40,7 @@ public class InteractiveDesk : MonoBehaviour
             }
             else
             {
-                StandUp(); // Bangun lewat tombol E
+                if (!BimbinganTerkunci()) StandUp(); // Bangun lewat tombol E (diblokir saat bimbingan)
             }
         }
 
@@ -52,9 +52,15 @@ public class InteractiveDesk : MonoBehaviour
 
             if (moveX != 0 || moveY != 0)
             {
-                StandUp(); // Bangun lewat tombol gerak
+                if (!BimbinganTerkunci()) StandUp(); // Bangun lewat tombol gerak (diblokir saat bimbingan)
             }
         }
+    }
+
+    // True selama Scene 3 (mahasiswa berjalan + dialog) sedang berlangsung
+    private bool BimbinganTerkunci()
+    {
+        return bimbinganScript != null && bimbinganScript.KunciPlayer;
     }
 
     private void OnTriggerEnter2D(Collider2D other)

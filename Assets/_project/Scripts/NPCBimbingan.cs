@@ -23,6 +23,7 @@ public class NPCBimbingan : MonoBehaviour
     [Header("Tampilan Saat Duduk (Opsional)")]
     public Sprite spriteDuduk;               // kosong = sprite tidak diganti
     public int sortingOrderDuduk = 2;
+    public float skalaSaatDuduk = 1f;        // pengali ukuran saat sprite duduk dipakai (kecil = < 1, mis. 0.3)
 
     [Header("Animator Mahasiswa (Opsional)")]
     public Animator animator;
@@ -35,6 +36,15 @@ public class NPCBimbingan : MonoBehaviour
 
     private bool sudahTerjadi = false;
     private bool sedangBerjalan = false;
+
+    // True selama bimbingan berlangsung (jalan + dialog): player tidak bisa berdiri dari kursi
+    public bool KunciPlayer { get; set; } = false;
+
+    // Tampilan awal mahasiswa (disimpan sebelum diganti sprite duduk, dipakai saat keluar)
+    private Sprite spriteAwal;
+    private Vector3 skalaAwal = Vector3.one;
+    private int sortingAwal = 0;
+    private bool spriteDidiganti = false;
 
     void Start()
     {
@@ -56,11 +66,13 @@ public class NPCBimbingan : MonoBehaviour
     private IEnumerator ProsesBimbingan()
     {
         sedangBerjalan = true;
+        KunciPlayer = true;
 
         if (mahasiswa == null)
         {
             Debug.LogWarning("[NPCBimbingan] Objek mahasiswa belum diisi di Inspector!");
             sedangBerjalan = false;
+            KunciPlayer = false;
             yield break;
         }
 
@@ -94,8 +106,13 @@ public class NPCBimbingan : MonoBehaviour
             if (spriteDuduk != null)
             {
                 if (animator != null) animator.enabled = false;  // supaya sprite duduk tidak tertimpa animasi
+                spriteAwal = sr.sprite;
+                skalaAwal = sr.transform.localScale;
+                spriteDidiganti = true;
                 sr.sprite = spriteDuduk;
+                sr.transform.localScale = sr.transform.localScale * skalaSaatDuduk;
             }
+            sortingAwal = sr.sortingOrder;
             sr.sortingOrder = sortingOrderDuduk;
         }
 
@@ -104,6 +121,9 @@ public class NPCBimbingan : MonoBehaviour
         // Dialog langsung muncul setelah mahasiswa duduk
         if (boxDialog != null) boxDialog.SetActive(true);
         saatMahasiswaDuduk.Invoke();
+
+        // Kalau tidak ada dialog yang terhubung, jangan kunci player selamanya
+        if (saatMahasiswaDuduk.GetPersistentEventCount() == 0) KunciPlayer = false;
 
         sudahTerjadi = true;
         sedangBerjalan = false;
@@ -129,6 +149,40 @@ public class NPCBimbingan : MonoBehaviour
         }
 
         mahasiswa.transform.position = tujuan;
+    }
+
+    // Mahasiswa bangun dari kursi lalu berjalan keluar lewat jalur (urutan terbalik), lalu menghilang.
+    // Dipanggil dari DialogBimbingan setelah poin masuk.
+    public IEnumerator ProsesKeluar()
+    {
+        if (mahasiswa == null) yield break;
+
+        SpriteRenderer sr = mahasiswa.GetComponentInChildren<SpriteRenderer>();
+
+        // Kembalikan tampilan berjalan (sprite, ukuran, layer)
+        if (sr != null && spriteDidiganti)
+        {
+            sr.sprite = spriteAwal;
+            sr.transform.localScale = skalaAwal;
+            sr.sortingOrder = sortingAwal;
+        }
+
+        if (animator != null) animator.enabled = true;
+        SetAnimasiJalan(true);
+
+        if (jalur != null)
+        {
+            for (int i = jalur.Length - 1; i >= 0; i--)
+            {
+                if (jalur[i] == null) continue;
+                yield return JalanKe(jalur[i].position, sr);
+            }
+        }
+
+        SetAnimasiJalan(false);
+        mahasiswa.SetActive(false);
+
+        Debug.Log("[NPCBimbingan] Mahasiswa sudah keluar ruangan.");
     }
 
     private void SetAnimasiJalan(bool jalan)
