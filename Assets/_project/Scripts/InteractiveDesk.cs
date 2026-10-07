@@ -11,7 +11,10 @@ public class InteractiveDesk : MonoBehaviour
     public GameObject[] panahDimatikanSaatDuduk;
 
     [Header("Scene 3 - Bimbingan Mahasiswa")]
-    public NPCBimbingan bimbinganScript;   // Drag objek yang memasang NPCBimbingan (boleh kosong)   // Panah yang harus hilang tiap kali player duduk (mis. panahKeKursiDosen)
+    public NPCBimbingan bimbinganScript;   // Drag objek yang memasang NPCBimbingan (boleh kosong)
+
+    [Header("Scene 5 - Evaluasi Level 1")]
+    public NPCKaprodiEvaluasi evaluasiScript;   // Drag objek yang memasang NPCKaprodiEvaluasi (boleh kosong)   // Panah yang harus hilang tiap kali player duduk (mis. panahKeKursiDosen)
 
     [Header("Pengaturan Interaksi")]
     public KeyCode interactKey = KeyCode.E;
@@ -25,6 +28,12 @@ public class InteractiveDesk : MonoBehaviour
 
     private bool isPlayerNear = false;
     private bool isSitting = false;
+
+    // Dibaca script lain (mis. NPCDosenSenior) untuk tahu apakah player sedang duduk di kursi ini
+    public bool SedangDuduk { get { return isSitting; } }
+
+    // Diset script lain (mis. NPCKaprodiEvaluasi) untuk mengunci player di kursi selama adegan berlangsung
+    public bool TerkunciEksternal { get; set; }
     private bool hasSatOnce = false;
     private GameObject playerObj;
     private Sprite originalSprite; // Menyimpan sprite asli saat berdiri
@@ -60,7 +69,7 @@ public class InteractiveDesk : MonoBehaviour
     // True selama Scene 3 (mahasiswa berjalan + dialog) sedang berlangsung
     private bool BimbinganTerkunci()
     {
-        return bimbinganScript != null && bimbinganScript.KunciPlayer;
+        return TerkunciEksternal || (bimbinganScript != null && bimbinganScript.KunciPlayer);
     }
 
     private void OnTriggerEnter2D(Collider2D other)
@@ -97,6 +106,12 @@ public class InteractiveDesk : MonoBehaviour
         if (bimbinganScript != null)
         {
             bimbinganScript.CobaMulai();
+        }
+
+        // Scene 5: coba mulai evaluasi Kaprodi (hanya jalan kalau Scene 4 sudah selesai)
+        if (evaluasiScript != null)
+        {
+            evaluasiScript.CobaMulai();
         }
 
         // Onboarding / Kaprodi cuma jalan di interaksi pertama

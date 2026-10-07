@@ -1,5 +1,6 @@
 using System.Collections;
 using UnityEngine;
+using UnityEngine.Events;
 using UnityEngine.UI;
 using TMPro;
 
@@ -54,6 +55,9 @@ public class DialogBimbingan : MonoBehaviour
     [Header("Setelah Selesai")]
     public GameObject mahasiswa;             // dinonaktifkan setelah selesai (mahasiswa pergi)
     public float jedaSebelumPergi = 0.8f;
+
+    [Header("Langkah Berikutnya")]
+    public UnityEvent saatBimbinganSelesai;   // dipanggil setelah mahasiswa keluar (hubungkan ke NPCDosenSenior.MulaiMasuk)
 
     private bool sedangBerjalan = false;
     private bool sudahSelesai = false;
@@ -154,6 +158,8 @@ public class DialogBimbingan : MonoBehaviour
 
         sudahSelesai = true;
         sedangBerjalan = false;
+
+        saatBimbinganSelesai.Invoke();
     }
 
     private void TampilkanBaris(BarisDialog b)
