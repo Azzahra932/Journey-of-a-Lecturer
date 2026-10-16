@@ -42,6 +42,8 @@ public class DialogBimbingan : MonoBehaviour
     [Header("Hadiah Setelah Dialog Selesai")]
     public bool beriPoin = true;
     public int poinReward = 5;
+    public float biayaEnergi = 10f;          // energi yang berkurang setelah bimbingan selesai
+    public EnergyBar energyBar;              // kosong = dicari otomatis
 
     [Header("Bar Memberi Arahan (Opsional, default mati)")]
     public bool pakaiBarSetelahDialog = true;
@@ -65,6 +67,8 @@ public class DialogBimbingan : MonoBehaviour
     void Start()
     {
         SembunyikanSemua();
+
+        if (energyBar == null) energyBar = FindFirstObjectByType<EnergyBar>();
     }
 
     // Dipanggil dari NPCBimbingan.saatMahasiswaDuduk
@@ -141,6 +145,9 @@ public class DialogBimbingan : MonoBehaviour
             }
         }
 
+        // Energi berkurang setelah bimbingan selesai
+        if (energyBar != null) energyBar.DecreaseEnergy(biayaEnergi);
+
         // ---------- 4. Mahasiswa pergi, player bebas lagi ----------
         yield return new WaitForSeconds(jedaSebelumPergi);
 
@@ -158,6 +165,10 @@ public class DialogBimbingan : MonoBehaviour
 
         sudahSelesai = true;
         sedangBerjalan = false;
+
+        Debug.Log("[DialogBimbingan] Bimbingan selesai. Jumlah fungsi di 'Saat Bimbingan Selesai': " + saatBimbinganSelesai.GetPersistentEventCount());
+        // Cek energi habis (kalau habis: transisi hitam, player kembali ke titik awal)
+        if (energyBar != null) energyBar.CekEnergiHabis();
 
         saatBimbinganSelesai.Invoke();
     }

@@ -7330,6 +7330,7 @@ GameObject:
   - component: {fileID: 319163998}
   - component: {fileID: 319164000}
   - component: {fileID: 319163999}
+  - component: {fileID: 319164001}
   m_Layer: 5
   m_Name: EnergyBar
   m_TagString: Untagged
@@ -7405,6 +7406,9 @@ MonoBehaviour:
   maxEnergy: 100
   currentEnergy: 0
   drainRate: 0.6
+  transisi: {fileID: 1569655129}
+  isiPenuhSetelahTransisi: 1
+  pemicuOtomatis: 1
 --- !u!114 &319164000
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -7456,6 +7460,31 @@ MonoBehaviour:
   m_OnValueChanged:
     m_PersistentCalls:
       m_Calls: []
+--- !u!114 &319164001
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 319163997}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 0ff74798096b4c5468b476f4b0d22c42, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Assembly-CSharp::TransisiKembaliKeAwal
+  layarHitam: {fileID: 415006269}
+  playerBerjalan: {fileID: 796029501}
+  titikAwal: {fileID: 0}
+  kursiKelas: {fileID: 727798937}
+  kursiDosen: {fileID: 558640735}
+  durasiGelap: 0.6
+  durasiTahan: 0.8
+  durasiTerang: 0.6
+  pesanEnergiHabis: {fileID: 0}
+  saatTransisiSelesai:
+    m_PersistentCalls:
+      m_Calls: []
+  tombolTes: 0
 --- !u!1 &337914126
 GameObject:
   m_ObjectHideFlags: 0
@@ -7872,6 +7901,81 @@ MonoBehaviour:
   m_EditorClassIdentifier: Assembly-CSharp::NpcFloating
   speed: 4
   height: 0.03
+--- !u!1 &415006266
+GameObject:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  serializedVersion: 6
+  m_Component:
+  - component: {fileID: 415006267}
+  - component: {fileID: 415006268}
+  - component: {fileID: 415006269}
+  m_Layer: 5
+  m_Name: transisienergy
+  m_TagString: Untagged
+  m_Icon: {fileID: 0}
+  m_NavMeshLayer: 0
+  m_StaticEditorFlags: 0
+  m_IsActive: 1
+--- !u!224 &415006267
+RectTransform:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 415006266}
+  m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
+  m_LocalPosition: {x: 0, y: 0, z: 0}
+  m_LocalScale: {x: 1, y: 1, z: 1}
+  m_ConstrainProportionsScale: 0
+  m_Children: []
+  m_Father: {fileID: 1684132957}
+  m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
+  m_AnchorMin: {x: 0, y: 0}
+  m_AnchorMax: {x: 1, y: 1}
+  m_AnchoredPosition: {x: 0, y: 0}
+  m_SizeDelta: {x: 0, y: 0}
+  m_Pivot: {x: 0.5, y: 0.5}
+--- !u!222 &415006268
+CanvasRenderer:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 415006266}
+  m_CullTransparentMesh: 1
+--- !u!114 &415006269
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 415006266}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: fe87c0e1cc204ed48ad3b37840f39efc, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: UnityEngine.UI::UnityEngine.UI.Image
+  m_Material: {fileID: 0}
+  m_Color: {r: 0.07924521, g: 0.025567792, b: 0.025567792, a: 1}
+  m_RaycastTarget: 0
+  m_RaycastPadding: {x: 0, y: 0, z: 0, w: 0}
+  m_Maskable: 1
+  m_OnCullStateChanged:
+    m_PersistentCalls:
+      m_Calls: []
+  m_Sprite: {fileID: 0}
+  m_Type: 0
+  m_PreserveAspect: 0
+  m_FillCenter: 1
+  m_FillMethod: 4
+  m_FillAmount: 1
+  m_FillClockwise: 1
+  m_FillOrigin: 0
+  m_UseSpriteMesh: 0
+  m_PixelsPerUnitMultiplier: 1
 --- !u!1 &415746855
 GameObject:
   m_ObjectHideFlags: 0
@@ -7997,8 +8101,8 @@ RectTransform:
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
   m_AnchorMin: {x: 0.5, y: 0.5}
   m_AnchorMax: {x: 0.5, y: 0.5}
-  m_AnchoredPosition: {x: -849, y: 483}
-  m_SizeDelta: {x: 187.671, y: 108.5513}
+  m_AnchoredPosition: {x: -842.5742, y: 484.7}
+  m_SizeDelta: {x: 63.4175, y: 64.132}
   m_Pivot: {x: 0.5, y: 0.5}
 --- !u!114 &480481377
 MonoBehaviour:
@@ -8020,7 +8124,7 @@ MonoBehaviour:
   m_OnCullStateChanged:
     m_PersistentCalls:
       m_Calls: []
-  m_Sprite: {fileID: 21300000, guid: 7e371f83754472c44ba59b7bc4a93466, type: 3}
+  m_Sprite: {fileID: 21300000, guid: c6b954ad58bf48c408f8f49bb0cb4e3a, type: 3}
   m_Type: 0
   m_PreserveAspect: 0
   m_FillCenter: 1
@@ -10085,6 +10189,81 @@ CanvasRenderer:
   m_PrefabAsset: {fileID: 0}
   m_GameObject: {fileID: 735138146}
   m_CullTransparentMesh: 1
+--- !u!1 &745028937
+GameObject:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  serializedVersion: 6
+  m_Component:
+  - component: {fileID: 745028938}
+  - component: {fileID: 745028940}
+  - component: {fileID: 745028939}
+  m_Layer: 5
+  m_Name: tutbox
+  m_TagString: Untagged
+  m_Icon: {fileID: 0}
+  m_NavMeshLayer: 0
+  m_StaticEditorFlags: 0
+  m_IsActive: 1
+--- !u!224 &745028938
+RectTransform:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 745028937}
+  m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
+  m_LocalPosition: {x: 0, y: 0, z: 0}
+  m_LocalScale: {x: 1, y: 1, z: 1}
+  m_ConstrainProportionsScale: 0
+  m_Children: []
+  m_Father: {fileID: 1151619931}
+  m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
+  m_AnchorMin: {x: 0.5, y: 0.5}
+  m_AnchorMax: {x: 0.5, y: 0.5}
+  m_AnchoredPosition: {x: -39.676, y: -11.5}
+  m_SizeDelta: {x: 1521.9397, y: 380.0579}
+  m_Pivot: {x: 0.47393078, y: 0.4697412}
+--- !u!114 &745028939
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 745028937}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: fe87c0e1cc204ed48ad3b37840f39efc, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: UnityEngine.UI::UnityEngine.UI.Image
+  m_Material: {fileID: 0}
+  m_Color: {r: 1, g: 1, b: 1, a: 1}
+  m_RaycastTarget: 1
+  m_RaycastPadding: {x: 0, y: 0, z: 0, w: 0}
+  m_Maskable: 1
+  m_OnCullStateChanged:
+    m_PersistentCalls:
+      m_Calls: []
+  m_Sprite: {fileID: 21300000, guid: 94b654af1fbc0714a8570cd337ce9e95, type: 3}
+  m_Type: 0
+  m_PreserveAspect: 0
+  m_FillCenter: 1
+  m_FillMethod: 4
+  m_FillAmount: 1
+  m_FillClockwise: 1
+  m_FillOrigin: 0
+  m_UseSpriteMesh: 0
+  m_PixelsPerUnitMultiplier: 1
+--- !u!222 &745028940
+CanvasRenderer:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 745028937}
+  m_CullTransparentMesh: 1
 --- !u!1 &792113930
 GameObject:
   m_ObjectHideFlags: 0
@@ -10746,6 +10925,8 @@ MonoBehaviour:
   jedaTekanPertama: 0.3
   beriPoin: 1
   poinReward: 5
+  biayaEnergi: 10
+  energyBar: {fileID: 0}
   pakaiBarSetelahDialog: 1
   butuhTekanTombol: 0
   tombolAksi: 102
@@ -12447,7 +12628,7 @@ GameObject:
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
   m_StaticEditorFlags: 0
-  m_IsActive: 1
+  m_IsActive: 0
 --- !u!224 &1130147963
 RectTransform:
   m_ObjectHideFlags: 0
@@ -12505,6 +12686,157 @@ CanvasRenderer:
   m_PrefabInstance: {fileID: 0}
   m_PrefabAsset: {fileID: 0}
   m_GameObject: {fileID: 1130147962}
+  m_CullTransparentMesh: 1
+--- !u!1 &1140240202
+GameObject:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  serializedVersion: 6
+  m_Component:
+  - component: {fileID: 1140240203}
+  - component: {fileID: 1140240205}
+  - component: {fileID: 1140240204}
+  m_Layer: 5
+  m_Name: tutbox
+  m_TagString: Untagged
+  m_Icon: {fileID: 0}
+  m_NavMeshLayer: 0
+  m_StaticEditorFlags: 0
+  m_IsActive: 1
+--- !u!224 &1140240203
+RectTransform:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1140240202}
+  m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
+  m_LocalPosition: {x: 0, y: 0, z: 0}
+  m_LocalScale: {x: 1, y: 1, z: 1}
+  m_ConstrainProportionsScale: 0
+  m_Children: []
+  m_Father: {fileID: 1953657803}
+  m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
+  m_AnchorMin: {x: 0.5, y: 0.5}
+  m_AnchorMax: {x: 0.5, y: 0.5}
+  m_AnchoredPosition: {x: -39.676, y: -11.5}
+  m_SizeDelta: {x: 1521.9397, y: 380.0579}
+  m_Pivot: {x: 0.47393078, y: 0.4697412}
+--- !u!114 &1140240204
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1140240202}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: fe87c0e1cc204ed48ad3b37840f39efc, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: UnityEngine.UI::UnityEngine.UI.Image
+  m_Material: {fileID: 0}
+  m_Color: {r: 1, g: 1, b: 1, a: 1}
+  m_RaycastTarget: 1
+  m_RaycastPadding: {x: 0, y: 0, z: 0, w: 0}
+  m_Maskable: 1
+  m_OnCullStateChanged:
+    m_PersistentCalls:
+      m_Calls: []
+  m_Sprite: {fileID: 21300000, guid: 270323ea39ec7af4cabe116ebcf8f74e, type: 3}
+  m_Type: 0
+  m_PreserveAspect: 0
+  m_FillCenter: 1
+  m_FillMethod: 4
+  m_FillAmount: 1
+  m_FillClockwise: 1
+  m_FillOrigin: 0
+  m_UseSpriteMesh: 0
+  m_PixelsPerUnitMultiplier: 1
+--- !u!222 &1140240205
+CanvasRenderer:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1140240202}
+  m_CullTransparentMesh: 1
+--- !u!1 &1151619930
+GameObject:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  serializedVersion: 6
+  m_Component:
+  - component: {fileID: 1151619931}
+  - component: {fileID: 1151619933}
+  - component: {fileID: 1151619932}
+  m_Layer: 5
+  m_Name: tutorialbimbingan
+  m_TagString: Untagged
+  m_Icon: {fileID: 0}
+  m_NavMeshLayer: 0
+  m_StaticEditorFlags: 0
+  m_IsActive: 0
+--- !u!224 &1151619931
+RectTransform:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1151619930}
+  m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
+  m_LocalPosition: {x: 0, y: 0, z: 0}
+  m_LocalScale: {x: 1, y: 1, z: 1}
+  m_ConstrainProportionsScale: 0
+  m_Children:
+  - {fileID: 745028938}
+  m_Father: {fileID: 1684132957}
+  m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
+  m_AnchorMin: {x: 0, y: 0}
+  m_AnchorMax: {x: 1, y: 1}
+  m_AnchoredPosition: {x: 3.3848877, y: -1.128418}
+  m_SizeDelta: {x: 42.8761, y: 42.8761}
+  m_Pivot: {x: 0.5, y: 0.5}
+--- !u!114 &1151619932
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1151619930}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: fe87c0e1cc204ed48ad3b37840f39efc, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: UnityEngine.UI::UnityEngine.UI.Image
+  m_Material: {fileID: 0}
+  m_Color: {r: 0, g: 0, b: 0, a: 0.65882355}
+  m_RaycastTarget: 1
+  m_RaycastPadding: {x: 0, y: 0, z: 0, w: 0}
+  m_Maskable: 1
+  m_OnCullStateChanged:
+    m_PersistentCalls:
+      m_Calls: []
+  m_Sprite: {fileID: 10907, guid: 0000000000000000f000000000000000, type: 0}
+  m_Type: 1
+  m_PreserveAspect: 0
+  m_FillCenter: 1
+  m_FillMethod: 4
+  m_FillAmount: 1
+  m_FillClockwise: 1
+  m_FillOrigin: 0
+  m_UseSpriteMesh: 0
+  m_PixelsPerUnitMultiplier: 1
+--- !u!222 &1151619933
+CanvasRenderer:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1151619930}
   m_CullTransparentMesh: 1
 --- !u!1 &1167778728
 GameObject:
@@ -13948,6 +14280,8 @@ MonoBehaviour:
   workDuration: 3
   interactionDistance: 1.2
   scoreReward: 15
+  biayaEnergi: 15
+  energyBar: {fileID: 0}
   interactionPoint: {fileID: 0}
   playerTransform: {fileID: 796029505}
   isDialogDone: 1
@@ -13956,6 +14290,10 @@ MonoBehaviour:
   petunjukTekanE: {fileID: 1121371826}
   panahKeKelas: {fileID: 1246672391}
   choiceHandler: {fileID: 533134092}
+  overlayHitam: {fileID: 1953657802}
+  boxHasil: {fileID: 1140240202}
+  tombolTutupBox: 32
+  bolehKlikMouse: 0
 --- !u!61 &1372169989
 BoxCollider2D:
   m_ObjectHideFlags: 0
@@ -14561,12 +14899,20 @@ MonoBehaviour:
   teksIstirahat: {fileID: 1453854351}
   lamaTeksIstirahat: 12
   panahKeRuangDosen: {fileID: 118157954}
+  overlayHitam: {fileID: 1151619930}
+  boxTutorial: {fileID: 745028937}
+  kursiKelas: {fileID: 727798937}
+  tombolTutupBox: 32
+  bolehKlikMouse: 0
+  hanyaPertamaKali: 1
   spriteLaptop: {fileID: 0}
   warnaNormal: {r: 1, g: 1, b: 1, a: 1}
   warnaCooldown: {r: 0.55, g: 0.55, b: 0.55, a: 1}
   durasiKerja: 3
   durasiCooldown: 60
   jumlahPoinReward: 10
+  biayaEnergi: 20
+  energyBar: {fileID: 0}
   tombolInteraksi: 101
   playerTransform: {fileID: 636042726}
   wajibDuduk: 1
@@ -15568,6 +15914,63 @@ CanvasRenderer:
   m_PrefabAsset: {fileID: 0}
   m_GameObject: {fileID: 1496478391}
   m_CullTransparentMesh: 1
+--- !u!1 &1569655128
+GameObject:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  serializedVersion: 6
+  m_Component:
+  - component: {fileID: 1569655130}
+  - component: {fileID: 1569655129}
+  m_Layer: 0
+  m_Name: ManagerTransisi
+  m_TagString: Untagged
+  m_Icon: {fileID: 0}
+  m_NavMeshLayer: 0
+  m_StaticEditorFlags: 0
+  m_IsActive: 1
+--- !u!114 &1569655129
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1569655128}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 0ff74798096b4c5468b476f4b0d22c42, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Assembly-CSharp::TransisiKembaliKeAwal
+  layarHitam: {fileID: 415006269}
+  playerBerjalan: {fileID: 796029501}
+  titikAwal: {fileID: 0}
+  kursiKelas: {fileID: 727798937}
+  kursiDosen: {fileID: 558640735}
+  durasiGelap: 0.6
+  durasiTahan: 0.8
+  durasiTerang: 0.6
+  pesanEnergiHabis: {fileID: 0}
+  saatTransisiSelesai:
+    m_PersistentCalls:
+      m_Calls: []
+  tombolTes: 116
+--- !u!4 &1569655130
+Transform:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1569655128}
+  serializedVersion: 2
+  m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
+  m_LocalPosition: {x: 895.5744, y: 588.2517, z: 0}
+  m_LocalScale: {x: 1, y: 1, z: 1}
+  m_ConstrainProportionsScale: 0
+  m_Children: []
+  m_Father: {fileID: 0}
+  m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
 --- !u!1 &1569748333
 GameObject:
   m_ObjectHideFlags: 0
@@ -16367,6 +16770,9 @@ RectTransform:
   - {fileID: 868028794}
   - {fileID: 640287011}
   - {fileID: 1130147963}
+  - {fileID: 1953657803}
+  - {fileID: 1151619931}
+  - {fileID: 415006267}
   m_Father: {fileID: 0}
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
   m_AnchorMin: {x: 0, y: 0}
@@ -16868,7 +17274,7 @@ MonoBehaviour:
   target: {fileID: 796029505}
   smoothSpeed: 5
   offset: {x: 0, y: 0, z: -10}
-  useBounds: 1
+  useBounds: 0
   minX: -5
   maxX: 20.5
   minY: -10
@@ -18900,6 +19306,82 @@ CanvasRenderer:
   m_PrefabAsset: {fileID: 0}
   m_GameObject: {fileID: 1936660776}
   m_CullTransparentMesh: 1
+--- !u!1 &1953657802
+GameObject:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  serializedVersion: 6
+  m_Component:
+  - component: {fileID: 1953657803}
+  - component: {fileID: 1953657805}
+  - component: {fileID: 1953657804}
+  m_Layer: 5
+  m_Name: tutorialkeruangkls
+  m_TagString: Untagged
+  m_Icon: {fileID: 0}
+  m_NavMeshLayer: 0
+  m_StaticEditorFlags: 0
+  m_IsActive: 0
+--- !u!224 &1953657803
+RectTransform:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1953657802}
+  m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
+  m_LocalPosition: {x: 0, y: 0, z: 0}
+  m_LocalScale: {x: 1, y: 1, z: 1}
+  m_ConstrainProportionsScale: 0
+  m_Children:
+  - {fileID: 1140240203}
+  m_Father: {fileID: 1684132957}
+  m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
+  m_AnchorMin: {x: 0, y: 0}
+  m_AnchorMax: {x: 1, y: 1}
+  m_AnchoredPosition: {x: 3.3848877, y: -1.128418}
+  m_SizeDelta: {x: 42.8761, y: 42.8761}
+  m_Pivot: {x: 0.5, y: 0.5}
+--- !u!114 &1953657804
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1953657802}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: fe87c0e1cc204ed48ad3b37840f39efc, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: UnityEngine.UI::UnityEngine.UI.Image
+  m_Material: {fileID: 0}
+  m_Color: {r: 0, g: 0, b: 0, a: 0.65882355}
+  m_RaycastTarget: 1
+  m_RaycastPadding: {x: 0, y: 0, z: 0, w: 0}
+  m_Maskable: 1
+  m_OnCullStateChanged:
+    m_PersistentCalls:
+      m_Calls: []
+  m_Sprite: {fileID: 10907, guid: 0000000000000000f000000000000000, type: 0}
+  m_Type: 1
+  m_PreserveAspect: 0
+  m_FillCenter: 1
+  m_FillMethod: 4
+  m_FillAmount: 1
+  m_FillClockwise: 1
+  m_FillOrigin: 0
+  m_UseSpriteMesh: 0
+  m_PixelsPerUnitMultiplier: 1
+--- !u!222 &1953657805
+CanvasRenderer:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1953657802}
+  m_CullTransparentMesh: 1
 --- !u!1 &1953680072
 GameObject:
   m_ObjectHideFlags: 0
@@ -20158,3 +20640,4 @@ SceneRoots:
   - {fileID: 31818946}
   - {fileID: 1869263298}
   - {fileID: 1713759867}
+  - {fileID: 1569655130}

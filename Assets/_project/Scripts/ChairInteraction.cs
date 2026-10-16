@@ -20,6 +20,9 @@ public class ChairInteraction : MonoBehaviour
     private bool playerIsClose = false;
     private bool isSitting = false;
     private bool sedangBerdiri = false;
+
+    // Diset script lain (mis. LaptopKelas) untuk mengunci player di kursi selama box tutorial tampil
+    public bool TerkunciEksternal { get; set; }
     private bool sudahPernahDialog = false;   // true setelah dialog muncul di duduk pertama
     private float waktuDuduk = 0f;
 
@@ -48,7 +51,7 @@ public class ChairInteraction : MonoBehaviour
         }
 
         // Berdiri
-        if (isSitting && !sedangBerdiri && TombolGerakDitekan())
+        if (isSitting && !sedangBerdiri && !TerkunciEksternal && TombolGerakDitekan())
         {
             if (Time.time - waktuDuduk < jedaSetelahDuduk) return;
 
@@ -120,6 +123,24 @@ public class ChairInteraction : MonoBehaviour
         Debug.Log("Player berdiri dari kursi kelas.");
 
         yield return new WaitForSeconds(0.2f);
+        sedangBerdiri = false;
+    }
+
+    // Dipanggil TransisiKembaliKeAwal: berdiri langsung (tanpa jeda) lalu player dipindah ke titik awal
+    public void PaksaBerdiriSegera()
+    {
+        if (!isSitting) return;
+
+        if (lecturerSitting != null) lecturerSitting.SetActive(false);
+        if (playerCharacter != null)
+        {
+            playerCharacter.SetActive(true);
+
+            PlayerMovement pm = playerCharacter.GetComponent<PlayerMovement>();
+            if (pm != null) pm.Berdiri();
+        }
+
+        isSitting = false;
         sedangBerdiri = false;
     }
 

@@ -9,6 +9,8 @@ public class LaptopInteraction : MonoBehaviour
     public float workDuration = 3.0f;           // (Default cadangan jika dipanggil langsung)
     public float interactionDistance = 1.2f;    // Jarak jangkauan interaksi (meter)
     public int scoreReward = 15;                // Poin hadiah setelah selesai (+15)
+    public float biayaEnergi = 15f;             // TAMBAHAN BARU: energi yang berkurang setelah tugas RPS selesai
+    public EnergyBar energyBar;                 // TAMBAHAN BARU: kosong = dicari otomatis
 
     [Header("Titik Acuan Jarak (Opsional)")]
     public Transform interactionPoint;          // Drag objek "TitikInteraksi" ke sini (opsional)
@@ -28,6 +30,14 @@ public class LaptopInteraction : MonoBehaviour
     [Header("Referensi Pilihan Laptop (Baru)")]
     public LaptopChoiceHandler choiceHandler;   // Drag objek LaptopChoiceManager ke sini
 
+    // ===== TAMBAHAN BARU: Box Hasil + Overlay Hitam (muncul setelah bar bulat selesai) =====
+    [Header("Box Hasil + Overlay Hitam (Setelah Bar Selesai)")]
+    public GameObject overlayHitam;             // Panel hitam transparan satu layar (di belakang box). Kosong = tanpa overlay
+    public GameObject boxHasil;                 // Box buatanmu (gambar + teks sudah jadi). Kosong = tanpa box
+    public KeyCode tombolTutupBox = KeyCode.Space;    // Space untuk menutup box
+    public bool bolehKlikMouse = true;                // Klik kiri mouse juga bisa menutup box
+    // ======================================================================================
+
     private bool isWorking = false;
     private bool isCompleted = false;
 
@@ -37,6 +47,13 @@ public class LaptopInteraction : MonoBehaviour
         if (progressBarCanvas != null) progressBarCanvas.SetActive(false);
         if (petunjukTekanE != null) petunjukTekanE.SetActive(false);
         if (panahKeKelas != null) panahKeKelas.SetActive(false);
+
+        // TAMBAHAN BARU: cari EnergyBar otomatis
+        if (energyBar == null) energyBar = FindFirstObjectByType<EnergyBar>();
+
+        // TAMBAHAN BARU: sembunyikan overlay dan box hasil di awal game
+        if (overlayHitam != null) overlayHitam.SetActive(false);
+        if (boxHasil != null) boxHasil.SetActive(false);
 
         // Jika interactionPoint kosong, gunakan posisi objek Laptop ini sendiri
         if (interactionPoint == null)
@@ -156,6 +173,16 @@ public class LaptopInteraction : MonoBehaviour
             Debug.LogWarning("[Laptop Scene 1] ScoreManager.Instance tidak ditemukan di Scene!");
         }
 
+        // TAMBAHAN BARU: tampilkan box hasil dengan overlay hitam, tunggu pemain menutupnya
+        yield return StartCoroutine(TampilkanBoxHasil());
+
+        // TAMBAHAN BARU: energi berkurang setelah tugas selesai, lalu cek apakah habis
+        if (energyBar != null)
+        {
+            energyBar.DecreaseEnergy(biayaEnergi);
+            energyBar.CekEnergiHabis();
+        }
+
         isWorking = false;
         isCompleted = true;
 
@@ -164,4 +191,48 @@ public class LaptopInteraction : MonoBehaviour
             panahKeKelas.SetActive(true);
         }
     }
+
+    // ===== TAMBAHAN BARU: fungsi box hasil + overlay hitam =====
+    private IEnumerator TampilkanBoxHasil()
+    {
+        // Kalau overlay dan box sama-sama kosong, langkah ini dilewati (alur tetap seperti semula)
+        if (overlayHitam == null && boxHasil == null) yield break;
+
+        KunciPlayer(true);
+
+        // Urutan penting: overlay dulu, baru box (box harus tampil di atas overlay)
+        if (overlayHitam != null) overlayHitam.SetActive(true);
+        if (boxHasil != null) boxHasil.SetActive(true);
+
+        // Jeda singkat supaya tombol yang sedang ditekan tidak langsung menutup box
+        yield return new WaitForSeconds(0.3f);
+
+        while (!(Input.GetKeyDown(tombolTutupBox) || (bolehKlikMouse && Input.GetMouseButtonDown(0))))
+            yield return null;
+
+        if (boxHasil != null) boxHasil.SetActive(false);
+        if (overlayHitam != null) overlayHitam.SetActive(false);
+
+        KunciPlayer(false);
+    }
+
+    // Menahan pergerakan player selama box tampil
+    private void KunciPlayer(bool kunci)
+    {
+        PlayerMovement pm = null;
+
+        if (playerTransform != null) pm = playerTransform.GetComponent<PlayerMovement>();
+        if (pm == null) pm = FindObjectOfType<PlayerMovement>();
+        if (pm == null) return;
+
+        if (kunci && pm.animator != null)
+        {
+            pm.animator.SetBool("IsMoving", false);
+            pm.animator.SetFloat("MoveX", 0f);
+            pm.animator.SetFloat("MoveY", 0f);
+        }
+
+        pm.enabled = !kunci;
+    }
+    // ============================================================
 }

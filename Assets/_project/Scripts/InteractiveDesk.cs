@@ -72,6 +72,12 @@ public class InteractiveDesk : MonoBehaviour
         return TerkunciEksternal || (bimbinganScript != null && bimbinganScript.KunciPlayer);
     }
 
+    // Dipanggil TransisiKembaliKeAwal: kalau player sedang duduk, paksa berdiri (sprite, animator, collider dipulihkan)
+    public void PaksaBerdiri()
+    {
+        if (isSitting) StandUp();
+    }
+
     private void OnTriggerEnter2D(Collider2D other)
     {
         if (other.CompareTag("Player"))

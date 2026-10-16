@@ -1,4 +1,5 @@
 using UnityEngine;
+using System.Collections;
 using UnityEngine.UI;
 using TMPro;
 
@@ -19,6 +20,17 @@ public class LaptopKelas : MonoBehaviour
     [Header("Petunjuk Arah Setelah Dapat Poin")]
     public GameObject panahKeRuangDosen;   // panah penunjuk jalan ke ruang dosen, muncul setelah dapat poin
 
+    [Header("Box Tutorial + Overlay Hitam (Muncul Setelah Bar Bulat Selesai)")]
+    public GameObject overlayHitam;          // Panel hitam transparan satu layar (di belakang box). Kosong = tanpa overlay
+    public GameObject boxTutorial;           // Box tutorial buatanmu (gambar + teks sudah jadi). Kosong = tanpa box
+    public ChairInteraction kursiKelas;      // Kursi kelas: dikunci supaya player tidak bisa berdiri selama box tampil
+    public KeyCode tombolTutupBox = KeyCode.Space;
+    public bool bolehKlikMouse = true;
+    public bool hanyaPertamaKali = true;     // true = tutorial hanya muncul saat mengajar pertama kali
+
+    private bool tutorialSudahTampil = false;
+    private bool sedangTutorial = false;   // true selama box tutorial tampil (cek energi menunggu sampai box ditutup)
+
     [Header("Efek Layar Laptop")]
     public SpriteRenderer spriteLaptop;    // kosong = ambil dari objek ini
     public Color warnaNormal = Color.white;
@@ -28,6 +40,8 @@ public class LaptopKelas : MonoBehaviour
     public float durasiKerja = 3f;         // detik bar kerja terisi
     public float durasiCooldown = 60f;     // detik laptop istirahat
     public int jumlahPoinReward = 10;
+    public float biayaEnergi = 20f;        // energi yang berkurang tiap selesai mengajar
+    public EnergyBar energyBar;            // kosong = dicari otomatis
     public KeyCode tombolInteraksi = KeyCode.E;
 
     [Header("Syarat Player")]
@@ -63,8 +77,11 @@ public class LaptopKelas : MonoBehaviour
         if (teksCountdown != null) teksCountdown.gameObject.SetActive(false);
         if (teksIstirahat != null) teksIstirahat.SetActive(false);
         if (panahKeRuangDosen != null) panahKeRuangDosen.SetActive(false);
+        if (overlayHitam != null) overlayHitam.SetActive(false);
+        if (boxTutorial != null) boxTutorial.SetActive(false);
 
         if (interactionPoint == null) interactionPoint = transform;
+        if (energyBar == null) energyBar = FindFirstObjectByType<EnergyBar>();
         if (spriteLaptop == null) spriteLaptop = GetComponent<SpriteRenderer>();
         if (spriteLaptop != null) spriteLaptop.color = warnaNormal;
 
@@ -218,10 +235,28 @@ public class LaptopKelas : MonoBehaviour
 
         SudahMengajar = true;
 
+        // Energi berkurang setelah mengajar
+        if (energyBar != null) energyBar.DecreaseEnergy(biayaEnergi);
+
         // Munculkan panah penunjuk arah ke ruang dosen
-        if (panahKeRuangDosen != null) panahKeRuangDosen.SetActive(true);
+        // Box tutorial + overlay hitam (panah menyala setelah box ditutup)
+        bool tampilkanTutorial = (overlayHitam != null || boxTutorial != null)
+                                 && (!tutorialSudahTampil || !hanyaPertamaKali);
+
+        if (tampilkanTutorial)
+        {
+            tutorialSudahTampil = true;
+            StartCoroutine(TampilkanTutorial());
+        }
+        else if (panahKeRuangDosen != null)
+        {
+            panahKeRuangDosen.SetActive(true);
+        }
 
         MulaiCooldown();
+
+        // Cek energi habis (menunggu box tutorial ditutup kalau sedang tampil)
+        StartCoroutine(CekEnergiHabisSetelahSelesai());
     }
 
     void MulaiCooldown()
@@ -235,6 +270,41 @@ public class LaptopKelas : MonoBehaviour
         if (ikonBateraiLemah != null) ikonBateraiLemah.SetActive(true);
         if (teksCountdown != null) teksCountdown.gameObject.SetActive(true);
         if (indikatorBaterai != null) indikatorBaterai.SetProgress(0f);
+    }
+
+    // Overlay hitam + box tutorial. Ditutup dengan Space (atau klik). Setelah itu panah ke ruang dosen menyala.
+    private IEnumerator TampilkanTutorial()
+    {
+        sedangTutorial = true;
+        if (kursiKelas != null) kursiKelas.TerkunciEksternal = true;
+
+        // Urutan penting: overlay dulu, baru box (box harus tampil di atas overlay)
+        if (overlayHitam != null) overlayHitam.SetActive(true);
+        if (boxTutorial != null) boxTutorial.SetActive(true);
+
+        // Jeda singkat supaya tombol yang sedang ditekan tidak langsung menutup box
+        yield return new WaitForSeconds(0.3f);
+
+        while (!(Input.GetKeyDown(tombolTutupBox) || (bolehKlikMouse && Input.GetMouseButtonDown(0))))
+            yield return null;
+
+        if (boxTutorial != null) boxTutorial.SetActive(false);
+        if (overlayHitam != null) overlayHitam.SetActive(false);
+
+        if (kursiKelas != null) kursiKelas.TerkunciEksternal = false;
+        sedangTutorial = false;
+
+        if (panahKeRuangDosen != null) panahKeRuangDosen.SetActive(true);
+    }
+
+    // Menunggu box tutorial ditutup, lalu cek apakah energi habis (kalau habis: transisi hitam)
+    private IEnumerator CekEnergiHabisSetelahSelesai()
+    {
+        while (sedangTutorial) yield return null;
+
+        yield return new WaitForSeconds(0.3f);
+
+        if (energyBar != null) energyBar.CekEnergiHabis();
     }
 
     void SelesaiCooldown()

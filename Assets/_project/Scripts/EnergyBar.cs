@@ -14,6 +14,13 @@ public class EnergyBar : MonoBehaviour
     [Header("Passive Drain Rate")]
     public float drainRate = 0.01f;
 
+    // ===== TAMBAHAN BARU: Energi habis -> transisi hitam -> kembali ke titik awal =====
+    [Header("Energi Habis (Transisi Kembali ke Awal)")]
+    public TransisiKembaliKeAwal transisi;      // drag objek ManagerTransisi (kosong = dicari otomatis)
+    public bool isiPenuhSetelahTransisi = true; // energi terisi penuh setelah transisi selesai
+    public bool pemicuOtomatis = true;          // transisi langsung jalan begitu energi 0 (tanpa jeda)
+    // ===================================================================================
+
     // Status apakah pengurangan energi sedang di-pause
     private bool isPaused = false;
 
@@ -21,6 +28,13 @@ public class EnergyBar : MonoBehaviour
     {
         currentEnergy = maxEnergy;
         SetMaxEnergy(maxEnergy);
+
+        // TAMBAHAN BARU: sambungkan ke transisi
+        if (transisi == null) transisi = FindFirstObjectByType<TransisiKembaliKeAwal>();
+        if (transisi != null && isiPenuhSetelahTransisi)
+        {
+            transisi.saatTransisiSelesai.AddListener(IsiPenuh);
+        }
     }
 
     private void Update()
@@ -32,6 +46,17 @@ public class EnergyBar : MonoBehaviour
             currentEnergy = Mathf.Clamp(currentEnergy, 0f, maxEnergy);
             UpdateBarVisual();
         }
+    }
+
+    // TAMBAHAN BARU: pemicu otomatis. Begitu energi 0 (dari sebab apa pun), transisi langsung jalan.
+    private void LateUpdate()
+    {
+        if (!pemicuOtomatis || !isiPenuhSetelahTransisi) return;
+        if (currentEnergy > 0.01f) return;
+        if (transisi == null || transisi.SedangTransisi) return;
+
+        Debug.Log("[EnergyBar] Energi 0, transisi langsung dimulai.");
+        transisi.MulaiTransisi();
     }
 
     // Fungsi untuk mem-pause atau me-resume pengurangan energi
@@ -66,5 +91,30 @@ public class EnergyBar : MonoBehaviour
     {
         slider.value = currentEnergy;
         fillImage.color = colorGradient.Evaluate(slider.normalizedValue);
+    }
+
+    // ===== TAMBAHAN BARU =====
+
+    // Dipanggil script aktivitas SETELAH aktivitasnya selesai.
+    // Kalau energi sudah habis, jalankan transisi hitam dan kembalikan player ke titik awal.
+    public void CekEnergiHabis()
+    {
+        Debug.Log("[EnergyBar] CekEnergiHabis dipanggil. Energi sekarang = " + currentEnergy);
+
+        if (currentEnergy > 0.01f) return;
+
+        if (transisi == null)
+        {
+            Debug.LogWarning("[EnergyBar] Energi habis, tapi TransisiKembaliKeAwal belum ditemukan di scene!");
+            return;
+        }
+
+        transisi.MulaiTransisi();
+    }
+
+    // Isi energi sampai penuh (dipanggil otomatis setelah transisi selesai)
+    public void IsiPenuh()
+    {
+        RestoreEnergy(maxEnergy);
     }
 }
