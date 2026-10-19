@@ -20,6 +20,11 @@ public class NPCBimbingan : MonoBehaviour
     public Transform titikDuduk;             // posisi mahasiswa saat duduk (kursi depan meja dosen)
     public float kecepatan = 2.5f;
 
+    [Header("Pengaturan Lokasi Baru (mis. Research Center)")]
+    public bool kunciGerakPlayer = true;          // player tidak bisa jalan selama adegan
+    public bool berhentiDiDekatPlayer = false;    // true = mahasiswa berhenti di dekat posisi player, bukan di Titik Duduk
+    public Vector2 offsetDariPlayer = new Vector2(-1f, 0f);   // jarak berhenti dari player (negatif X = di kiri player)
+
     [Header("Tampilan Saat Duduk (Opsional)")]
     public Sprite spriteDuduk;               // kosong = sprite tidak diganti
     public int sortingOrderDuduk = 2;
@@ -38,7 +43,34 @@ public class NPCBimbingan : MonoBehaviour
     private bool sedangBerjalan = false;
 
     // True selama bimbingan berlangsung (jalan + dialog): player tidak bisa berdiri dari kursi
-    public bool KunciPlayer { get; set; } = false;
+    private bool kunciPlayer = false;
+    public bool KunciPlayer
+    {
+        get { return kunciPlayer; }
+        set
+        {
+            kunciPlayer = value;
+            TerapkanKunciGerak(value);
+        }
+    }
+
+    // Menahan gerak player selama adegan (dipakai kalau adegan terjadi saat player berdiri, mis. di Research Center)
+    private void TerapkanKunciGerak(bool kunci)
+    {
+        if (!kunciGerakPlayer) return;
+
+        PlayerMovement pm = FindFirstObjectByType<PlayerMovement>();
+        if (pm == null) return;
+
+        if (kunci && pm.animator != null)
+        {
+            pm.animator.SetBool("IsMoving", false);
+            pm.animator.SetFloat("MoveX", 0f);
+            pm.animator.SetFloat("MoveY", 0f);
+        }
+
+        pm.enabled = !kunci;
+    }
 
     // Tampilan awal mahasiswa (disimpan sebelum diganti sprite duduk, dipakai saat keluar)
     private Sprite spriteAwal;
@@ -95,7 +127,12 @@ public class NPCBimbingan : MonoBehaviour
             }
         }
 
-        if (titikDuduk != null)
+        if (berhentiDiDekatPlayer)
+        {
+            PlayerMovement pmDekat = FindFirstObjectByType<PlayerMovement>();
+            if (pmDekat != null) yield return JalanKe(pmDekat.transform.position + (Vector3)offsetDariPlayer, sr);
+        }
+        else if (titikDuduk != null)
             yield return JalanKe(titikDuduk.position, sr);
 
         // Sampai: duduk

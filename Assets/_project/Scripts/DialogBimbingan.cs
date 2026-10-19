@@ -54,12 +54,15 @@ public class DialogBimbingan : MonoBehaviour
     public Image fillBar;
     public float durasiBar = 3f;
 
+    [Header("Tutorial Setelah Bimbingan (Baru)")]
+    public TutorialManager tutorialManager;  // <--- Drag TutorialManager ke sini via Inspector
+
     [Header("Setelah Selesai")]
     public GameObject mahasiswa;             // dinonaktifkan setelah selesai (mahasiswa pergi)
     public float jedaSebelumPergi = 0.8f;
 
     [Header("Langkah Berikutnya")]
-    public UnityEvent saatBimbinganSelesai;   // dipanggil setelah mahasiswa keluar (hubungkan ke NPCDosenSenior.MulaiMasuk)
+    public UnityEvent saatBimbinganSelesai;    // dipanggil setelah mahasiswa keluar (hubungkan ke NPCDosenSenior.MulaiMasuk)
 
     private bool sedangBerjalan = false;
     private bool sudahSelesai = false;
@@ -69,6 +72,9 @@ public class DialogBimbingan : MonoBehaviour
         SembunyikanSemua();
 
         if (energyBar == null) energyBar = FindFirstObjectByType<EnergyBar>();
+
+        // Cari TutorialManager otomatis jika belum di-drag di Inspector
+        if (tutorialManager == null) tutorialManager = FindFirstObjectByType<TutorialManager>();
     }
 
     // Dipanggil dari NPCBimbingan.saatMahasiswaDuduk
@@ -131,7 +137,7 @@ public class DialogBimbingan : MonoBehaviour
             if (canvasBar != null) canvasBar.SetActive(false);
         }
 
-        // ---------- 3. Poin ----------
+        // ---------- 3. Poin & Energi ----------
         if (beriPoin)
         {
             if (ScoreManager.Instance != null)
@@ -148,7 +154,14 @@ public class DialogBimbingan : MonoBehaviour
         // Energi berkurang setelah bimbingan selesai
         if (energyBar != null) energyBar.DecreaseEnergy(biayaEnergi);
 
-        // ---------- 4. Mahasiswa pergi, player bebas lagi ----------
+        // ---------- 4. MUNCULKAN TUTORIAL KHUSUS BIMBINGAN DI SINI ----------
+        if (tutorialManager != null)
+        {
+            Debug.Log("[DialogBimbingan] Memanggil StartBimbinganTutorial()");
+            tutorialManager.StartBimbinganTutorial();
+        }
+
+        // ---------- 5. Mahasiswa pergi, player bebas lagi ----------
         yield return new WaitForSeconds(jedaSebelumPergi);
 
         NPCBimbingan np = GetComponent<NPCBimbingan>();
@@ -167,7 +180,8 @@ public class DialogBimbingan : MonoBehaviour
         sedangBerjalan = false;
 
         Debug.Log("[DialogBimbingan] Bimbingan selesai. Jumlah fungsi di 'Saat Bimbingan Selesai': " + saatBimbinganSelesai.GetPersistentEventCount());
-        // Cek energi habis (kalau habis: transisi hitam, player kembali ke titik awal)
+
+        // Cek energi habis
         if (energyBar != null) energyBar.CekEnergiHabis();
 
         saatBimbinganSelesai.Invoke();
@@ -200,7 +214,7 @@ public class DialogBimbingan : MonoBehaviour
     private void SembunyikanSemua()
     {
         SembunyikanBox();
-        if (promptTombol != null) promptTombol.SetActive(false);
         if (canvasBar != null) canvasBar.SetActive(false);
+        if (promptTombol != null) promptTombol.SetActive(false);
     }
 }

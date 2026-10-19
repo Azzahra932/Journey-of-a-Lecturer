@@ -16,17 +16,21 @@ public class TutorialManager : MonoBehaviour
         public Vector2 sizeDelta; // Ukuran Width dan Height untuk langkah ini
     }
 
-    [Header("Daftar Step Tutorial")]
+    [Header("Daftar Step Tutorial Awal")]
     public TutorialStep[] steps;
+
+    [Header("Daftar Step Tutorial Selesai Bimbingan")]
+    public TutorialStep[] bimbinganSteps; // Array khusus untuk tutorial bimbingan
 
     [Header("Pengaturan Player")]
     public PlayerMovement playerMovement;
 
+    private TutorialStep[] currentActiveSteps; // Menyimpan daftar step yang sedang aktif
     private int currentIndex = 0;
 
     void Start()
     {
-        StartTutorial();
+        StartTutorial(); // Otomatis jalankan tutorial awal saat game mulai
     }
 
     void Update()
@@ -40,9 +44,33 @@ public class TutorialManager : MonoBehaviour
         }
     }
 
+    // Fungsi untuk memanggil Tutorial Awal Game
     public void StartTutorial()
     {
-        if (tutorialPanel != null && steps.Length > 0)
+        if (steps != null && steps.Length > 0)
+        {
+            currentActiveSteps = steps;
+            ShowTutorial();
+        }
+    }
+
+    // Fungsi untuk memanggil Tutorial Selesai Bimbingan
+    public void StartBimbinganTutorial()
+    {
+        if (bimbinganSteps != null && bimbinganSteps.Length > 0)
+        {
+            currentActiveSteps = bimbinganSteps;
+            ShowTutorial();
+        }
+        else
+        {
+            Debug.LogWarning("[TutorialManager] Array 'bimbinganSteps' masih kosong di Inspector!");
+        }
+    }
+
+    void ShowTutorial()
+    {
+        if (tutorialPanel != null)
         {
             tutorialPanel.SetActive(true);
             currentIndex = 0;
@@ -55,9 +83,9 @@ public class TutorialManager : MonoBehaviour
 
     void ApplyStep(int index)
     {
-        if (index < steps.Length)
+        if (currentActiveSteps != null && index < currentActiveSteps.Length)
         {
-            TutorialStep currentStep = steps[index];
+            TutorialStep currentStep = currentActiveSteps[index];
 
             // Ganti gambar
             if (tutorialDisplayImage != null && currentStep.tutorialSprite != null)
@@ -78,7 +106,7 @@ public class TutorialManager : MonoBehaviour
     {
         currentIndex++;
 
-        if (currentIndex < steps.Length)
+        if (currentActiveSteps != null && currentIndex < currentActiveSteps.Length)
         {
             ApplyStep(currentIndex);
         }
