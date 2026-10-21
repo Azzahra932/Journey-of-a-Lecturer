@@ -19,6 +19,10 @@ public class InteractiveDesk : MonoBehaviour
     [Header("Pengaturan Interaksi")]
     public KeyCode interactKey = KeyCode.E;
 
+    [Header("Posisi Saat Berdiri")]
+    public Vector2 offsetBerdiri = new Vector2(0f, -0.6f);   // geser dari kursi saat berdiri (default sama seperti sebelumnya: ke bawah)
+    public Transform titikBerdiri;                            // Opsional: kalau diisi, player berdiri TEPAT di titik ini (mengabaikan offset)
+
     [Header("Pengaturan Sorting Layer Player")]
     public int defaultSortingOrder = 3; // Order sprite saat berdiri/jalan
     public int sittingSortingOrder = 2; // Order sprite saat duduk (di belakang meja)
@@ -179,7 +183,14 @@ public class InteractiveDesk : MonoBehaviour
         if (playerObj != null)
         {
             // 1. Geser sedikit ke bawah saat berdiri agar tidak tersangkut di collider kursi
-            playerObj.transform.position += new Vector3(0, -0.6f, 0);
+            if (titikBerdiri != null)
+            {
+                playerObj.transform.position = new Vector3(titikBerdiri.position.x, titikBerdiri.position.y, playerObj.transform.position.z);
+            }
+            else
+            {
+                playerObj.transform.position += (Vector3)offsetBerdiri;
+            }
 
             // 2. Kembalikan Sprite & Order in Layer ke semula
             SpriteRenderer playerSr = playerObj.GetComponent<SpriteRenderer>();

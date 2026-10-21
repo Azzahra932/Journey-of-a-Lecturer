@@ -1,6 +1,7 @@
 using System.Collections;
 using UnityEngine;
 using UnityEngine.UI;
+using TMPro;
 
 public class LaptopInteraction : MonoBehaviour
 {
@@ -9,8 +10,8 @@ public class LaptopInteraction : MonoBehaviour
     public float workDuration = 3.0f;           // (Default cadangan jika dipanggil langsung)
     public float interactionDistance = 1.2f;    // Jarak jangkauan interaksi (meter)
     public int scoreReward = 15;                // Poin hadiah setelah selesai (+15)
-    public float biayaEnergi = 15f;             // TAMBAHAN BARU: energi yang berkurang setelah tugas RPS selesai
-    public EnergyBar energyBar;                 // TAMBAHAN BARU: kosong = dicari otomatis
+    public float biayaEnergi = 15f;             // Energi yang berkurang setelah tugas RPS selesai
+    public EnergyBar energyBar;                 // Kosong = dicari otomatis
 
     [Header("Titik Acuan Jarak (Opsional)")]
     public Transform interactionPoint;          // Drag objek "TitikInteraksi" ke sini (opsional)
@@ -30,13 +31,30 @@ public class LaptopInteraction : MonoBehaviour
     [Header("Referensi Pilihan Laptop (Baru)")]
     public LaptopChoiceHandler choiceHandler;   // Drag objek LaptopChoiceManager ke sini
 
-    // ===== TAMBAHAN BARU: Box Hasil + Overlay Hitam (muncul setelah bar bulat selesai) =====
+    [Header("Aktivitas Berulang (Setelah Scene 5)")]
+    public float durasiCooldown = 60f;           // Jeda (detik) sebelum RPS bisa dikerjakan lagi
+    public GameObject teksLaptopIstirahat;       // Teks "Laptop sedang istirahat" saat E ditekan selama cooldown (opsional)
+    public float lamaTeksIstirahat = 1.5f;
+
+    [Header("Cooldown Baterai (Seperti Laptop Kelas, Opsional)")]
+    public GameObject ikonBateraiLemah;          // Objek induk baterai, muncul saat cooldown
+    public IndikatorBaterai indikatorBaterai;    // Script pengisi segmen baterai (belum dihubungkan di kode ini)
+    public TMP_Text teksCountdown;               // Teks di dekat baterai (contoh "Recharging..."), opsional
+    public string isiTeksCooldown = "Recharging...";   // Tulisan yang tampil selama cooldown
+    public SpriteRenderer spriteLaptop;          // Kosong = ambil dari objek ini
+    public Color warnaNormal = Color.white;
+    public Color warnaCooldown = new Color(0.45f, 0.45f, 0.45f, 1f);   // Layar redup
+
     [Header("Box Hasil + Overlay Hitam (Setelah Bar Selesai)")]
     public GameObject overlayHitam;             // Panel hitam transparan satu layar (di belakang box). Kosong = tanpa overlay
     public GameObject boxHasil;                 // Box buatanmu (gambar + teks sudah jadi). Kosong = tanpa box
     public KeyCode tombolTutupBox = KeyCode.Space;    // Space untuk menutup box
     public bool bolehKlikMouse = true;                // Klik kiri mouse juga bisa menutup box
-    // ======================================================================================
+
+    private bool modeBerulang = false;           // True setelah Scene 5 (RPS bisa diulang dengan cooldown)
+    private float cooldownSelesaiPada = 0f;
+    private float teksSembunyiPada = 0f;
+    private bool cooldownAktif = false;          // True selama tampilan cooldown (baterai) menyala
 
     private bool isWorking = false;
     private bool isCompleted = false;
@@ -48,10 +66,19 @@ public class LaptopInteraction : MonoBehaviour
         if (petunjukTekanE != null) petunjukTekanE.SetActive(false);
         if (panahKeKelas != null) panahKeKelas.SetActive(false);
 
-        // TAMBAHAN BARU: cari EnergyBar otomatis
+        // Sembunyikan teks istirahat laptop
+        if (teksLaptopIstirahat != null) teksLaptopIstirahat.SetActive(false);
+
+        // Sembunyikan tampilan baterai cooldown
+        if (ikonBateraiLemah != null) ikonBateraiLemah.SetActive(false);
+        if (teksCountdown != null) teksCountdown.gameObject.SetActive(false);
+        if (spriteLaptop == null) spriteLaptop = GetComponent<SpriteRenderer>();
+        if (spriteLaptop != null) spriteLaptop.color = warnaNormal;
+
+        // Cari EnergyBar otomatis
         if (energyBar == null) energyBar = FindFirstObjectByType<EnergyBar>();
 
-        // TAMBAHAN BARU: sembunyikan overlay dan box hasil di awal game
+        // Sembunyikan overlay dan box hasil di awal game
         if (overlayHitam != null) overlayHitam.SetActive(false);
         if (boxHasil != null) boxHasil.SetActive(false);
 
@@ -79,13 +106,44 @@ public class LaptopInteraction : MonoBehaviour
         // Cari otomatis LaptopChoiceHandler jika belum didrag di Inspector
         if (choiceHandler == null)
         {
-            choiceHandler = FindObjectOfType<LaptopChoiceHandler>();
+            choiceHandler = FindFirstObjectByType<LaptopChoiceHandler>();
         }
     }
 
     void Update()
     {
+        // Teks istirahat hilang otomatis
+        if (teksLaptopIstirahat != null && teksLaptopIstirahat.activeSelf && Time.time >= teksSembunyiPada)
+            teksLaptopIstirahat.SetActive(false);
+
         if (isCompleted || isWorking || playerTransform == null) return;
+
+        // Cooldown selesai -> baterai hilang, layar laptop terang lagi
+        if (cooldownAktif && Time.time >= cooldownSelesaiPada) SelesaiTampilanCooldown();
+
+        // Hitung mundur selama cooldown
+        if (cooldownAktif)
+        {
+            float sisa = Mathf.Max(0f, cooldownSelesaiPada - Time.time);
+
+            // Segmen baterai terisi bertahap: 0 (kosong) -> 1 (penuh)
+            if (indikatorBaterai != null && durasiCooldown > 0f)
+                indikatorBaterai.SetProgress(1f - (sisa / durasiCooldown));
+        }
+
+        // Selama cooldown (mode berulang), E tidak membuka pilihan
+        if (Time.time < cooldownSelesaiPada)
+        {
+            if (petunjukTekanE != null) petunjukTekanE.SetActive(false);
+
+            float jarakCooldown = Vector2.Distance(interactionPoint.position, playerTransform.position);
+            if (jarakCooldown <= interactionDistance && Input.GetKeyDown(interactKey) && teksLaptopIstirahat != null)
+            {
+                teksLaptopIstirahat.SetActive(true);
+                teksSembunyiPada = Time.time + lamaTeksIstirahat;
+            }
+            return;
+        }
 
         float distance = Vector2.Distance(interactionPoint.position, playerTransform.position);
 
@@ -97,7 +155,7 @@ public class LaptopInteraction : MonoBehaviour
             {
                 if (petunjukTekanE != null) petunjukTekanE.SetActive(false);
 
-                // MURNI MEMBUKA PILIHAN BOX SAJA (Tidak ada progress bar otomatis saat tekan E)
+                // Murni membuka pilihan box saja (tidak ada progress bar otomatis saat tekan E)
                 if (choiceHandler != null)
                 {
                     choiceHandler.OpenChoices();
@@ -166,17 +224,17 @@ public class LaptopInteraction : MonoBehaviour
         if (ScoreManager.Instance != null)
         {
             ScoreManager.Instance.AddScore(scoreReward);
-            Debug.Log($"[Laptop Scene 1] Tugas RPS Selesai! Skor bertambah +{scoreReward}");
+            Debug.Log($"[Laptop] Tugas RPS Selesai! Skor bertambah +{scoreReward}");
         }
         else
         {
-            Debug.LogWarning("[Laptop Scene 1] ScoreManager.Instance tidak ditemukan di Scene!");
+            Debug.LogWarning("[Laptop] ScoreManager.Instance tidak ditemukan di Scene!");
         }
 
-        // TAMBAHAN BARU: tampilkan box hasil dengan overlay hitam, tunggu pemain menutupnya
+        // Tampilkan box hasil dengan overlay hitam, tunggu pemain menutupnya
         yield return StartCoroutine(TampilkanBoxHasil());
 
-        // TAMBAHAN BARU: energi berkurang setelah tugas selesai, lalu cek apakah habis
+        // Energi berkurang setelah tugas selesai, lalu cek apakah habis
         if (energyBar != null)
         {
             energyBar.DecreaseEnergy(biayaEnergi);
@@ -186,13 +244,53 @@ public class LaptopInteraction : MonoBehaviour
         isWorking = false;
         isCompleted = true;
 
+        // Mode berulang (setelah Scene 5): tidak terkunci permanen, tapi cooldown dulu
+        if (modeBerulang)
+        {
+            isCompleted = false;
+            cooldownSelesaiPada = Time.time + durasiCooldown;
+
+            // Tampilkan baterai + redupkan layar laptop
+            cooldownAktif = true;
+            if (indikatorBaterai != null) indikatorBaterai.SetProgress(0f);
+            if (ikonBateraiLemah != null) ikonBateraiLemah.SetActive(true);
+            if (teksCountdown != null)
+            {
+                teksCountdown.text = isiTeksCooldown;
+                teksCountdown.gameObject.SetActive(true);
+            }
+            if (spriteLaptop != null) spriteLaptop.color = warnaCooldown;
+        }
+
         if (panahKeKelas != null && !PintuKelasTrigger.sudahPernahKeKelas)
         {
             panahKeKelas.SetActive(true);
         }
     }
 
-    // ===== TAMBAHAN BARU: fungsi box hasil + overlay hitam =====
+    // Dipanggil setelah Scene 5 selesai (lewat UnityEvent "Saat Dialog Selesai")
+    // RPS di laptop dosen bisa dikerjakan lagi, dengan cooldown antar pengerjaan
+    public void BukaAktivitasBerulang()
+    {
+        modeBerulang = true;
+        isCompleted = false;
+        isDialogDone = true;
+        cooldownSelesaiPada = 0f;
+
+        Debug.Log("[Laptop] Aktivitas RPS terbuka untuk dikerjakan berulang.");
+    }
+
+    // Dipanggil saat cooldown selesai: baterai hilang, layar laptop terang lagi
+    private void SelesaiTampilanCooldown()
+    {
+        cooldownAktif = false;
+
+        if (ikonBateraiLemah != null) ikonBateraiLemah.SetActive(false);
+        if (teksCountdown != null) teksCountdown.gameObject.SetActive(false);
+        if (spriteLaptop != null) spriteLaptop.color = warnaNormal;
+    }
+
+    // Box hasil + overlay hitam
     private IEnumerator TampilkanBoxHasil()
     {
         // Kalau overlay dan box sama-sama kosong, langkah ini dilewati (alur tetap seperti semula)
@@ -222,7 +320,7 @@ public class LaptopInteraction : MonoBehaviour
         PlayerMovement pm = null;
 
         if (playerTransform != null) pm = playerTransform.GetComponent<PlayerMovement>();
-        if (pm == null) pm = FindObjectOfType<PlayerMovement>();
+        if (pm == null) pm = FindFirstObjectByType<PlayerMovement>();
         if (pm == null) return;
 
         if (kunci && pm.animator != null)
@@ -234,5 +332,4 @@ public class LaptopInteraction : MonoBehaviour
 
         pm.enabled = !kunci;
     }
-    // ============================================================
 }

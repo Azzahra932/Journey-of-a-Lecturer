@@ -22,6 +22,12 @@ public class TutorialManager : MonoBehaviour
     [Header("Daftar Step Tutorial Selesai Bimbingan")]
     public TutorialStep[] bimbinganSteps; // Array khusus untuk tutorial bimbingan
 
+    [Header("Daftar Step Tutorial Selesai Dosen Senior")]
+    public TutorialStep[] dosenSeniorSteps; // Array khusus untuk tutorial dosen senior
+
+    [Header("Daftar Step Tutorial Selesai Kaprodi (Scene 5)")]
+    public TutorialStep[] kaprodiSteps; // Array khusus untuk tutorial kaprodi (3 box)
+
     [Header("Pengaturan Player")]
     public PlayerMovement playerMovement;
 
@@ -65,6 +71,34 @@ public class TutorialManager : MonoBehaviour
         else
         {
             Debug.LogWarning("[TutorialManager] Array 'bimbinganSteps' masih kosong di Inspector!");
+        }
+    }
+
+    // Fungsi untuk memanggil Tutorial Selesai Dosen Senior
+    public void StartDosenSeniorTutorial()
+    {
+        if (dosenSeniorSteps != null && dosenSeniorSteps.Length > 0)
+        {
+            currentActiveSteps = dosenSeniorSteps;
+            ShowTutorial();
+        }
+        else
+        {
+            Debug.LogWarning("[TutorialManager] Array 'dosenSeniorSteps' masih kosong di Inspector!");
+        }
+    }
+
+    // Fungsi untuk memanggil Tutorial Selesai Kaprodi (Scene 5)
+    public void StartKaprodiTutorial()
+    {
+        if (kaprodiSteps != null && kaprodiSteps.Length > 0)
+        {
+            currentActiveSteps = kaprodiSteps;
+            ShowTutorial();
+        }
+        else
+        {
+            Debug.LogWarning("[TutorialManager] Array 'kaprodiSteps' masih kosong di Inspector!");
         }
     }
 

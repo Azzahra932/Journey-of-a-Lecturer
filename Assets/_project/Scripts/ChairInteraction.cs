@@ -13,6 +13,7 @@ public class ChairInteraction : MonoBehaviour
     public GameObject dialogueBoxUI;      // Box Teks / Dialogue Manager
 
     [Header("Pengaturan Berdiri")]
+    public Transform titikBerdiri;                        // Opsional: kalau diisi, player berdiri TEPAT di titik ini (mengabaikan Offset Berdiri)
     public Vector2 offsetBerdiri = new Vector2(0f, -1f);  // Posisi player saat berdiri, relatif dari Tpngajar
     public bool blokirBerdiriSaatDialog = false;          // true = tidak bisa berdiri selama dialogueBoxUI aktif
     public float jedaSetelahDuduk = 0.3f;                 // Cegah langsung berdiri tepat setelah duduk
@@ -106,7 +107,14 @@ public class ChairInteraction : MonoBehaviour
         if (playerCharacter != null && lecturerSitting != null)
         {
             // Posisikan player berdiri di dekat kursi
-            playerCharacter.transform.position = lecturerSitting.transform.position + (Vector3)offsetBerdiri;
+            if (titikBerdiri != null)
+            {
+                playerCharacter.transform.position = new Vector3(titikBerdiri.position.x, titikBerdiri.position.y, playerCharacter.transform.position.z);
+            }
+            else
+            {
+                playerCharacter.transform.position = lecturerSitting.transform.position + (Vector3)offsetBerdiri;
+            }
         }
 
         if (lecturerSitting != null) lecturerSitting.SetActive(false);
