@@ -2,67 +2,58 @@ using System.Collections;
 using UnityEngine;
 using UnityEngine.Events;
 using UnityEngine.UI;
-using TMPro;
 
-/// <summary>
-/// Scene 3 - Dialog Bimbingan (2 box: Mahasiswa & Pemain).
-/// Dialog muncul OTOMATIS begitu mahasiswa duduk, lanjut dengan Space, selesai setelah baris terakhir.
-/// Pasang di objek yang sama dengan NPCBimbingan (ManagerBimbingan).
-/// Hubungkan lewat NPCBimbingan > Saat Mahasiswa Duduk () > DialogBimbingan.Mulai
-/// </summary>
 public class DialogBimbingan : MonoBehaviour
 {
     [System.Serializable]
     public class BarisDialog
     {
         public bool pembicaraMahasiswa = true;   // true = box mahasiswa, false = box pemain
-        [TextArea(2, 4)] public string teks;
     }
 
-    [Header("Box Dialog Mahasiswa")]
+    [Header("Box Dialog Mahasiswa (Gambar saja)")]
     public GameObject boxMahasiswa;
-    public TMP_Text teksMahasiswa;
 
-    [Header("Box Dialog Pemain")]
+    [Header("Box Dialog Pemain (Gambar saja)")]
     public GameObject boxPemain;
-    public TMP_Text teksPemain;
 
-    [Header("Isi Dialog (urut dari atas)")]
+    [Header("Urutan Tampilan Box (sesuai jumlah baris percakapan)")]
     public BarisDialog[] baris = new BarisDialog[]
     {
-        new BarisDialog { pembicaraMahasiswa = true,  teks = "Permisi, Pak/Bu. Saya ingin meminta arahan mengenai tugas kuliah saya." },
-        new BarisDialog { pembicaraMahasiswa = false, teks = "Tentu. Coba jelaskan bagian mana yang masih mengalami kesulitan." }
+        new BarisDialog { pembicaraMahasiswa = true  }, // Giliran 1: Mahasiswa bicara
+        new BarisDialog { pembicaraMahasiswa = false }  // Giliran 2: Pemain membalas
     };
 
     [Header("Lanjut Dialog")]
     public KeyCode tombolLanjut = KeyCode.Space;
     public bool bolehKlikMouse = true;
-    public float jedaTekanPertama = 0.3f;    // cegah Space yang masih "nyangkut" langsung melewati baris pertama
+    public float jedaTekanPertama = 0.3f;
 
     [Header("Hadiah Setelah Dialog Selesai")]
     public bool beriPoin = true;
     public int poinReward = 5;
-    public float biayaEnergi = 10f;          // energi yang berkurang setelah bimbingan selesai
-    public EnergyBar energyBar;              // kosong = dicari otomatis
+    public float biayaEnergi = 10f;
+    public EnergyBar energyBar;
+    public int indexReward = 2;
 
-    [Header("Bar Memberi Arahan (Opsional, default mati)")]
+    [Header("Bar Memberi Arahan (Opsional)")]
     public bool pakaiBarSetelahDialog = true;
-    public bool butuhTekanTombol = false;    // true = tekan tombol dulu baru bar jalan, false = bar langsung jalan otomatis
-    public KeyCode tombolAksi = KeyCode.F;   // jangan E (dipakai laptop dosen)
+    public bool butuhTekanTombol = false;
+    public KeyCode tombolAksi = KeyCode.F;
     public GameObject promptTombol;
     public GameObject canvasBar;
     public Image fillBar;
     public float durasiBar = 3f;
 
-    [Header("Tutorial Setelah Bimbingan (Baru)")]
-    public TutorialManager tutorialManager;  // <--- Drag TutorialManager ke sini via Inspector
+    [Header("Tutorial Setelah Bimbingan")]
+    public TutorialManager tutorialManager;
 
     [Header("Setelah Selesai")]
-    public GameObject mahasiswa;             // dinonaktifkan setelah selesai (mahasiswa pergi)
+    public GameObject mahasiswa;
     public float jedaSebelumPergi = 0.8f;
 
     [Header("Langkah Berikutnya")]
-    public UnityEvent saatBimbinganSelesai;    // dipanggil setelah mahasiswa keluar (hubungkan ke NPCDosenSenior.MulaiMasuk)
+    public UnityEvent saatBimbinganSelesai;
 
     private bool sedangBerjalan = false;
     private bool sudahSelesai = false;
@@ -72,16 +63,11 @@ public class DialogBimbingan : MonoBehaviour
         SembunyikanSemua();
 
         if (energyBar == null) energyBar = FindFirstObjectByType<EnergyBar>();
-
-        // Cari TutorialManager otomatis jika belum di-drag di Inspector
         if (tutorialManager == null) tutorialManager = FindFirstObjectByType<TutorialManager>();
     }
 
-    // Dipanggil dari NPCBimbingan.saatMahasiswaDuduk
     public void Mulai()
     {
-        Debug.Log("[DialogBimbingan] Mulai() dipanggil. sedangBerjalan=" + sedangBerjalan + ", sudahSelesai=" + sudahSelesai);
-
         if (sedangBerjalan || sudahSelesai) return;
         StartCoroutine(AlurBimbingan());
     }
@@ -95,7 +81,7 @@ public class DialogBimbingan : MonoBehaviour
     {
         sedangBerjalan = true;
 
-        // ---------- 1. Dialog (otomatis muncul, lanjut dengan Space) ----------
+        // ---------- 1. Menampilkan Box Bergantian ----------
         for (int i = 0; i < baris.Length; i++)
         {
             TampilkanBaris(baris[i]);
@@ -108,7 +94,7 @@ public class DialogBimbingan : MonoBehaviour
 
         SembunyikanBox();
 
-        // ---------- 2. (Opsional) bar memberi arahan ----------
+        // ---------- 2. Bar Memberi Arahan ----------
         if (pakaiBarSetelahDialog)
         {
             if (butuhTekanTombol)
@@ -138,36 +124,30 @@ public class DialogBimbingan : MonoBehaviour
         }
 
         // ---------- 3. Poin & Energi ----------
-        if (beriPoin)
+        if (beriPoin && ScoreManager.Instance != null)
         {
-            if (ScoreManager.Instance != null)
-            {
-                ScoreManager.Instance.AddScore(poinReward);
-                Debug.Log("[DialogBimbingan] Bimbingan selesai! Skor bertambah +" + poinReward);
-            }
-            else
-            {
-                Debug.LogWarning("[DialogBimbingan] ScoreManager.Instance tidak ditemukan di Scene ini!");
-            }
+            ScoreManager.Instance.AddScore(poinReward);
         }
 
-        // Energi berkurang setelah bimbingan selesai
         if (energyBar != null) energyBar.DecreaseEnergy(biayaEnergi);
 
-        // ---------- 4. MUNCULKAN TUTORIAL KHUSUS BIMBINGAN DI SINI ----------
+        if (indexReward >= 0 && RewardManager.Instance != null)
+        {
+            yield return StartCoroutine(RewardManager.Instance.RewardRoutine(indexReward));
+        }
+
+        // ---------- 4. Tutorial ----------
         if (tutorialManager != null)
         {
-            Debug.Log("[DialogBimbingan] Memanggil StartBimbinganTutorial()");
             tutorialManager.StartBimbinganTutorial();
         }
 
-        // ---------- 5. Mahasiswa pergi, player bebas lagi ----------
+        // ---------- 5. Mahasiswa Pergi ----------
         yield return new WaitForSeconds(jedaSebelumPergi);
 
         NPCBimbingan np = GetComponent<NPCBimbingan>();
         if (np != null)
         {
-            // Mahasiswa bangun dan berjalan keluar lewat jalur, lalu menghilang
             yield return StartCoroutine(np.ProsesKeluar());
             np.KunciPlayer = false;
         }
@@ -179,9 +159,6 @@ public class DialogBimbingan : MonoBehaviour
         sudahSelesai = true;
         sedangBerjalan = false;
 
-        Debug.Log("[DialogBimbingan] Bimbingan selesai. Jumlah fungsi di 'Saat Bimbingan Selesai': " + saatBimbinganSelesai.GetPersistentEventCount());
-
-        // Cek energi habis
         if (energyBar != null) energyBar.CekEnergiHabis();
 
         saatBimbinganSelesai.Invoke();
@@ -189,20 +166,11 @@ public class DialogBimbingan : MonoBehaviour
 
     private void TampilkanBaris(BarisDialog b)
     {
-        Debug.Log("[DialogBimbingan] Menampilkan baris (" + (b.pembicaraMahasiswa ? "mahasiswa" : "pemain") + "): " + b.teks);
+        bool mahasiswaBicara = b.pembicaraMahasiswa;
 
-        SembunyikanBox();
-
-        if (b.pembicaraMahasiswa)
-        {
-            if (boxMahasiswa != null) boxMahasiswa.SetActive(true);
-            if (teksMahasiswa != null) teksMahasiswa.text = b.teks;
-        }
-        else
-        {
-            if (boxPemain != null) boxPemain.SetActive(true);
-            if (teksPemain != null) teksPemain.text = b.teks;
-        }
+        // Hanya menyalakan/mematikan objek gambar box-nya saja
+        if (boxMahasiswa != null) boxMahasiswa.SetActive(mahasiswaBicara);
+        if (boxPemain != null) boxPemain.SetActive(!mahasiswaBicara);
     }
 
     private void SembunyikanBox()
@@ -214,7 +182,7 @@ public class DialogBimbingan : MonoBehaviour
     private void SembunyikanSemua()
     {
         SembunyikanBox();
-        if (canvasBar != null) canvasBar.SetActive(false);
         if (promptTombol != null) promptTombol.SetActive(false);
+        if (canvasBar != null) canvasBar.SetActive(false);
     }
 }

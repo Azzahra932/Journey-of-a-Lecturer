@@ -1,27 +1,23 @@
 using UnityEngine;
 using UnityEngine.UI;
-using TMPro;
 
 [System.Serializable]
 public class DialogueData
 {
-    [TextArea(2, 5)]
-    public string sentence;         // Teks kalimat dialog
-    public Sprite customBoxSprite;   // Sprite Box Dialog (Box Kaprodi / Box Pemain)
+    public Sprite customBoxSprite;   // Sprite Box Dialog (gambar box yang sudah berisi teks, contoh Box Kaprodi / Box Pemain)
 }
 
 public class DialogueManager : MonoBehaviour
 {
     [Header("UI Elements")]
     public GameObject dialogueBox;          // Panel Utama Dialog
-    public Image dialogueBoxImage;         // Component Image tempat gambar background box
-    public TextMeshProUGUI dialogueText;     // Component Teks (IsiDialog)
+    public Image dialogueBoxImage;          // Component Image tempat gambar box (gambar sudah berisi teks)
 
-    [Header("Daftar Dialog")]
-    public DialogueData[] dialogueLines;   // Array data dialog
+    [Header("Daftar Dialog (urut dari atas, satu sprite per baris)")]
+    public DialogueData[] dialogueLines;    // Array data dialog
 
     [Header("Referensi NPC Cutscene")]
-    public NPCCutscene kaprodiCutscene;    // Drag GameObject kapdiam ke sini
+    public NPCCutscene kaprodiCutscene;     // Drag GameObject kapdiam ke sini
 
     private int currentLineIndex = 0;
     private bool isDialogueActive = false;
@@ -63,13 +59,7 @@ public class DialogueManager : MonoBehaviour
 
         DialogueData currentData = dialogueLines[currentLineIndex];
 
-        // 1. Set Isi Teks
-        if (dialogueText != null)
-        {
-            dialogueText.text = currentData.sentence;
-        }
-
-        // 2. Ganti Sprite Box Dialog jika dimasukkan sprite khusus
+        // Ganti gambar box dialog sesuai baris. Kalau sprite baris ini kosong, gambar sebelumnya dipertahankan.
         if (dialogueBoxImage != null && currentData.customBoxSprite != null)
         {
             dialogueBoxImage.sprite = currentData.customBoxSprite;

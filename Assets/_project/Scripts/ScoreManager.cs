@@ -68,6 +68,17 @@ public class ScoreManager : MonoBehaviour
         if (scoreSlider != null)
         {
             scoreSlider.value = currentScore;
+
+            // PENGAMAN TAMBAHAN: Mencegah komponen Fill meregang/panjang melebihi bar saat nilainya berubah
+            RectTransform fillRect = scoreSlider.fillRect;
+            if (fillRect != null && scoreSlider.maxValue > 0f)
+            {
+                float persen = Mathf.Clamp01(currentScore / scoreSlider.maxValue);
+                fillRect.anchorMin = new Vector2(0, 0);
+                fillRect.anchorMax = new Vector2(persen, 1);
+                fillRect.offsetMin = new Vector2(0, 0); // Left, Bottom
+                fillRect.offsetMax = new Vector2(0, 0); // Right, Top
+            }
         }
 
         if (scoreText != null)

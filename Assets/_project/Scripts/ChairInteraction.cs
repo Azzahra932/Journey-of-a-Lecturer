@@ -12,6 +12,10 @@ public class ChairInteraction : MonoBehaviour
     public GameObject panahKeKursi;       // Panah kursi yang akan dimatikan
     public GameObject dialogueBoxUI;      // Box Teks / Dialogue Manager
 
+    [Header("Panah Hanya Untuk Scene 2")]
+    public bool panahHanyaSekali = true;            // true = setelah duduk pertama kali, panah tidak muncul lagi walau dinyalakan script lain
+    public GameObject[] panahLainDimatikan;         // Opsional: panah lain yang juga tidak boleh muncul lagi setelah duduk pertama kali
+
     [Header("Pengaturan Berdiri")]
     public Transform titikBerdiri;                        // Opsional: kalau diisi, player berdiri TEPAT di titik ini (mengabaikan Offset Berdiri)
     public Vector2 offsetBerdiri = new Vector2(0f, -1f);  // Posisi player saat berdiri, relatif dari Tpngajar
@@ -24,6 +28,10 @@ public class ChairInteraction : MonoBehaviour
 
     // Diset script lain (mis. LaptopKelas) untuk mengunci player di kursi selama box tutorial tampil
     public bool TerkunciEksternal { get; set; }
+
+    // True setelah player duduk di kursi ini untuk pertama kali (akhir Scene 2)
+    public bool SudahPernahDuduk { get; private set; }
+
     private bool sudahPernahDialog = false;   // true setelah dialog muncul di duduk pertama
     private float waktuDuduk = 0f;
 
@@ -62,6 +70,23 @@ public class ChairInteraction : MonoBehaviour
         }
     }
 
+    // LateUpdate jalan setelah semua Update: panah yang dinyalakan script lain langsung dimatikan lagi
+    // sebelum sempat tampil di layar.
+    void LateUpdate()
+    {
+        if (!panahHanyaSekali || !SudahPernahDuduk) return;
+
+        if (panahKeKursi != null && panahKeKursi.activeSelf) panahKeKursi.SetActive(false);
+
+        if (panahLainDimatikan != null)
+        {
+            foreach (GameObject p in panahLainDimatikan)
+            {
+                if (p != null && p.activeSelf) p.SetActive(false);
+            }
+        }
+    }
+
     // Berdiri kalau menekan WASD atau tombol panah
     bool TombolGerakDitekan()
     {
@@ -74,6 +99,7 @@ public class ChairInteraction : MonoBehaviour
     void DudukKeKursi()
     {
         isSitting = true;
+        SudahPernahDuduk = true;
         waktuDuduk = Time.time;
         if (promptUI != null) promptUI.SetActive(false);
 

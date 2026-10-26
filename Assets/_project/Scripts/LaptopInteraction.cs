@@ -51,6 +51,9 @@ public class LaptopInteraction : MonoBehaviour
     public KeyCode tombolTutupBox = KeyCode.Space;    // Space untuk menutup box
     public bool bolehKlikMouse = true;                // Klik kiri mouse juga bisa menutup box
 
+    [Header("Reward (Setelah Tugas Selesai)")]
+    public int indexReward = 0;                 // Nomor reward di RewardManager (0 = RPS). -1 = tanpa reward
+
     private bool modeBerulang = false;           // True setelah Scene 5 (RPS bisa diulang dengan cooldown)
     private float cooldownSelesaiPada = 0f;
     private float teksSembunyiPada = 0f;
@@ -58,6 +61,9 @@ public class LaptopInteraction : MonoBehaviour
 
     private bool isWorking = false;
     private bool isCompleted = false;
+
+    // True selama tugas RPS berjalan (sampai box hasil ditutup), dipakai pop-up level selesai
+    public bool SedangSibuk { get { return isWorking; } }
 
     void Start()
     {
@@ -231,8 +237,18 @@ public class LaptopInteraction : MonoBehaviour
             Debug.LogWarning("[Laptop] ScoreManager.Instance tidak ditemukan di Scene!");
         }
 
-        // Tampilkan box hasil dengan overlay hitam, tunggu pemain menutupnya
-        yield return StartCoroutine(TampilkanBoxHasil());
+        // Tampilkan box hasil dengan overlay hitam, tunggu pemain menutupnya.
+        // Hanya untuk pengerjaan pertama (Scene 1). Setelah Scene 5 (mode berulang) dilewati.
+        if (!modeBerulang)
+        {
+            yield return StartCoroutine(TampilkanBoxHasil());
+        }
+
+        // Reward muncul langsung setelah tugas selesai, alur menunggu box ditutup
+        if (indexReward >= 0 && RewardManager.Instance != null)
+        {
+            yield return StartCoroutine(RewardManager.Instance.RewardRoutine(indexReward));
+        }
 
         // Energi berkurang setelah tugas selesai, lalu cek apakah habis
         if (energyBar != null)
@@ -262,7 +278,7 @@ public class LaptopInteraction : MonoBehaviour
             if (spriteLaptop != null) spriteLaptop.color = warnaCooldown;
         }
 
-        if (panahKeKelas != null && !PintuKelasTrigger.sudahPernahKeKelas)
+        if (panahKeKelas != null && !modeBerulang && !PintuKelasTrigger.sudahPernahKeKelas)
         {
             panahKeKelas.SetActive(true);
         }

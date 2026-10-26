@@ -29,7 +29,7 @@ public class LaptopChoiceHandler : MonoBehaviour
         Debug.Log("Memilih: Menyusun materi secara mandiri (Jujur)");
 
 
-        SelesaikanPilihan(20.0f);
+        SelesaikanPilihan(10.0f);
     }
 
     public void ChooseAIOption()
@@ -46,7 +46,7 @@ public class LaptopChoiceHandler : MonoBehaviour
             Debug.LogWarning("[LaptopChoiceHandler] IntegritasManager.Instance tidak ditemukan di Scene!");
         }
 
-        SelesaikanPilihan(3.0f);
+        SelesaikanPilihan(5.0f);
     }
 
     void SelesaikanPilihan(float duration)

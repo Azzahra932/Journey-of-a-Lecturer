@@ -140,6 +140,8 @@ public class NPCKaprodiEvaluasi : MonoBehaviour
         {
             yield return new WaitForSeconds(jedaSebelumKeluar);
 
+            Debug.Log("[NPCKaprodiEvaluasi] Kaprodi mulai berjalan keluar lewat " + (jalurMasuk != null ? jalurMasuk.Length : 0) + " titik (urutan terbalik).");
+
             SetAnimasiJalan(true);
 
             if (jalurMasuk != null)
@@ -210,9 +212,9 @@ public class NPCKaprodiEvaluasi : MonoBehaviour
 
         foreach (AnimatorControllerParameter p in animator.parameters)
         {
-            if (p.name == parameterJalan && p.type == AnimatorControllerParameterType.Bool)
+            if ((p.name == parameterJalan || p.name == "isWalking") && p.type == AnimatorControllerParameterType.Bool)
             {
-                animator.SetBool(parameterJalan, jalan);
+                animator.SetBool(p.name, jalan);
                 return;
             }
         }

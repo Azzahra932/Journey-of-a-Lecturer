@@ -1,10 +1,9 @@
 using System.Collections;
 using UnityEngine;
 using UnityEngine.Events;
-using TMPro;
 
 /// <summary>
-/// Scene 4 - Pengembangan Kompetensi.
+/// Scene 4 - Pengembangan Kompetensi. Teks sudah ada di dalam box, jadi script ini hanya mengatur box mana yang tampil.
 /// Pasang di objek yang SELALU AKTIF (mis. empty object "ManagerDosenSenior").
 /// Alur:
 ///  1. MulaiMasuk() dipanggil (dari DialogBimbingan.saatBimbinganSelesai)
@@ -18,8 +17,8 @@ public class NPCDosenSenior : MonoBehaviour
     [System.Serializable]
     public class BarisDialog
     {
-        public bool pembicaraSenior = true;   // true = box dosen senior, false = box pemain
-        [TextArea(2, 4)] public string teks;
+        public bool pembicaraSenior = true;   // true = box dosen senior, false = box pemain (dipakai kalau "Box" di bawah kosong)
+        public GameObject box;                // Box khusus untuk baris ini (gambar + teks sudah jadi). Kosong = pakai Box Senior / Box Pemain
     }
 
     [Header("NPC Dosen Senior")]
@@ -32,6 +31,10 @@ public class NPCDosenSenior : MonoBehaviour
     public Animator animator;
     public string parameterJalan = "IsMoving";
 
+    [Header("Arah Hadap")]
+    public bool gambarMenghadapKiri = false;       // centang kalau gambar aslinya menghadap KIRI (arah hadap terbalik)
+    public bool hadapPlayerSaatBerhenti = true;    // saat berdiri dan saat dialog, dosen senior menghadap ke player
+
     [Header("Panah Penunjuk")]
     public GameObject panahKeDosenSenior;    // menyala saat dosen senior sudah berdiri, mati saat dialog mulai
     public GameObject panahKeLaptop;         // menyala setelah dialog selesai
@@ -40,19 +43,17 @@ public class NPCDosenSenior : MonoBehaviour
     public InteractiveDesk kursiDosen;       // objek kursi dosen: dialog baru mulai kalau player SUDAH BERDIRI
     public float jarakMulaiDialog = 1.5f;
 
-    [Header("Box Dialog")]
+    [Header("Box Cadangan (dipakai kalau baris tidak punya Box sendiri)")]
     public GameObject boxSenior;
-    public TMP_Text teksSenior;
     public GameObject boxPemain;
-    public TMP_Text teksPemain;
 
-    [Header("Isi Dialog (urut dari atas)")]
+    [Header("Urutan Dialog (Size = jumlah box yang tampil bergantian, isi Box di tiap baris)")]
     public BarisDialog[] baris = new BarisDialog[]
     {
-        new BarisDialog { pembicaraSenior = true,  teks = "Sebagai dosen baru, jangan berhenti belajar. Kompetensi harus terus dikembangkan." },
-        new BarisDialog { pembicaraSenior = false, teks = "Baik, Pak/Bu. Apa yang harus saya tingkatkan?" },
-        new BarisDialog { pembicaraSenior = true,  teks = "Perbanyak membaca referensi, mengikuti pelatihan, dan berdiskusi dengan dosen lain." },
-        new BarisDialog { pembicaraSenior = false, teks = "Saya akan mulai mengembangkan kemampuan saya." }
+        new BarisDialog { pembicaraSenior = true },
+        new BarisDialog { pembicaraSenior = false },
+        new BarisDialog { pembicaraSenior = true },
+        new BarisDialog { pembicaraSenior = false }
     };
 
     [Header("Lanjut Dialog")]
@@ -76,8 +77,7 @@ public class NPCDosenSenior : MonoBehaviour
     void Start()
     {
         if (dosenSenior != null) dosenSenior.SetActive(false);
-        if (boxSenior != null) boxSenior.SetActive(false);
-        if (boxPemain != null) boxPemain.SetActive(false);
+        SembunyikanBox();
         if (panahKeDosenSenior != null) panahKeDosenSenior.SetActive(false);
         if (panahKeLaptop != null) panahKeLaptop.SetActive(false);
 
@@ -147,6 +147,8 @@ public class NPCDosenSenior : MonoBehaviour
 
         SetAnimasiJalan(false);
 
+        HadapPlayer();
+
         if (panahKeDosenSenior != null) panahKeDosenSenior.SetActive(true);
 
         Debug.Log("[NPCDosenSenior] Dosen senior sudah berdiri, menunggu player mendekat.");
@@ -161,6 +163,7 @@ public class NPCDosenSenior : MonoBehaviour
         if (panahKeDosenSenior != null) panahKeDosenSenior.SetActive(false);
 
         KunciPlayer(true);
+        HadapPlayer();
 
         for (int i = 0; i < baris.Length; i++)
         {
@@ -209,6 +212,30 @@ public class NPCDosenSenior : MonoBehaviour
     }
 
     // ---------- Pembantu ----------
+
+    // Mengatur arah hadap sprite: arahX negatif = menghadap kiri, positif = menghadap kanan
+    private void HadapKe(SpriteRenderer sr, float arahX)
+    {
+        if (sr == null) return;
+
+        bool keKiri = arahX < 0f;
+        sr.flipX = gambarMenghadapKiri ? !keKiri : keKiri;
+    }
+
+    // Dosen senior menghadap ke arah player (kiri atau kanan)
+    private void HadapPlayer()
+    {
+        if (!hadapPlayerSaatBerhenti || dosenSenior == null) return;
+
+        if (playerMovement == null) playerMovement = FindFirstObjectByType<PlayerMovement>();
+        if (playerMovement == null) return;
+
+        SpriteRenderer sr = dosenSenior.GetComponentInChildren<SpriteRenderer>();
+        float selisihX = playerMovement.transform.position.x - dosenSenior.transform.position.x;
+
+        if (Mathf.Abs(selisihX) > 0.01f) HadapKe(sr, selisihX);
+    }
+
     private void KunciPlayer(bool kunci)
     {
         if (playerMovement == null) return;
@@ -223,19 +250,26 @@ public class NPCDosenSenior : MonoBehaviour
         playerMovement.enabled = !kunci;
     }
 
+    // Menampilkan satu box untuk baris ini (teks sudah ada di dalam box)
     private void TampilkanBaris(BarisDialog b)
     {
         SembunyikanBox();
 
+        // Box khusus baris ini (kalau diisi)
+        if (b.box != null)
+        {
+            b.box.SetActive(true);
+            return;
+        }
+
+        // Cadangan: box senior atau box pemain
         if (b.pembicaraSenior)
         {
             if (boxSenior != null) boxSenior.SetActive(true);
-            if (teksSenior != null) teksSenior.text = b.teks;
         }
         else
         {
             if (boxPemain != null) boxPemain.SetActive(true);
-            if (teksPemain != null) teksPemain.text = b.teks;
         }
     }
 
@@ -243,6 +277,14 @@ public class NPCDosenSenior : MonoBehaviour
     {
         if (boxSenior != null) boxSenior.SetActive(false);
         if (boxPemain != null) boxPemain.SetActive(false);
+
+        if (baris != null)
+        {
+            foreach (BarisDialog b in baris)
+            {
+                if (b != null && b.box != null) b.box.SetActive(false);
+            }
+        }
     }
 
     private IEnumerator JalanKe(Vector3 tujuan, SpriteRenderer sr)
@@ -256,7 +298,7 @@ public class NPCDosenSenior : MonoBehaviour
 
             // Hadap kiri/kanan sesuai arah jalan
             if (sr != null && Mathf.Abs(arah.x) > 0.01f)
-                sr.flipX = arah.x < 0f;
+                HadapKe(sr, arah.x);
 
             dosenSenior.transform.position = Vector3.MoveTowards(posisi, tujuan, kecepatan * Time.deltaTime);
             yield return null;

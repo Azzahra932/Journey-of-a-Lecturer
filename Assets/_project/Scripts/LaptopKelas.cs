@@ -28,8 +28,11 @@ public class LaptopKelas : MonoBehaviour
     public bool bolehKlikMouse = true;
     public bool hanyaPertamaKali = true;     // true = tutorial hanya muncul saat mengajar pertama kali
 
+    [Header("Reward (Setelah Mengajar Selesai)")]
+    public int indexReward = 1;              // Nomor reward di RewardManager (1 = Ngajar). -1 = tanpa reward
+
     private bool tutorialSudahTampil = false;
-    private bool sedangTutorial = false;   // true selama box tutorial tampil (cek energi menunggu sampai box ditutup)
+    private bool sedangTutorial = false;   // true selama box tutorial tampil
 
     [Header("Efek Layar Laptop")]
     public SpriteRenderer spriteLaptop;    // kosong = ambil dari objek ini
@@ -54,13 +57,18 @@ public class LaptopKelas : MonoBehaviour
     public Transform interactionPoint;
     public float interactionDistance = 3f;
 
-    private enum Status { Siap, Bekerja, Cooldown }
+    private enum Status { Siap, Bekerja, Menyelesaikan, Cooldown }
     private Status status = Status.Siap;
 
     private float progressTimer = 0f;
 
     // True setelah player pertama kali menyelesaikan tugas mengajar (dipakai Scene 3)
     public bool SudahMengajar { get; private set; } = false;
+
+    // True selama mengajar berjalan sampai semua langkah akhirnya (tutorial, reward) selesai
+    public bool SedangSibuk { get { return status == Status.Bekerja || status == Status.Menyelesaikan; } }
+
+    private bool modeBerulang = false;     // True setelah Scene 5: tanpa panah petunjuk dan tanpa box tutorial
     private float cooldownSelesaiPada = 0f;
     private float teksSembunyiPada = 0f;
 
@@ -97,6 +105,15 @@ public class LaptopKelas : MonoBehaviour
 
         if (playerTransform == null)
             Debug.LogWarning("[LaptopKelas] Player Transform (Tpngajar) tidak ditemukan! Drag manual di Inspector.");
+    }
+
+    // Dipanggil setelah Scene 5 selesai (lewat UnityEvent "Saat Dialog Selesai", opsional)
+    // Setelah itu mengajar tidak lagi memunculkan panah petunjuk dan box tutorial
+    public void BukaAktivitasBerulang()
+    {
+        modeBerulang = true;
+        if (panahKeRuangDosen != null) panahKeRuangDosen.SetActive(false);
+        Debug.Log("[LaptopKelas] Mode berulang aktif (tanpa panah dan tutorial).");
     }
 
     bool PlayerBolehInteraksi()
@@ -147,6 +164,16 @@ public class LaptopKelas : MonoBehaviour
             MulaiMengajar();
     }
 
+    void MulaiMengajar()
+    {
+        status = Status.Bekerja;
+        progressTimer = 0f;
+
+        if (promptPressE != null) promptPressE.SetActive(false);
+        if (canvasProgressBar != null) canvasProgressBar.SetActive(true);
+        if (circularProgressBar != null) circularProgressBar.fillAmount = 0f;
+    }
+
     // ---------- BEKERJA: bar bulat ----------
     void UpdateBekerja()
     {
@@ -163,49 +190,10 @@ public class LaptopKelas : MonoBehaviour
             circularProgressBar.fillAmount = Mathf.Clamp01(progressTimer / durasiKerja);
 
         if (progressTimer >= durasiKerja)
-            SelesaiMengajar();
-    }
-
-    // ---------- COOLDOWN: layar redup, baterai lemah, hitung mundur ----------
-    void UpdateCooldown()
-    {
-        float sisa = cooldownSelesaiPada - Time.time;
-
-        if (teksCountdown != null)
         {
-            int detik = Mathf.Max(0, Mathf.CeilToInt(sisa));
-            teksCountdown.text = (detik / 60) + ":" + (detik % 60).ToString("00");
+            status = Status.Menyelesaikan;
+            StartCoroutine(SelesaiKerja());
         }
-
-        // Isi baterai bertahap (0 = kosong, 1 = penuh)
-        if (indikatorBaterai != null)
-            indikatorBaterai.SetProgress(Mathf.Clamp01(1f - (sisa / durasiCooldown)));
-
-        // Player tekan E saat laptop masih istirahat
-        if (PlayerBolehInteraksi() && BolehTekanE() && Input.GetKeyDown(tombolInteraksi))
-        {
-            if (teksIstirahat != null)
-            {
-                teksIstirahat.SetActive(true);
-                teksSembunyiPada = Time.time + lamaTeksIstirahat;
-            }
-        }
-
-        if (sisa <= 0f)
-            SelesaiCooldown();
-    }
-
-    // ---------- Transisi ----------
-    void MulaiMengajar()
-    {
-        Debug.Log("[LaptopKelas] Mulai mengajar.");
-
-        status = Status.Bekerja;
-        progressTimer = 0f;
-
-        if (circularProgressBar != null) circularProgressBar.fillAmount = 0f;
-        if (promptPressE != null) promptPressE.SetActive(false);
-        if (canvasProgressBar != null) canvasProgressBar.SetActive(true);
     }
 
     void BatalkanKerja()
@@ -213,72 +201,65 @@ public class LaptopKelas : MonoBehaviour
         status = Status.Siap;
         progressTimer = 0f;
 
-        if (circularProgressBar != null) circularProgressBar.fillAmount = 0f;
         if (canvasProgressBar != null) canvasProgressBar.SetActive(false);
+        if (circularProgressBar != null) circularProgressBar.fillAmount = 0f;
     }
 
-    void SelesaiMengajar()
+    // ---------- SELESAI: poin, panah, tutorial, reward, energi, lalu cooldown ----------
+    IEnumerator SelesaiKerja()
     {
         if (circularProgressBar != null) circularProgressBar.fillAmount = 1f;
+        yield return new WaitForSeconds(0.3f);
+        if (canvasProgressBar != null) canvasProgressBar.SetActive(false);
 
+        // Poin
         if (ScoreManager.Instance != null)
         {
             ScoreManager.Instance.AddScore(jumlahPoinReward);
-            Debug.Log("[LaptopKelas] Tugas di kelas selesai! Skor bertambah +" + jumlahPoinReward);
+            Debug.Log("[LaptopKelas] Mengajar selesai! Skor bertambah +" + jumlahPoinReward);
         }
         else
         {
             Debug.LogWarning("[LaptopKelas] ScoreManager.Instance tidak ditemukan di Scene ini!");
         }
 
-        if (canvasProgressBar != null) canvasProgressBar.SetActive(false);
-
         SudahMengajar = true;
 
-        // Energi berkurang setelah mengajar
-        if (energyBar != null) energyBar.DecreaseEnergy(biayaEnergi);
+        // Panah ke ruang dosen (hanya sebelum Scene 5)
+        if (panahKeRuangDosen != null && !modeBerulang) panahKeRuangDosen.SetActive(true);
 
-        // Munculkan panah penunjuk arah ke ruang dosen
-        // Box tutorial + overlay hitam (panah menyala setelah box ditutup)
-        bool tampilkanTutorial = (overlayHitam != null || boxTutorial != null)
-                                 && (!tutorialSudahTampil || !hanyaPertamaKali);
-
+        // Box tutorial (hanya sebelum Scene 5, dan hanya pertama kali kalau "Hanya Pertama Kali" dicentang)
+        bool tampilkanTutorial = boxTutorial != null && !modeBerulang && (!hanyaPertamaKali || !tutorialSudahTampil);
         if (tampilkanTutorial)
         {
-            tutorialSudahTampil = true;
-            StartCoroutine(TampilkanTutorial());
+            yield return StartCoroutine(TampilkanTutorial());
         }
-        else if (panahKeRuangDosen != null)
+
+        // Reward muncul sendiri, lalu hilang sendiri
+        if (indexReward >= 0 && RewardManager.Instance != null)
         {
-            panahKeRuangDosen.SetActive(true);
+            yield return StartCoroutine(RewardManager.Instance.RewardRoutine(indexReward));
+        }
+
+        // Energi berkurang, lalu cek apakah habis (menunggu tutorial dan reward selesai)
+        if (energyBar != null)
+        {
+            energyBar.DecreaseEnergy(biayaEnergi);
+            energyBar.CekEnergiHabis();
         }
 
         MulaiCooldown();
-
-        // Cek energi habis (menunggu box tutorial ditutup kalau sedang tampil)
-        StartCoroutine(CekEnergiHabisSetelahSelesai());
     }
 
-    void MulaiCooldown()
+    IEnumerator TampilkanTutorial()
     {
-        status = Status.Cooldown;
-        cooldownSelesaiPada = Time.time + durasiCooldown;
-
-        // Layar redup + baterai lemah + angka hitung mundur
-        if (promptPressE != null) promptPressE.SetActive(false);
-        if (spriteLaptop != null) spriteLaptop.color = warnaCooldown;
-        if (ikonBateraiLemah != null) ikonBateraiLemah.SetActive(true);
-        if (teksCountdown != null) teksCountdown.gameObject.SetActive(true);
-        if (indikatorBaterai != null) indikatorBaterai.SetProgress(0f);
-    }
-
-    // Overlay hitam + box tutorial. Ditutup dengan Space (atau klik). Setelah itu panah ke ruang dosen menyala.
-    private IEnumerator TampilkanTutorial()
-    {
+        tutorialSudahTampil = true;
         sedangTutorial = true;
+
+        // Kunci kursi supaya player tidak bisa berdiri selama box tampil
         if (kursiKelas != null) kursiKelas.TerkunciEksternal = true;
 
-        // Urutan penting: overlay dulu, baru box (box harus tampil di atas overlay)
+        // Urutan penting: overlay dulu, baru box
         if (overlayHitam != null) overlayHitam.SetActive(true);
         if (boxTutorial != null) boxTutorial.SetActive(true);
 
@@ -293,30 +274,55 @@ public class LaptopKelas : MonoBehaviour
 
         if (kursiKelas != null) kursiKelas.TerkunciEksternal = false;
         sedangTutorial = false;
-
-        if (panahKeRuangDosen != null) panahKeRuangDosen.SetActive(true);
     }
 
-    // Menunggu box tutorial ditutup, lalu cek apakah energi habis (kalau habis: transisi hitam)
-    private IEnumerator CekEnergiHabisSetelahSelesai()
+    // ---------- COOLDOWN: layar redup, baterai terisi ----------
+    void MulaiCooldown()
     {
-        while (sedangTutorial) yield return null;
+        status = Status.Cooldown;
+        cooldownSelesaiPada = Time.time + durasiCooldown;
 
-        yield return new WaitForSeconds(0.3f);
+        if (promptPressE != null) promptPressE.SetActive(false);
 
-        if (energyBar != null) energyBar.CekEnergiHabis();
+        if (indikatorBaterai != null) indikatorBaterai.SetProgress(0f);
+        if (ikonBateraiLemah != null) ikonBateraiLemah.SetActive(true);
+        if (teksCountdown != null) teksCountdown.gameObject.SetActive(true);
+        if (spriteLaptop != null) spriteLaptop.color = warnaCooldown;
+    }
+
+    void UpdateCooldown()
+    {
+        float sisa = Mathf.Max(0f, cooldownSelesaiPada - Time.time);
+
+        if (indikatorBaterai != null && durasiCooldown > 0f)
+            indikatorBaterai.SetProgress(1f - (sisa / durasiCooldown));
+
+        if (teksCountdown != null)
+        {
+            int menit = Mathf.FloorToInt(sisa / 60f);
+            int detik = Mathf.FloorToInt(sisa % 60f);
+            teksCountdown.text = $"{menit}:{detik:00}";
+        }
+
+        // E saat cooldown: tampilkan teks "laptop sedang istirahat"
+        if (teksIstirahat != null && PlayerBolehInteraksi() && BolehTekanE() && Input.GetKeyDown(tombolInteraksi))
+        {
+            teksIstirahat.SetActive(true);
+            teksSembunyiPada = Time.time + lamaTeksIstirahat;
+        }
+
+        if (Time.time >= cooldownSelesaiPada)
+            SelesaiCooldown();
     }
 
     void SelesaiCooldown()
     {
-        Debug.Log("[LaptopKelas] Laptop menyala lagi, siap dipakai.");
-
         status = Status.Siap;
 
-        // Layar menyala lagi, ikon baterai hilang, ikon E akan muncul di UpdateSiap
-        if (spriteLaptop != null) spriteLaptop.color = warnaNormal;
         if (ikonBateraiLemah != null) ikonBateraiLemah.SetActive(false);
         if (teksCountdown != null) teksCountdown.gameObject.SetActive(false);
-        if (teksIstirahat != null) teksIstirahat.SetActive(false);
+        if (spriteLaptop != null) spriteLaptop.color = warnaNormal;
+
+        Debug.Log("[LaptopKelas] Laptop menyala lagi, siap dipakai.");
     }
 }

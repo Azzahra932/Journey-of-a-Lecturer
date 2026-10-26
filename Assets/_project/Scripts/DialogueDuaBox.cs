@@ -1,17 +1,12 @@
 using UnityEngine;
-using TMPro;
 
 public class DialogueDuaBox : MonoBehaviour
 {
-    [Header("Box Dosen")]
+    [Header("Box Dosen (teks sudah ada di dalam box)")]
     public GameObject boxDosen;
-    public TextMeshProUGUI textDosen;
-    [TextArea(2, 4)] public string kalimatDosen;
 
-    [Header("Box Mahasiswa")]
+    [Header("Box Mahasiswa (teks sudah ada di dalam box)")]
     public GameObject boxMahasiswa;
-    public TextMeshProUGUI textMahasiswa;
-    [TextArea(2, 4)] public string kalimatMahasiswa;
 
     private int tahap = 0;
 
@@ -38,14 +33,12 @@ public class DialogueDuaBox : MonoBehaviour
             // Tahap 1: Munculkan Dosen, Matikan Mahasiswa
             if (boxDosen != null) boxDosen.SetActive(true);
             if (boxMahasiswa != null) boxMahasiswa.SetActive(false);
-            if (textDosen != null) textDosen.text = kalimatDosen;
         }
         else if (tahap == 1)
         {
             // Tahap 2: Matikan Dosen, Munculkan Mahasiswa
             if (boxDosen != null) boxDosen.SetActive(false);
             if (boxMahasiswa != null) boxMahasiswa.SetActive(true);
-            if (textMahasiswa != null) textMahasiswa.text = kalimatMahasiswa;
         }
         else
         {

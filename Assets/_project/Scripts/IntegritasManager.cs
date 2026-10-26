@@ -10,6 +10,18 @@ public class IntegritasManager : MonoBehaviour
     public float maxIntegritas = 100f;
     private float currentIntegritas;
 
+    // TAMBAHAN BARU: nilai integritas disimpan di sini supaya terbawa ke level berikutnya (tidak kembali 100%)
+    private static float integritasTersimpan = -1f;
+
+    // Panggil ini kalau mau mulai permainan baru dari awal (mis. dari menu utama)
+    public static void ResetProgres()
+    {
+        integritasTersimpan = -1f;
+    }
+
+    // TAMBAHAN BARU: supaya script lain (pop-up level selesai) bisa membaca nilai integritas
+    public float CurrentIntegritas { get { return currentIntegritas; } }
+
     [Header("Referensi UI (Slider)")]
     public Slider integritasSlider;
     public TMP_Text integritasText;
@@ -22,7 +34,10 @@ public class IntegritasManager : MonoBehaviour
 
     void Start()
     {
-        currentIntegritas = maxIntegritas;
+        // Kalau ada nilai dari level sebelumnya, lanjutkan dari situ. Kalau tidak, mulai dari penuh.
+        currentIntegritas = (integritasTersimpan >= 0f)
+            ? Mathf.Clamp(integritasTersimpan, 0f, maxIntegritas)
+            : maxIntegritas;
 
         if (integritasText != null)
         {
@@ -36,6 +51,7 @@ public class IntegritasManager : MonoBehaviour
     {
         currentIntegritas -= amount;
         currentIntegritas = Mathf.Clamp(currentIntegritas, 0f, maxIntegritas);
+        integritasTersimpan = currentIntegritas;
 
         Debug.Log($"[IntegritasManager] Integritas berkurang {amount}%. Sisa: {currentIntegritas}%");
         UpdateUI();
