@@ -14,17 +14,27 @@ public class ScoreManager : MonoBehaviour
     public Slider scoreSlider;
     public TMP_Text scoreText;
 
+    // Skor dan target disimpan di sini (static) supaya terbawa ke level berikutnya.
+    // Tidak memakai DontDestroyOnLoad, jadi objek ini boleh berada di mana saja di Hierarchy (mis. di dalam Canvas).
+    private static bool adaTersimpan = false;
+    private static int skorTersimpan = 0;
+    private static int targetTersimpan = 150;
+
+    // Panggil ini kalau mau mulai permainan baru dari awal (mis. dari menu utama)
+    public static void ResetProgres()
+    {
+        adaTersimpan = false;
+    }
+
     private void Awake()
     {
-        // Singleton agar ScoreManager hanya ada satu dan bertahan antar scene
-        if (Instance == null)
+        Instance = this;
+
+        // Kalau ada skor dari level sebelumnya, lanjutkan dari situ
+        if (adaTersimpan)
         {
-            Instance = this;
-            DontDestroyOnLoad(gameObject); // Agar skor terbawa dari Scene 1 ke Scene 2 tanpa reset
-        }
-        else
-        {
-            Destroy(gameObject);
+            currentScore = skorTersimpan;
+            targetScore = targetTersimpan;
         }
     }
 
@@ -65,6 +75,11 @@ public class ScoreManager : MonoBehaviour
 
     private void UpdateScoreUI()
     {
+        // Simpan supaya terbawa ke level berikutnya
+        skorTersimpan = currentScore;
+        targetTersimpan = targetScore;
+        adaTersimpan = true;
+
         if (scoreSlider != null)
         {
             scoreSlider.value = currentScore;
@@ -89,6 +104,6 @@ public class ScoreManager : MonoBehaviour
 
     private void OnTargetReached()
     {
-        Debug.Log("Target skor 150 tercapai!");
+        Debug.Log("Target skor " + targetScore + " tercapai!");
     }
 }

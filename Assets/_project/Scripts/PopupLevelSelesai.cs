@@ -1,23 +1,43 @@
 using UnityEngine;
 using UnityEngine.UI;
-using UnityEngine.SceneManagement;
 using TMPro;
 
-// Memunculkan pop-up "Status Baru" saat poin mencapai target (150), menampilkan XP dan Integritas,
-// lalu tombol Lanjut memuat level berikutnya.
+// Memunculkan pop-up "Status Baru" saat poin mencapai target (150), menampilkan XP dan Integritas.
+// Tombol Lanjut (tetap di scene yang sama) akan:
+//   1. mengganti tampilan MC (sprite / animator)
+//   2. mengganti nama MC di top bar
+//   3. mengganti icon MC di top bar
+//   4. menaikkan target poin (150 -> 300), jadi top bar tampil 150/300
+//   5. membuka ruangan yang terkunci (Ruang C dan D)
 public class PopupLevelSelesai : MonoBehaviour
 {
     [Header("Panel Pop-up")]
-    public GameObject panelPopup;           // Panel "Status Baru" (kosong = tidak ada pop-up)
-    public GameObject overlayHitam;         // Panel hitam transparan satu layar di belakang pop-up (kosong = tanpa overlay)
+    public GameObject panelPopup;           // Panel "Status Baru"
+    public GameObject overlayHitam;         // Panel hitam transparan di belakang pop-up (opsional)
     public TMP_Text teksXP;                 // Teks angka di sebelah ikon bintang
     public TMP_Text teksIntegritas;         // Teks angka di sebelah ikon perisai
-    public Button tombolLanjut;             // Tombol "Lanjut" (jangan isi On Click lagi, dipasang lewat script)
+    public Button tombolLanjut;             // Tombol "Lanjut" (jangan isi On Click di Inspector, dipasang lewat script)
 
-    [Header("Level Berikutnya")]
-    public string namaSceneLevel2 = "Level2";   // Nama scene level 2 (harus ada di Build Profiles)
-    public bool resetSkorSaatLanjut = false;    // false = skor lanjut dari level 1 (tidak mulai dari 0)
-    public int targetSkorLevel2 = 0;            // Target skor baru untuk level 2 (0 = tidak diubah). Isi lebih besar dari 150 supaya skor bisa terus bertambah
+    [Header("1. Perubahan Karakter MC")]
+    public SpriteRenderer playerSpriteRenderer;             // SpriteRenderer pemain (dipakai kalau pemain TIDAK pakai Animator)
+    public Sprite spriteMCLevel2;                           // Sprite MC level 2
+    public Animator[] animatorPemain;                       // Animator pemain (TPdiam, dst). Dipakai kalau MC digerakkan Animator
+    public RuntimeAnimatorController animatorControllerLevel2;   // Animator Controller MC level 2
+
+    [Header("2 & 3. Nama & Icon MC di Top Bar")]
+    public TMP_Text teksNamaMCTopBar;       // Teks nama MC di top bar
+    public string namaBaruMC = "Asisten Ahli";
+    public Image iconTopBar;                // Image icon MC di top bar
+    public Sprite iconLevel2;               // Sprite icon level 2
+
+    [Header("4. Target Poin Level 2 (150 / 300)")]
+    public int targetSkorLevel2 = 300;      // 0 = target tidak diubah
+
+    [Header("5. Membuka Ruangan C & D")]
+    public RuangTerkunci[] ruangYangDibuka; // Isi dengan objek yang memasang script RuangTerkunci (Ruang C dan D)
+
+    [Header("Tutorial")]
+    public TutorialManager tutorialManager;     // Kosong = dicari otomatis. Di Level 2, step tutorial "Hanya Level 1" dilewati
 
     [Header("Waktu Muncul")]
     public float jedaSebelumPopup = 1.0f;       // Jeda (detik) setelah poin 150 tercapai
@@ -26,6 +46,7 @@ public class PopupLevelSelesai : MonoBehaviour
     public bool hentikanWaktuSaatTampil = true; // Game berhenti selama pop-up tampil
 
     private bool sudahTampil = false;
+    private bool sudahLanjut = false;
     private float waktuTercapai = -1f;
 
     void Start()
@@ -33,6 +54,7 @@ public class PopupLevelSelesai : MonoBehaviour
         if (panelPopup != null) panelPopup.SetActive(false);
         if (overlayHitam != null) overlayHitam.SetActive(false);
         if (tombolLanjut != null) tombolLanjut.onClick.AddListener(Lanjut);
+        if (tutorialManager == null) tutorialManager = FindFirstObjectByType<TutorialManager>();
     }
 
     void OnDestroy()
@@ -78,7 +100,7 @@ public class PopupLevelSelesai : MonoBehaviour
 
         if (panelPopup == null)
         {
-            Debug.LogWarning("[Level] Slot Panel Popup masih kosong di Inspector! Pop-up tidak bisa tampil (waktu tidak dihentikan).");
+            Debug.LogWarning("[Level] Slot Panel Popup masih kosong di Inspector! Pop-up tidak bisa tampil.");
             return;
         }
 
@@ -86,46 +108,81 @@ public class PopupLevelSelesai : MonoBehaviour
         if (overlayHitam != null) overlayHitam.SetActive(true);
         panelPopup.SetActive(true);
 
-        if (!panelPopup.activeInHierarchy)
-        {
-            Debug.LogWarning("[Level] Panel '" + panelPopup.name + "' sudah diaktifkan tapi induknya (Canvas) nonaktif, jadi tidak tampil.");
-        }
-
         if (hentikanWaktuSaatTampil) Time.timeScale = 0f;
 
         Debug.Log("[Level] Target poin tercapai. Pop-up status baru ditampilkan.");
     }
 
+    // Dipanggil tombol Lanjut: masuk ke level 2 tanpa pindah scene
     public void Lanjut()
     {
+        if (sudahLanjut) return;   // cegah klik ganda
+        sudahLanjut = true;
+
         Time.timeScale = 1f;
 
         if (panelPopup != null) panelPopup.SetActive(false);
         if (overlayHitam != null) overlayHitam.SetActive(false);
 
-        if (resetSkorSaatLanjut && ScoreManager.Instance != null)
+        GantiKarakterMC();
+        GantiNamaDanIconTopBar();
+        NaikkanTargetSkor();
+        BukaRuangan();
+
+        // Tutorial yang bertanda "Hanya Level 1" (mis. penjelasan top bar) tidak muncul lagi
+        if (tutorialManager != null) tutorialManager.MasukLevel2();
+
+        Debug.Log("[Level] Masuk Level 2.");
+    }
+
+    // 1. Ganti tampilan MC
+    private void GantiKarakterMC()
+    {
+        // Kalau MC digerakkan Animator, sprite harus diganti lewat Animator Controller,
+        // kalau tidak, Animator akan menimpa sprite setiap frame.
+        if (animatorControllerLevel2 != null && animatorPemain != null)
         {
-            // AddScore minus = mengembalikan skor ke 0 sekaligus memperbarui bar poin
-            ScoreManager.Instance.AddScore(-ScoreManager.Instance.currentScore);
+            foreach (Animator a in animatorPemain)
+            {
+                if (a != null) a.runtimeAnimatorController = animatorControllerLevel2;
+            }
         }
 
-        // Naikkan target skor supaya poin bisa terus bertambah di level 2
-        if (targetSkorLevel2 > 0 && ScoreManager.Instance != null)
+        if (playerSpriteRenderer != null && spriteMCLevel2 != null)
+            playerSpriteRenderer.sprite = spriteMCLevel2;
+    }
+
+    // 2 & 3. Nama dan icon MC di top bar
+    private void GantiNamaDanIconTopBar()
+    {
+        if (teksNamaMCTopBar != null && !string.IsNullOrEmpty(namaBaruMC))
+            teksNamaMCTopBar.text = namaBaruMC;
+
+        if (iconTopBar != null && iconLevel2 != null)
+            iconTopBar.sprite = iconLevel2;
+    }
+
+    // 4. Target poin jadi 300, skor tetap 150 -> top bar tampil 150/300
+    private void NaikkanTargetSkor()
+    {
+        if (targetSkorLevel2 <= 0 || ScoreManager.Instance == null) return;
+
+        ScoreManager.Instance.targetScore = targetSkorLevel2;
+
+        if (ScoreManager.Instance.scoreSlider != null)
+            ScoreManager.Instance.scoreSlider.maxValue = targetSkorLevel2;
+
+        ScoreManager.Instance.AddScore(0);   // perbarui teks dan bar poin
+    }
+
+    // 5. Buka ruangan yang terkunci
+    private void BukaRuangan()
+    {
+        if (ruangYangDibuka == null) return;
+
+        foreach (RuangTerkunci r in ruangYangDibuka)
         {
-            ScoreManager.Instance.targetScore = targetSkorLevel2;
-            if (ScoreManager.Instance.scoreSlider != null)
-                ScoreManager.Instance.scoreSlider.maxValue = targetSkorLevel2;
-
-            ScoreManager.Instance.AddScore(0);   // perbarui teks dan bar poin
+            if (r != null) r.Buka();
         }
-
-        if (string.IsNullOrEmpty(namaSceneLevel2))
-        {
-            Debug.LogWarning("[Level] Nama scene level 2 belum diisi di Inspector!");
-            if (panelPopup != null) panelPopup.SetActive(false);
-            return;
-        }
-
-        SceneManager.LoadScene(namaSceneLevel2);
     }
 }

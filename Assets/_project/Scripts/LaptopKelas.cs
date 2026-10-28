@@ -68,6 +68,9 @@ public class LaptopKelas : MonoBehaviour
     // True selama mengajar berjalan sampai semua langkah akhirnya (tutorial, reward) selesai
     public bool SedangSibuk { get { return status == Status.Bekerja || status == Status.Menyelesaikan; } }
 
+    [Header("Level Berikutnya")]
+    public bool mulaiModeBerulang = false; // Centang di level 2: langsung tanpa panah petunjuk dan tanpa box tutorial
+
     private bool modeBerulang = false;     // True setelah Scene 5: tanpa panah petunjuk dan tanpa box tutorial
     private float cooldownSelesaiPada = 0f;
     private float teksSembunyiPada = 0f;
@@ -105,6 +108,9 @@ public class LaptopKelas : MonoBehaviour
 
         if (playerTransform == null)
             Debug.LogWarning("[LaptopKelas] Player Transform (Tpngajar) tidak ditemukan! Drag manual di Inspector.");
+
+        // Level 2: langsung dalam mode berulang
+        if (mulaiModeBerulang) BukaAktivitasBerulang();
     }
 
     // Dipanggil setelah Scene 5 selesai (lewat UnityEvent "Saat Dialog Selesai", opsional)

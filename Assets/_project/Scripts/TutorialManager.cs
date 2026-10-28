@@ -14,6 +14,9 @@ public class TutorialManager : MonoBehaviour
         public Sprite tutorialSprite; // Gambar untuk langkah ini
         public Vector2 anchoredPosition; // Posisi X dan Y di layar untuk langkah ini
         public Vector2 sizeDelta; // Ukuran Width dan Height untuk langkah ini
+
+        [Tooltip("Centang kalau step ini hanya untuk Level 1 (misalnya penjelasan top bar). Di Level 2 step ini dilewati.")]
+        public bool hanyaLevel1;
     }
 
     [Header("Daftar Step Tutorial Awal")]
@@ -30,6 +33,9 @@ public class TutorialManager : MonoBehaviour
 
     [Header("Pengaturan Player")]
     public PlayerMovement playerMovement;
+
+    // True setelah pemain masuk Level 2 (diset oleh PopupLevelSelesai lewat MasukLevel2)
+    public bool SudahLevel2 { get; private set; } = false;
 
     private TutorialStep[] currentActiveSteps; // Menyimpan daftar step yang sedang aktif
     private int currentIndex = 0;
@@ -48,6 +54,13 @@ public class TutorialManager : MonoBehaviour
                 NextStep();
             }
         }
+    }
+
+    // Dipanggil saat pemain menekan Lanjutkan di pop-up Level Selesai.
+    // Setelah ini, semua step yang bertanda "Hanya Level 1" dilewati.
+    public void MasukLevel2()
+    {
+        SudahLevel2 = true;
     }
 
     // Fungsi untuk memanggil Tutorial Awal Game
@@ -102,17 +115,32 @@ public class TutorialManager : MonoBehaviour
         }
     }
 
+    // Cari step berikutnya (mulai dari index 'dari') yang tidak dilewati. -1 = tidak ada lagi.
+    private int CariStep(int dari)
+    {
+        if (currentActiveSteps == null) return -1;
+
+        for (int i = dari; i < currentActiveSteps.Length; i++)
+        {
+            bool dilewati = SudahLevel2 && currentActiveSteps[i].hanyaLevel1;
+            if (!dilewati) return i;
+        }
+        return -1;
+    }
+
     void ShowTutorial()
     {
-        if (tutorialPanel != null)
-        {
-            tutorialPanel.SetActive(true);
-            currentIndex = 0;
-            ApplyStep(currentIndex);
+        if (tutorialPanel == null) return;
 
-            if (playerMovement != null) playerMovement.enabled = false;
-            Time.timeScale = 0f;
-        }
+        int awal = CariStep(0);
+        if (awal < 0) return;   // semua step dilewati: tutorial tidak ditampilkan, game tidak dihentikan
+
+        tutorialPanel.SetActive(true);
+        currentIndex = awal;
+        ApplyStep(currentIndex);
+
+        if (playerMovement != null) playerMovement.enabled = false;
+        Time.timeScale = 0f;
     }
 
     void ApplyStep(int index)
@@ -138,10 +166,11 @@ public class TutorialManager : MonoBehaviour
 
     public void NextStep()
     {
-        currentIndex++;
+        int berikut = CariStep(currentIndex + 1);
 
-        if (currentActiveSteps != null && currentIndex < currentActiveSteps.Length)
+        if (berikut >= 0)
         {
+            currentIndex = berikut;
             ApplyStep(currentIndex);
         }
         else

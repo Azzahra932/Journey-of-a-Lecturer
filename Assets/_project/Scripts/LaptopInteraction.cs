@@ -35,6 +35,7 @@ public class LaptopInteraction : MonoBehaviour
     public float durasiCooldown = 60f;           // Jeda (detik) sebelum RPS bisa dikerjakan lagi
     public GameObject teksLaptopIstirahat;       // Teks "Laptop sedang istirahat" saat E ditekan selama cooldown (opsional)
     public float lamaTeksIstirahat = 1.5f;
+    public bool mulaiModeBerulang = false;       // Centang di level 2: aktivitas langsung terbuka berulang sejak awal (tanpa menunggu Scene 5)
 
     [Header("Cooldown Baterai (Seperti Laptop Kelas, Opsional)")]
     public GameObject ikonBateraiLemah;          // Objek induk baterai, muncul saat cooldown
@@ -114,6 +115,9 @@ public class LaptopInteraction : MonoBehaviour
         {
             choiceHandler = FindFirstObjectByType<LaptopChoiceHandler>();
         }
+
+        // Level 2: langsung dalam mode berulang
+        if (mulaiModeBerulang) BukaAktivitasBerulang();
     }
 
     void Update()
