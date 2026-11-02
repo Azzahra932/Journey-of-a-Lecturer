@@ -24,6 +24,12 @@ public class LaptopInteraction : MonoBehaviour
     public GameObject progressBarCanvas;        // Drag objek ProgressBarUI ke sini
     public Image progressCircleFill;            // Drag objek ProgressFill (Image Type: Filled) ke sini
 
+    [Header("Sound Effect Mengetik (selama bar bulat berputar)")]
+    public AudioClip suaraKetik;                // File mp3 suara mengetik. Kosong = tanpa suara
+    [Range(0f, 1f)] public float volumeSuaraKetik = 1f;
+    public bool suaraDiulang = true;            // true = suara diulang terus selama bar berputar
+    public AudioSource audioSource;             // Kosong = dibuat otomatis di objek ini
+
     [Header("Gimmick UI / Petunjuk")]
     public GameObject petunjukTekanE;           // UI petunjuk "Tekan [E]"
     public GameObject panahKeKelas;             // Panah penunjuk jalan setelah tugas selesai
@@ -120,6 +126,36 @@ public class LaptopInteraction : MonoBehaviour
         if (mulaiModeBerulang) BukaAktivitasBerulang();
     }
 
+    // ---------- Sound effect mengetik ----------
+    private void MulaiSuaraKetik()
+    {
+        if (suaraKetik == null) return;
+
+        // Buat AudioSource khusus di objek ini (tidak mengganggu AudioSource lain yang mungkin sudah ada)
+        if (audioSource == null)
+        {
+            audioSource = gameObject.AddComponent<AudioSource>();
+            audioSource.playOnAwake = false;
+            audioSource.spatialBlend = 0f;   // suara 2D: terdengar sama di mana pun posisi kamera
+        }
+
+        audioSource.clip = suaraKetik;
+        audioSource.loop = suaraDiulang;
+        audioSource.volume = volumeSuaraKetik;
+        audioSource.Play();
+    }
+
+    private void HentikanSuaraKetik()
+    {
+        if (audioSource != null && audioSource.isPlaying && audioSource.clip == suaraKetik)
+            audioSource.Stop();
+    }
+
+    void OnDisable()
+    {
+        HentikanSuaraKetik();
+    }
+
     void Update()
     {
         // Teks istirahat hilang otomatis
@@ -198,6 +234,9 @@ public class LaptopInteraction : MonoBehaviour
         if (petunjukTekanE != null) petunjukTekanE.SetActive(false);
         if (progressBarCanvas != null) progressBarCanvas.SetActive(true);
 
+        // Suara mengetik mulai bersamaan dengan bar berputar
+        MulaiSuaraKetik();
+
         float timer = 0f;
 
         if (progressCircleFill != null)
@@ -217,6 +256,9 @@ public class LaptopInteraction : MonoBehaviour
 
             yield return null;
         }
+
+        // Suara berhenti saat bar penuh
+        HentikanSuaraKetik();
 
         if (progressCircleFill != null)
         {

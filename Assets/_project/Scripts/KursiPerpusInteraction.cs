@@ -19,13 +19,21 @@ public class KursiPerpusInteraction : MonoBehaviour
     [Header("Syarat")]
     public BukuInteraction buku;                    // Kursi baru bisa dipakai setelah buku terbuka (Scene 5)
 
+    [Header("Level 2 (buku diganti laptop)")]
+    public bool tanpaSyaratBukuDiLevel2 = true;     // true = di level 2 kursi bisa dipakai tanpa menunggu buku terbuka
+    public int targetSkorLevel1 = 150;              // Target skor level 1. Target skor yang lebih besar dari ini berarti level 2 sudah dimulai
+
     [Header("Petunjuk (Opsional)")]
     public GameObject petunjukTekanSpace;           // UI petunjuk "Tekan [Space]" untuk duduk
 
     [HideInInspector] public bool sedangDuduk = false;
 
+    // Diset script lain (mis. adegan Level 2) untuk mengunci MC di kursi, supaya tidak bisa berdiri selama adegan
+    public bool TerkunciEksternal { get; set; }
+
     private float waktuDuduk = 0f;
     private TransisiKembaliKeAwal transisi;
+    private bool peringatanPemainDitampilkan = false;
 
     void Start()
     {
@@ -50,9 +58,26 @@ public class KursiPerpusInteraction : MonoBehaviour
         if (transisi != null) transisi.saatTransisiSelesai.RemoveListener(PaksaBerdiriSegera);
     }
 
+    // Lingkaran biru di tab Scene (saat objek ini dipilih): area MC bisa menekan tombol duduk
+    void OnDrawGizmosSelected()
+    {
+        Transform acuan = (titikArea != null) ? titikArea : transform;
+
+        Gizmos.color = Color.cyan;
+        Gizmos.DrawWireSphere(acuan.position, jarakArea);
+    }
+
     void Update()
     {
-        if (playerCharacter == null) return;
+        if (playerCharacter == null)
+        {
+            if (!peringatanPemainDitampilkan)
+            {
+                peringatanPemainDitampilkan = true;
+                Debug.LogWarning("[Kursi Perpus] Objek pemain (TPdiam) tidak ditemukan, kursi tidak bisa dipakai. Drag TPdiam ke slot Player Character.");
+            }
+            return;
+        }
 
         // Sedang duduk: berdiri dengan WASD / tombol panah (tidak bisa saat memilih atau membaca)
         if (sedangDuduk)
@@ -61,6 +86,7 @@ public class KursiPerpusInteraction : MonoBehaviour
 
             if (TombolGerakDitekan()
                 && Time.time - waktuDuduk >= jedaSetelahDuduk
+                && !TerkunciEksternal
                 && (buku == null || !buku.SedangSibuk))
             {
                 Berdiri();
@@ -68,14 +94,29 @@ public class KursiPerpusInteraction : MonoBehaviour
             return;
         }
 
-        bool bisaDipakai = (buku == null) || buku.terbuka;
+        bool bisaDipakai = (buku == null) || buku.terbuka || (tanpaSyaratBukuDiLevel2 && Level2Aktif());
         float jarak = Vector2.Distance(titikArea.position, playerCharacter.transform.position);
         bool dekat = bisaDipakai && jarak <= jarakArea;
 
         if (petunjukTekanSpace != null) petunjukTekanSpace.SetActive(dekat);
 
+        // Diagnosis: kalau tombol duduk ditekan tapi tidak bisa duduk, Console menjelaskan alasannya
+        if (!dekat && Input.GetKeyDown(tombolDuduk))
+        {
+            if (!bisaDipakai)
+                Debug.Log("[Kursi Perpus] Tombol duduk ditekan, tapi kursi belum bisa dipakai: aktivitas buku belum 'terbuka' (kursi baru bisa dipakai setelah buku terbuka).");
+            else
+                Debug.Log("[Kursi Perpus] Tombol duduk ditekan, tapi MC terlalu jauh dari kursi (jarak " + jarak.ToString("0.00") + ", batas " + jarakArea + ").");
+        }
+
         if (dekat && Input.GetKeyDown(tombolDuduk))
             Duduk();
+    }
+
+    // Level 2 dianggap sudah dimulai kalau target skor sudah naik (150 -> 300) setelah pop-up Level Selesai
+    bool Level2Aktif()
+    {
+        return ScoreManager.Instance != null && ScoreManager.Instance.targetScore > targetSkorLevel1;
     }
 
     bool TombolGerakDitekan()

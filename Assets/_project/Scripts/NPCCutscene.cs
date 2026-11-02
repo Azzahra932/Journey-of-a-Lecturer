@@ -23,6 +23,9 @@ public class NPCCutscene : MonoBehaviour
     [Header("Pengaturan Animator NPC")]
     public string isWalkingParam = "isWalking";
 
+    // Dipanggil saat Kaprodi sudah tiba di tujuan dan duduk (dipakai adegan level 2 untuk memulai dialognya sendiri)
+    public event System.Action SaatTibaDanDuduk;
+
     private int currentWaypointIndex = 0;
     private bool isWalking = false;
     private bool isExiting = false;
@@ -77,6 +80,12 @@ public class NPCCutscene : MonoBehaviour
                         if (dialogueManager != null)
                         {
                             dialogueManager.StartDialogue();
+                        }
+
+                        // 3. Beri tahu script lain bahwa Kaprodi sudah tiba dan duduk
+                        if (SaatTibaDanDuduk != null)
+                        {
+                            SaatTibaDanDuduk.Invoke();
                         }
                     }
                     else

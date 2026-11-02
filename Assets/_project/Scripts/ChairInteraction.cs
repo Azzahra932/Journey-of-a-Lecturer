@@ -32,6 +32,7 @@ public class ChairInteraction : MonoBehaviour
     // True setelah player duduk di kursi ini untuk pertama kali (akhir Scene 2)
     public bool SudahPernahDuduk { get; private set; }
 
+    private bool level2Aktif = false;        // true setelah SiapkanLevelBaru() dipanggil: panah selalu dimatikan di level 2
     private bool sudahPernahDialog = false;   // true setelah dialog muncul di duduk pertama
     private float waktuDuduk = 0f;
 
@@ -48,6 +49,16 @@ public class ChairInteraction : MonoBehaviour
             GameObject playerObj = GameObject.FindGameObjectWithTag("Player");
             if (playerObj != null) playerCharacter = playerObj;
         }
+    }
+
+    // Dipanggil saat level 2 dimulai (lewat event "Saat Masuk Level 2" di PopupLevelSelesai):
+    // box percakapan muncul lagi saat duduk pertama kali di kursi ini. Panah tetap mati
+    // karena SudahPernahDuduk tidak direset.
+    public void SiapkanLevelBaru()
+    {
+        sudahPernahDialog = false;
+        level2Aktif = true;   // panah kursi kelas (dan panah lain di daftar) dimatikan terus di level 2
+        Debug.Log("[ChairInteraction] Level 2: box percakapan akan muncul lagi saat duduk (tanpa panah).");
     }
 
     void Update()
@@ -74,7 +85,7 @@ public class ChairInteraction : MonoBehaviour
     // sebelum sempat tampil di layar.
     void LateUpdate()
     {
-        if (!panahHanyaSekali || !SudahPernahDuduk) return;
+        if (!panahHanyaSekali || !(SudahPernahDuduk || level2Aktif)) return;
 
         if (panahKeKursi != null && panahKeKursi.activeSelf) panahKeKursi.SetActive(false);
 

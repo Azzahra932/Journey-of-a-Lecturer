@@ -82,6 +82,22 @@ public class InteractiveDesk : MonoBehaviour
         if (isSitting) StandUp();
     }
 
+    // Dipanggil adegan Level 2 (AdeganLevel2Scene1): MC langsung duduk di kursi ini lewat kode.
+    // Tidak memicu Kaprodi onboarding level 1, bimbingan (Scene 3), maupun evaluasi (Scene 5).
+    public void DudukUntukAdegan()
+    {
+        if (isSitting) return;
+
+        if (playerObj == null) playerObj = GameObject.FindGameObjectWithTag("Player");
+        if (playerObj == null)
+        {
+            Debug.LogWarning("[InteractiveDesk] Player (tag 'Player') tidak ditemukan, MC tidak bisa didudukkan.");
+            return;
+        }
+
+        SitDown(false);
+    }
+
     private void OnTriggerEnter2D(Collider2D other)
     {
         if (other.CompareTag("Player"))
@@ -99,7 +115,9 @@ public class InteractiveDesk : MonoBehaviour
         }
     }
 
-    private void SitDown()
+    // picuAdegan = true  : duduk biasa (tombol E), Kaprodi onboarding / bimbingan / evaluasi boleh terpicu
+    // picuAdegan = false : duduk lewat kode untuk adegan lain, tidak memicu apa-apa
+    private void SitDown(bool picuAdegan = true)
     {
         isSitting = true;
 
@@ -112,32 +130,35 @@ public class InteractiveDesk : MonoBehaviour
             }
         }
 
-        // Scene 3: coba mulai bimbingan mahasiswa (hanya jalan kalau syaratnya terpenuhi)
-        if (bimbinganScript != null)
+        if (picuAdegan)
         {
-            bimbinganScript.CobaMulai();
-        }
-
-        // Scene 5: coba mulai evaluasi Kaprodi (hanya jalan kalau Scene 4 sudah selesai)
-        if (evaluasiScript != null)
-        {
-            evaluasiScript.CobaMulai();
-        }
-
-        // Onboarding / Kaprodi cuma jalan di interaksi pertama
-        if (!hasSatOnce)
-        {
-            if (arrowIndicator != null)
+            // Scene 3: coba mulai bimbingan mahasiswa (hanya jalan kalau syaratnya terpenuhi)
+            if (bimbinganScript != null)
             {
-                arrowIndicator.SetActive(false);
+                bimbinganScript.CobaMulai();
             }
 
-            if (kaprodiScript != null)
+            // Scene 5: coba mulai evaluasi Kaprodi (hanya jalan kalau Scene 4 sudah selesai)
+            if (evaluasiScript != null)
             {
-                kaprodiScript.MulaiJalanMasuk();
+                evaluasiScript.CobaMulai();
             }
 
-            hasSatOnce = true;
+            // Onboarding / Kaprodi cuma jalan di interaksi pertama
+            if (!hasSatOnce)
+            {
+                if (arrowIndicator != null)
+                {
+                    arrowIndicator.SetActive(false);
+                }
+
+                if (kaprodiScript != null)
+                {
+                    kaprodiScript.MulaiJalanMasuk();
+                }
+
+                hasSatOnce = true;
+            }
         }
 
         // Matikan Fisik & Collider Player agar tidak berbenturan

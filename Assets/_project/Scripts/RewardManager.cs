@@ -20,7 +20,7 @@ public class RewardManager : MonoBehaviour
     public static RewardManager Instance;
 
     [Header("Daftar Reward (urutan = nomor index)")]
-    [Tooltip("Saran urutan: 0 = RPS, 1 = Ngajar, 2 = Bimbingan, 3 = Referensi (buku)")]
+    [Tooltip("Urutan: 0 = RPS, 1 = Ngajar, 2 = Bimbingan, 3 = Referensi (buku), 4 = Penelitian, 5 = Karya Ilmiah. Nomor mulai dari 0.")]
     public RewardItem[] daftarReward;
 
     [Header("Box Reward (Muncul Sendiri, Hilang Sendiri)")]
@@ -83,7 +83,13 @@ public class RewardManager : MonoBehaviour
     // Versi coroutine: dipakai dengan "yield return StartCoroutine(...)" supaya alur aktivitas menunggu box hilang
     public IEnumerator RewardRoutine(int index)
     {
-        if (daftarReward == null || index < 0 || index >= daftarReward.Length) yield break;
+        if (daftarReward == null || index < 0 || index >= daftarReward.Length)
+        {
+            int jumlah = (daftarReward == null) ? 0 : daftarReward.Length;
+            Debug.LogWarning("[Reward] Nomor reward " + index + " tidak ada. Daftar Reward hanya berisi " + jumlah
+                + " elemen, jadi nomor yang valid adalah 0 sampai " + (jumlah - 1) + ". Reward tidak ditampilkan.");
+            yield break;
+        }
 
         RewardItem r = daftarReward[index];
 
@@ -169,6 +175,26 @@ public class RewardManager : MonoBehaviour
         }
     }
 
+    // Dipanggil saat masuk level baru: riwayat dan hitungan reward level sebelumnya dikosongkan
+    public void MulaiLevelBaru()
+    {
+        foreach (GameObject entri in entriRiwayat)
+        {
+            if (entri != null) Destroy(entri);
+        }
+        entriRiwayat.Clear();
+
+        if (daftarReward != null)
+        {
+            foreach (RewardItem r in daftarReward) r.jumlah = 0;
+        }
+
+        TutupRiwayat();
+        if (tandaBaru != null) tandaBaru.SetActive(false);
+
+        Debug.Log("[Reward] Riwayat dikosongkan untuk level baru.");
+    }
+
     public void BukaTutupRiwayat()
     {
         LepasFokusTombol();
@@ -222,4 +248,10 @@ public class RewardManager : MonoBehaviour
 
     [ContextMenu("Tes Reward 3 (Referensi)")]
     private void Tes3() { TampilkanReward(3); }
+
+    [ContextMenu("Tes Reward 4 (Penelitian)")]
+    private void Tes4() { TampilkanReward(4); }
+
+    [ContextMenu("Tes Reward 5 (Karya Ilmiah)")]
+    private void Tes5() { TampilkanReward(5); }
 }

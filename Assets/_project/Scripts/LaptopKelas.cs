@@ -2,6 +2,7 @@ using UnityEngine;
 using System.Collections;
 using UnityEngine.UI;
 using TMPro;
+using UnityEngine.Events;
 
 public class LaptopKelas : MonoBehaviour
 {
@@ -28,11 +29,23 @@ public class LaptopKelas : MonoBehaviour
     public bool bolehKlikMouse = true;
     public bool hanyaPertamaKali = true;     // true = tutorial hanya muncul saat mengajar pertama kali
 
+    [Header("Box Tutorial Level 2")]
+    public GameObject boxTutorialLevel2;     // Box tutorial khusus level 2 (dibuat di Hierarchy). Dipakai setelah MasukLevel2() dipanggil
+    public UnityEvent saatMengajarPertamaLevel2Selesai;   // Dipanggil sekali: setelah mengajar pertama di level 2 selesai (tutorial, reward, energi). Dipakai untuk membuka Scene 3
+
+    [Header("Sound Effect Mengetik (selama bar bulat berputar)")]
+    public AudioClip suaraKetik;                // File mp3 suara mengetik. Kosong = tanpa suara
+    [Range(0f, 1f)] public float volumeSuaraKetik = 1f;
+    public bool suaraDiulang = true;            // true = suara diulang terus selama bar berputar
+    public AudioSource audioSource;             // Kosong = dibuat otomatis di objek ini
+
     [Header("Reward (Setelah Mengajar Selesai)")]
     public int indexReward = 1;              // Nomor reward di RewardManager (1 = Ngajar). -1 = tanpa reward
 
     private bool tutorialSudahTampil = false;
     private bool sedangTutorial = false;   // true selama box tutorial tampil
+    private bool level2Aktif = false;      // True setelah MasukLevel2() dipanggil
+    private bool mengajarLevel2Dilaporkan = false;   // True setelah event mengajar pertama level 2 dipanggil
 
     [Header("Efek Layar Laptop")]
     public SpriteRenderer spriteLaptop;    // kosong = ambil dari objek ini
@@ -90,6 +103,7 @@ public class LaptopKelas : MonoBehaviour
         if (panahKeRuangDosen != null) panahKeRuangDosen.SetActive(false);
         if (overlayHitam != null) overlayHitam.SetActive(false);
         if (boxTutorial != null) boxTutorial.SetActive(false);
+        if (boxTutorialLevel2 != null) boxTutorialLevel2.SetActive(false);
 
         if (interactionPoint == null) interactionPoint = transform;
         if (energyBar == null) energyBar = FindFirstObjectByType<EnergyBar>();
@@ -109,7 +123,7 @@ public class LaptopKelas : MonoBehaviour
         if (playerTransform == null)
             Debug.LogWarning("[LaptopKelas] Player Transform (Tpngajar) tidak ditemukan! Drag manual di Inspector.");
 
-        // Level 2: langsung dalam mode berulang
+        // Level 2 (scene terpisah): langsung dalam mode berulang
         if (mulaiModeBerulang) BukaAktivitasBerulang();
     }
 
@@ -120,6 +134,52 @@ public class LaptopKelas : MonoBehaviour
         modeBerulang = true;
         if (panahKeRuangDosen != null) panahKeRuangDosen.SetActive(false);
         Debug.Log("[LaptopKelas] Mode berulang aktif (tanpa panah dan tutorial).");
+    }
+
+    // Dipanggil saat level 2 dimulai (lewat event "Saat Masuk Level 2" di PopupLevelSelesai):
+    // tutorial mengajar muncul lagi dengan box level 2, tanpa panah petunjuk
+    public void MasukLevel2()
+    {
+        level2Aktif = true;
+        tutorialSudahTampil = false;
+
+        // Box level 1 diganti box level 2 (kalau box level 2 kosong, tidak ada tutorial di level 2)
+        if (boxTutorial != null) boxTutorial.SetActive(false);
+        boxTutorial = boxTutorialLevel2;
+
+        if (panahKeRuangDosen != null) panahKeRuangDosen.SetActive(false);
+
+        Debug.Log("[LaptopKelas] Level 2: tutorial memakai box level 2, tanpa panah.");
+    }
+
+    // ---------- Sound effect mengetik ----------
+    void MulaiSuaraKetik()
+    {
+        if (suaraKetik == null) return;
+
+        // Buat AudioSource khusus di objek ini (tidak mengganggu AudioSource lain yang mungkin sudah ada)
+        if (audioSource == null)
+        {
+            audioSource = gameObject.AddComponent<AudioSource>();
+            audioSource.playOnAwake = false;
+            audioSource.spatialBlend = 0f;   // suara 2D: terdengar sama di mana pun posisi kamera
+        }
+
+        audioSource.clip = suaraKetik;
+        audioSource.loop = suaraDiulang;
+        audioSource.volume = volumeSuaraKetik;
+        audioSource.Play();
+    }
+
+    void HentikanSuaraKetik()
+    {
+        if (audioSource != null && audioSource.isPlaying && audioSource.clip == suaraKetik)
+            audioSource.Stop();
+    }
+
+    void OnDisable()
+    {
+        HentikanSuaraKetik();
     }
 
     bool PlayerBolehInteraksi()
@@ -177,6 +237,7 @@ public class LaptopKelas : MonoBehaviour
 
         if (promptPressE != null) promptPressE.SetActive(false);
         if (canvasProgressBar != null) canvasProgressBar.SetActive(true);
+        MulaiSuaraKetik();
         if (circularProgressBar != null) circularProgressBar.fillAmount = 0f;
     }
 
@@ -197,6 +258,7 @@ public class LaptopKelas : MonoBehaviour
 
         if (progressTimer >= durasiKerja)
         {
+            HentikanSuaraKetik();
             status = Status.Menyelesaikan;
             StartCoroutine(SelesaiKerja());
         }
@@ -204,6 +266,7 @@ public class LaptopKelas : MonoBehaviour
 
     void BatalkanKerja()
     {
+        HentikanSuaraKetik();
         status = Status.Siap;
         progressTimer = 0f;
 
@@ -231,11 +294,12 @@ public class LaptopKelas : MonoBehaviour
 
         SudahMengajar = true;
 
-        // Panah ke ruang dosen (hanya sebelum Scene 5)
-        if (panahKeRuangDosen != null && !modeBerulang) panahKeRuangDosen.SetActive(true);
+        // Panah ke ruang dosen (hanya level 1 sebelum Scene 5, tidak pernah di level 2)
+        if (panahKeRuangDosen != null && !modeBerulang && !level2Aktif) panahKeRuangDosen.SetActive(true);
 
-        // Box tutorial (hanya sebelum Scene 5, dan hanya pertama kali kalau "Hanya Pertama Kali" dicentang)
-        bool tampilkanTutorial = boxTutorial != null && !modeBerulang && (!hanyaPertamaKali || !tutorialSudahTampil);
+        // Box tutorial: level 1 hanya sebelum Scene 5, level 2 muncul lagi (box level 2).
+        // Hanya pertama kali kalau "Hanya Pertama Kali" dicentang.
+        bool tampilkanTutorial = boxTutorial != null && (!modeBerulang || level2Aktif) && (!hanyaPertamaKali || !tutorialSudahTampil);
         if (tampilkanTutorial)
         {
             yield return StartCoroutine(TampilkanTutorial());
@@ -252,6 +316,13 @@ public class LaptopKelas : MonoBehaviour
         {
             energyBar.DecreaseEnergy(biayaEnergi);
             energyBar.CekEnergiHabis();
+        }
+
+        // Level 2: mengajar pertama selesai -> beri tahu adegan berikutnya (Scene 3 Research Center)
+        if (level2Aktif && !mengajarLevel2Dilaporkan)
+        {
+            mengajarLevel2Dilaporkan = true;
+            saatMengajarPertamaLevel2Selesai.Invoke();
         }
 
         MulaiCooldown();
