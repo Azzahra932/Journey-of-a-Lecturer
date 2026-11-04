@@ -20,7 +20,7 @@ public class RewardManager : MonoBehaviour
     public static RewardManager Instance;
 
     [Header("Daftar Reward (urutan = nomor index)")]
-    [Tooltip("Urutan: 0 = RPS, 1 = Ngajar, 2 = Bimbingan, 3 = Referensi (buku), 4 = Penelitian, 5 = Karya Ilmiah. Nomor mulai dari 0.")]
+    [Tooltip("Urutan: 0 = RPS, 1 = Ngajar, 2 = Bimbingan, 3 = Referensi (buku), 4 = Penelitian, 5 = Karya Ilmiah, 6 = Seminar, 7 = Pengabdian. Nomor mulai dari 0.")]
     public RewardItem[] daftarReward;
 
     [Header("Box Reward (Muncul Sendiri, Hilang Sendiri)")]
@@ -254,4 +254,10 @@ public class RewardManager : MonoBehaviour
 
     [ContextMenu("Tes Reward 5 (Karya Ilmiah)")]
     private void Tes5() { TampilkanReward(5); }
+
+    [ContextMenu("Tes Reward 6 (Seminar)")]
+    private void Tes6() { TampilkanReward(6); }
+
+    [ContextMenu("Tes Reward 7 (Pengabdian)")]
+    private void Tes7() { TampilkanReward(7); }
 }

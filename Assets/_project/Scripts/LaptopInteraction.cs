@@ -13,6 +13,10 @@ public class LaptopInteraction : MonoBehaviour
     public float biayaEnergi = 15f;             // Energi yang berkurang setelah tugas RPS selesai
     public EnergyBar energyBar;                 // Kosong = dicari otomatis
 
+    [Header("Level 2 (RPS tidak dipakai)")]
+    public bool nonaktifDiLevel2 = true;        // true = di level 2 laptop tetap terlihat, tapi RPS dan ikon E tidak berfungsi
+    public int targetSkorLevel1 = 150;          // Target skor level 1. Target skor yang lebih besar dari ini berarti level 2 sudah dimulai
+
     [Header("Titik Acuan Jarak (Opsional)")]
     public Transform interactionPoint;          // Drag objek "TitikInteraksi" ke sini (opsional)
 
@@ -68,6 +72,7 @@ public class LaptopInteraction : MonoBehaviour
 
     private bool isWorking = false;
     private bool isCompleted = false;
+    private bool fungsiDimatikan = false;        // True setelah fungsi RPS dimatikan di level 2
 
     // True selama tugas RPS berjalan (sampai box hasil ditutup), dipakai pop-up level selesai
     public bool SedangSibuk { get { return isWorking; } }
@@ -158,6 +163,13 @@ public class LaptopInteraction : MonoBehaviour
 
     void Update()
     {
+        // Level 2: laptop tetap terlihat, tapi RPS tidak berfungsi dan ikon E tidak muncul
+        if (nonaktifDiLevel2 && !isWorking && Level2Aktif())
+        {
+            if (!fungsiDimatikan) MatikanFungsiLevel2();
+            return;
+        }
+
         // Teks istirahat hilang otomatis
         if (teksLaptopIstirahat != null && teksLaptopIstirahat.activeSelf && Time.time >= teksSembunyiPada)
             teksLaptopIstirahat.SetActive(false);
@@ -216,6 +228,28 @@ public class LaptopInteraction : MonoBehaviour
         {
             if (petunjukTekanE != null) petunjukTekanE.SetActive(false);
         }
+    }
+
+    // Level 2 dianggap sudah dimulai kalau target skor sudah naik (150 -> 300) setelah pop-up Level Selesai
+    private bool Level2Aktif()
+    {
+        return ScoreManager.Instance != null && ScoreManager.Instance.targetScore > targetSkorLevel1;
+    }
+
+    // Menyembunyikan semua tampilan fungsi RPS (ikon E, cooldown, panah). Laptop sendiri tetap terlihat.
+    private void MatikanFungsiLevel2()
+    {
+        fungsiDimatikan = true;
+        cooldownAktif = false;
+
+        if (petunjukTekanE != null) petunjukTekanE.SetActive(false);
+        if (teksLaptopIstirahat != null) teksLaptopIstirahat.SetActive(false);
+        if (ikonBateraiLemah != null) ikonBateraiLemah.SetActive(false);
+        if (teksCountdown != null) teksCountdown.gameObject.SetActive(false);
+        if (panahKeKelas != null) panahKeKelas.SetActive(false);
+        if (spriteLaptop != null) spriteLaptop.color = warnaNormal;
+
+        Debug.Log("[Laptop] Level 2: fungsi RPS dimatikan, laptop hanya tampil sebagai dekorasi.");
     }
 
     // Menerima durasi dinamis dari pilihan box (20s atau 3s) yang dipanggil oleh LaptopChoiceHandler
