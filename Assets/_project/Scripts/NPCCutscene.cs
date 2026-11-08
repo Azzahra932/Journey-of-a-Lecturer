@@ -23,19 +23,23 @@ public class NPCCutscene : MonoBehaviour
     [Header("Pengaturan Animator NPC")]
     public string isWalkingParam = "isWalking";
 
-    // Dipanggil saat Kaprodi sudah tiba di tujuan dan duduk (dipakai adegan level 2 untuk memulai dialognya sendiri)
+    // Dipanggil saat Kaprodi sudah tiba di tujuan dan duduk (dipakai adegan level 2/3 untuk memulai dialognya sendiri)
     public event System.Action SaatTibaDanDuduk;
 
     private int currentWaypointIndex = 0;
     private bool isWalking = false;
     private bool isExiting = false;
 
+    // Kunci adegan: selama true, MulaiJalanKeluar() dari script lain diabaikan.
+    // Hanya MulaiJalanKeluarAdegan() yang boleh membuat Kaprodi keluar.
+    private bool dikunciAdegan = false;
+
     private Animator npcAnimator;
     private SpriteRenderer npcSpriteRenderer;
 
     void Awake()
     {
-        // Menggunakan komponen khusus milik GameObject NPC ini sahaja
+        // Menggunakan komponen khusus milik GameObject NPC ini saja
         npcAnimator = GetComponent<Animator>();
         npcSpriteRenderer = GetComponent<SpriteRenderer>();
 
@@ -143,7 +147,31 @@ public class NPCCutscene : MonoBehaviour
         }
     }
 
+    // Dipanggil adegan yang butuh Kaprodi tidak diganggu script lain (mis. Level 3 Scene 1)
+    public void KunciAdegan(bool kunci)
+    {
+        dikunciAdegan = kunci;
+    }
+
+    // Method lama (dipakai adegan Level 1 dan 2): diabaikan kalau sedang dikunci adegan lain
     public void MulaiJalanKeluar()
+    {
+        if (dikunciAdegan)
+        {
+            Debug.LogWarning("[NPCCutscene] MulaiJalanKeluar DIABAIKAN karena sedang dikunci adegan lain. Pemanggil:\n" + System.Environment.StackTrace);
+            return;
+        }
+
+        JalanKeluarSekarang();
+    }
+
+    // Method khusus untuk adegan yang memegang kunci (AdeganLevel3Scene1)
+    public void MulaiJalanKeluarAdegan()
+    {
+        JalanKeluarSekarang();
+    }
+
+    private void JalanKeluarSekarang()
     {
         if (npcSpriteRenderer != null)
         {

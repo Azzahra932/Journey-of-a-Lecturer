@@ -1,16 +1,30 @@
+using System.Collections;
 using UnityEngine;
 using UnityEngine.Events;
-using UnityEngine.SceneManagement;
 using UnityEngine.UI;
 using TMPro;
 
 // Pop-up "Level 2 selesai" (popuplv2): muncul saat poin mencapai target level 2 (300), menampilkan XP dan Integritas.
-// Sama seperti pop-up level 1 (PopupLevelSelesai), tapi hanya aktif setelah target skor naik menjadi 300.
+// Tombol Lanjut (tetap di scene yang sama, seperti level 1 ke level 2) akan:
+//   1. mengganti tampilan MC (animator berjalan/diam, dan sprite MC saat duduk)
+//   2. mengganti nama MC di top bar (Lektor)
+//   3. mengganti icon MC di top bar
+//   4. menaikkan target poin (300 -> target level 3)
+//   5. membuka ruangan yang terkunci (Ruang A)
+//   6. transisi layar hitam: MC kembali ke ruang dosen, energi penuh, jam 08.00
+//   7. box pengantar level 3 (opsional), lalu event "Saat Masuk Level 3"
 // Kalau poin tercapai saat sebuah aktivitas masih berjalan (laptop, podium, tutorial), pop-up menunggu sampai aktivitas itu selesai.
 //
 // Pasang script ini di satu objek kosong (mis. "ManagerLevel2Selesai").
 public class PopupLevel2Selesai : MonoBehaviour
 {
+    [System.Serializable]
+    public class GantiSpriteItem
+    {
+        public SpriteRenderer target;   // SpriteRenderer objek MC duduk (mis. Tpngajar di kelas, Sit di perpustakaan)
+        public Sprite spriteBaru;       // Sprite MC level 3 versi duduk untuk objek itu
+    }
+
     [Header("Syarat Muncul")]
     public int targetSkorLevel2 = 300;          // Pop-up muncul saat skor mencapai target ini. Pop-up tidak muncul selama target skor masih milik level 1 (150)
     public float jedaSebelumPopup = 1.0f;       // Jeda (detik) setelah poin tercapai
@@ -28,9 +42,45 @@ public class PopupLevel2Selesai : MonoBehaviour
     public LaptopInteraction laptopDosen;
     public LaptopPerpusInteraction laptopPerpus;
 
-    [Header("Saat Tombol Lanjut Ditekan")]
-    public string namaSceneBerikutnya = "";     // Opsional: nama scene yang dimuat setelah Lanjut (harus ada di Build Profiles). Kosong = tidak pindah scene
-    public UnityEvent saatLanjut;               // Opsional: hal lain yang dijalankan saat Lanjut (mis. menampilkan ending)
+    [Header("0. Box Pengantar Level 3 (opsional, muncul setelah MC kembali ke ruang dosen)")]
+    public GameObject[] boxPengantarLevel3;         // Box tampil berurutan setelah transisi. Kosong = langsung lanjut
+    public KeyCode tombolLanjutBox = KeyCode.Space; // Menutup box dan lanjut ke box berikutnya
+    public bool bolehKlikMouse = true;              // Klik kiri mouse juga bisa
+
+    [Header("1. Perubahan Karakter MC Level 3 (Berjalan / Diam)")]
+    public SpriteRenderer playerSpriteRenderer;             // SpriteRenderer pemain (dipakai kalau pemain TIDAK pakai Animator)
+    public Sprite spriteMCLevel3;                           // Sprite MC level 3
+    public Animator[] animatorPemain;                       // Animator pemain (TPdiam, dst)
+    public RuntimeAnimatorController animatorControllerLevel3;   // Animator (Override) Controller MC level 3
+
+    [Header("1b. Sprite MC Saat Duduk (Kelas, Perpustakaan, dst)")]
+    public GantiSpriteItem[] spriteDuduk;                   // Satu elemen per objek MC duduk
+
+    [Header("1c. Sprite Duduk di Kursi Dosen (InteractiveDesk)")]
+    public InteractiveDesk kursiDosen;                      // Objek yang memasang script Interactive Desk (kursi dosen)
+    public Sprite spriteDudukDosenLevel3;                   // Sprite MC level 3 saat duduk di kursi dosen
+
+    [Header("2 & 3. Nama & Icon MC di Top Bar")]
+    public TMP_Text teksNamaMCTopBar;           // Teks nama MC di top bar
+    public string namaBaruMC = "Lektor";
+    public Image iconTopBar;                    // Image icon MC di top bar
+    public Sprite iconLevel3;                   // Sprite icon level 3
+
+    [Header("4. Target Poin Level 3")]
+    public int targetSkorLevel3 = 450;          // Target poin level 3 (isi sesuai desain). 0 = target tidak diubah
+
+    [Header("5. Membuka Ruangan (Ruang A)")]
+    public RuangTerkunci[] ruangYangDibuka;     // Isi dengan objek yang memasang script RuangTerkunci untuk Ruang A
+
+    [Header("6. Mulai Level 3 di Ruang Dosen (Energi Penuh)")]
+    public bool kembaliKeAwalSaatLanjut = true;   // MC dipindah ke titik awal (ruang dosen) lewat transisi layar hitam
+    public TransisiKembaliKeAwal transisi;        // Kosong = dicari otomatis
+    public EnergyBar energyBar;                   // Kosong = dicari otomatis
+    public GameTimeManager timeManager;           // Kosong = dicari otomatis. Jam dikembalikan ke 08.00 saat level 3 dimulai
+
+    [Header("Saat Tombol Lanjut / Masuk Level 3")]
+    public UnityEvent saatLanjut;               // Dipanggil begitu tombol Lanjut ditekan
+    public UnityEvent saatMasukLevel3;          // Dipanggil setelah MC di titik awal dan box pengantar selesai (untuk menyambung adegan Level 3)
 
     private bool sudahTampil = false;
     private bool sudahLanjut = false;
@@ -42,11 +92,22 @@ public class PopupLevel2Selesai : MonoBehaviour
     {
         if (panelPopup != null) panelPopup.SetActive(false);
         if (overlayHitam != null) overlayHitam.SetActive(false);
+        if (boxPengantarLevel3 != null)
+        {
+            foreach (GameObject b in boxPengantarLevel3)
+            {
+                if (b != null) b.SetActive(false);
+            }
+        }
+
         if (tombolLanjut != null) tombolLanjut.onClick.AddListener(Lanjut);
 
         if (laptopKelas == null) laptopKelas = FindFirstObjectByType<LaptopKelas>();
         if (laptopDosen == null) laptopDosen = FindFirstObjectByType<LaptopInteraction>();
         if (laptopPerpus == null) laptopPerpus = FindFirstObjectByType<LaptopPerpusInteraction>(FindObjectsInactive.Include);
+        if (transisi == null) transisi = FindFirstObjectByType<TransisiKembaliKeAwal>();
+        if (energyBar == null) energyBar = FindFirstObjectByType<EnergyBar>();
+        if (timeManager == null) timeManager = FindFirstObjectByType<GameTimeManager>();
     }
 
     void OnDestroy()
@@ -110,6 +171,13 @@ public class PopupLevel2Selesai : MonoBehaviour
         Tampilkan();
     }
 
+    [ContextMenu("Tes Lanjut ke Level 3 (tanpa pop-up)")]
+    private void TesLanjut()
+    {
+        sudahTampil = true;
+        Lanjut();
+    }
+
     private void Tampilkan()
     {
         sudahTampil = true;
@@ -149,21 +217,175 @@ public class PopupLevel2Selesai : MonoBehaviour
         Debug.Log("[Level 2] Target poin level 2 tercapai. Pop-up level 2 ditampilkan.");
     }
 
+    // Dipanggil tombol Lanjut: masuk ke level 3 tanpa pindah scene
     public void Lanjut()
     {
         if (sudahLanjut) return;   // cegah klik ganda
         sudahLanjut = true;
 
-        Time.timeScale = 1f;
-
         if (panelPopup != null) panelPopup.SetActive(false);
-        if (overlayHitam != null) overlayHitam.SetActive(false);
 
         saatLanjut.Invoke();
 
-        if (!string.IsNullOrEmpty(namaSceneBerikutnya))
-            SceneManager.LoadScene(namaSceneBerikutnya);
+        StartCoroutine(AlurLanjut());
+    }
 
-        Debug.Log("[Level 2] Tombol Lanjut ditekan.");
+    private IEnumerator AlurLanjut()
+    {
+        // 1. Pop-up dan overlay ditutup, waktu berjalan lagi supaya transisi layar hitam bisa jalan
+        Time.timeScale = 1f;
+        if (overlayHitam != null) overlayHitam.SetActive(false);
+
+        // 2. Terapkan perubahan level 3
+        GantiKarakterMC();
+        GantiSpriteMCDuduk();
+        GantiNamaDanIconTopBar();
+        NaikkanTargetSkor();
+        BukaRuangan();
+
+        // Riwayat reward dikosongkan, level 3 mulai dari awal
+        if (RewardManager.Instance != null) RewardManager.Instance.MulaiLevelBaru();
+
+        // 3. Transisi layar hitam: MC kembali ke ruang dosen (titik awal)
+        if (kembaliKeAwalSaatLanjut && transisi != null && !transisi.SedangTransisi)
+        {
+            transisi.saatTransisiSelesai.AddListener(SetelahTransisiLevel3);
+            transisi.MulaiTransisi();
+        }
+        else
+        {
+            if (kembaliKeAwalSaatLanjut && transisi == null)
+                Debug.LogWarning("[Level 3] TransisiKembaliKeAwal tidak ditemukan, MC tidak dipindah ke titik awal.");
+
+            SetelahTransisiLevel3();
+        }
+
+        Debug.Log("[Level 3] Masuk Level 3.");
+        yield break;
+    }
+
+    // Dijalankan setelah transisi selesai dan MC berada di titik awal level 3
+    private void SetelahTransisiLevel3()
+    {
+        if (transisi != null) transisi.saatTransisiSelesai.RemoveListener(SetelahTransisiLevel3);
+
+        // Energi penuh
+        if (energyBar != null) energyBar.IsiPenuh();
+
+        // Jam kembali ke 08.00 pagi
+        if (timeManager != null) timeManager.ResetKeJamPagi();
+
+        StartCoroutine(AlurBoxPengantar());
+    }
+
+    // Setelah transisi: box pengantar (tunggu Space), lalu event masuk level 3
+    private IEnumerator AlurBoxPengantar()
+    {
+        if (boxPengantarLevel3 != null && boxPengantarLevel3.Length > 0)
+        {
+            // Game berhenti dan layar digelapkan selama box tampil
+            Time.timeScale = 0f;
+            if (overlayHitam != null)
+            {
+                overlayHitam.SetActive(true);
+                overlayHitam.transform.SetAsLastSibling();
+            }
+
+            foreach (GameObject box in boxPengantarLevel3)
+            {
+                if (box == null) continue;
+
+                box.SetActive(true);
+                box.transform.SetAsLastSibling();
+
+                // Jeda singkat supaya tombol yang masih tertekan tidak langsung menutup box
+                yield return new WaitForSecondsRealtime(0.25f);
+
+                while (!(Input.GetKeyDown(tombolLanjutBox) || (bolehKlikMouse && Input.GetMouseButtonDown(0))))
+                    yield return null;
+
+                box.SetActive(false);
+            }
+
+            if (overlayHitam != null) overlayHitam.SetActive(false);
+            Time.timeScale = 1f;
+        }
+
+        // Hal tambahan yang dihubungkan lewat Inspector (mis. adegan pertama Level 3)
+        saatMasukLevel3.Invoke();
+
+        Debug.Log("[Level 3] MC di titik awal level 3, energi penuh, jam 08.00.");
+    }
+
+    // 1. Ganti tampilan MC berjalan / diam
+    private void GantiKarakterMC()
+    {
+        // Kalau MC digerakkan Animator, sprite harus diganti lewat Animator Controller,
+        // kalau tidak, Animator akan menimpa sprite setiap frame.
+        if (animatorControllerLevel3 != null && animatorPemain != null)
+        {
+            foreach (Animator a in animatorPemain)
+            {
+                if (a != null) a.runtimeAnimatorController = animatorControllerLevel3;
+            }
+        }
+
+        if (playerSpriteRenderer != null && spriteMCLevel3 != null)
+            playerSpriteRenderer.sprite = spriteMCLevel3;
+    }
+
+    // 1b & 1c. Ganti sprite MC versi duduk di tiap kursi
+    private void GantiSpriteMCDuduk()
+    {
+        // Kursi dosen: InteractiveDesk memakai "Sit Sprite" untuk menggantikan gambar pemain saat duduk
+        if (kursiDosen != null && spriteDudukDosenLevel3 != null)
+        {
+            kursiDosen.sitSprite = spriteDudukDosenLevel3;
+            Debug.Log("[Level 3] Sprite duduk kursi dosen diganti.");
+        }
+
+        if (spriteDuduk == null) return;
+
+        foreach (GantiSpriteItem item in spriteDuduk)
+        {
+            if (item == null || item.target == null || item.spriteBaru == null) continue;
+
+            item.target.sprite = item.spriteBaru;
+            Debug.Log("[Level 3] Sprite duduk '" + item.target.name + "' diganti.");
+        }
+    }
+
+    // 2 & 3. Nama dan icon MC di top bar
+    private void GantiNamaDanIconTopBar()
+    {
+        if (teksNamaMCTopBar != null && !string.IsNullOrEmpty(namaBaruMC))
+            teksNamaMCTopBar.text = namaBaruMC;
+
+        if (iconTopBar != null && iconLevel3 != null)
+            iconTopBar.sprite = iconLevel3;
+    }
+
+    // 4. Target poin naik, skor tetap -> top bar tampil mis. 300/450
+    private void NaikkanTargetSkor()
+    {
+        if (targetSkorLevel3 <= 0 || ScoreManager.Instance == null) return;
+
+        ScoreManager.Instance.targetScore = targetSkorLevel3;
+
+        if (ScoreManager.Instance.scoreSlider != null)
+            ScoreManager.Instance.scoreSlider.maxValue = targetSkorLevel3;
+
+        ScoreManager.Instance.AddScore(0);   // perbarui teks dan bar poin
+    }
+
+    // 5. Buka ruangan yang terkunci (Ruang A)
+    private void BukaRuangan()
+    {
+        if (ruangYangDibuka == null) return;
+
+        foreach (RuangTerkunci r in ruangYangDibuka)
+        {
+            if (r != null) r.Buka();
+        }
     }
 }

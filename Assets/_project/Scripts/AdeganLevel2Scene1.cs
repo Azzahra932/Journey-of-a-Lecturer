@@ -13,6 +13,9 @@ using UnityEngine.Events;
 //
 // Cara menyambung: di ManagerLevel1Selesai (PopupLevelSelesai), event "Saat Masuk Level 2",
 // tambahkan objek ini dan pilih fungsi MulaiAdegan.
+//
+// Batalkan(): dipanggil AdeganLevel3Scene1 saat Level 3 dimulai. Kalau Scene 1 Level 2 belum selesai (mis. MC tidak pernah duduk
+// karena level dilewati saat tes), adegan ini dihentikan dan tidak ikut jalan di Level 3.
 public class AdeganLevel2Scene1 : MonoBehaviour
 {
     [Header("Referensi")]
@@ -44,6 +47,13 @@ public class AdeganLevel2Scene1 : MonoBehaviour
 
     private bool sudahJalan = false;
     private bool kaprodiTiba = false;
+
+    // Untuk Batalkan(): status adegan dan hal-hal yang harus dikembalikan kalau adegan dihentikan di tengah jalan
+    private bool sudahSelesai = false;
+    private bool dibatalkan = false;
+    private bool dialogDimatikan = false;
+    private DialogueManager dialogAsliTersimpan;
+    private bool tutorialAktif = false;
 
     void Start()
     {
@@ -88,13 +98,53 @@ public class AdeganLevel2Scene1 : MonoBehaviour
     // Mulai menunggu: adegan baru berjalan setelah MC duduk di kursi dosen.
     public void MulaiAdegan()
     {
-        if (sudahJalan) return;
+        if (sudahJalan || dibatalkan) return;
         sudahJalan = true;
 
         // Scene 1 level 2 hanya percakapan: ikon E dan RPS di laptop dosen dimatikan sampai adegan selesai
         if (laptopDosen != null) laptopDosen.isDialogDone = false;
 
         StartCoroutine(Alur());
+    }
+
+    // Dipanggil AdeganLevel3Scene1 saat Level 3 dimulai: kalau adegan ini belum selesai, dihentikan dan semuanya dikembalikan,
+    // supaya box dialog Level 2 tidak ikut muncul menumpuk dengan dialog Level 3.
+    public void Batalkan()
+    {
+        if (dibatalkan) return;
+        dibatalkan = true;
+
+        // Adegan sudah selesai dengan benar, tidak ada yang perlu dihentikan
+        if (sudahSelesai) return;
+
+        StopAllCoroutines();
+
+        SembunyikanSemuaBox(boxDialog);
+        SembunyikanSemuaBox(boxTutorial);
+        if (overlayHitam != null) overlayHitam.SetActive(false);
+
+        if (tutorialAktif)
+        {
+            tutorialAktif = false;
+            if (hentikanWaktuSaatTutorial) Time.timeScale = 1f;
+        }
+
+        if (kaprodi != null)
+        {
+            kaprodi.SaatTibaDanDuduk -= SaatKaprodiTiba;
+
+            // Dialog bawaan Kaprodi dikembalikan (tadinya dimatikan sementara oleh adegan ini)
+            if (dialogDimatikan)
+            {
+                kaprodi.dialogueManager = dialogAsliTersimpan;
+                dialogDimatikan = false;
+            }
+        }
+
+        if (kursiDosen != null) kursiDosen.TerkunciEksternal = false;
+        if (laptopDosen != null) laptopDosen.isDialogDone = true;
+
+        Debug.Log("[Adegan L2-S1] Scene 1 Level 2 belum selesai saat Level 3 dimulai, adegan dihentikan supaya tidak ikut jalan di Level 3.");
     }
 
     // Menu tes: saat Play, klik kanan judul komponen ini di Inspector, lalu pilih menu ini
@@ -144,6 +194,8 @@ public class AdeganLevel2Scene1 : MonoBehaviour
         // 2. Kaprodi masuk. Dialog bawaan level 1 dimatikan sementara,
         //    dialog level 2 memakai box buatan sendiri (dikembalikan lagi setelah adegan)
         DialogueManager dialogAsli = kaprodi.dialogueManager;
+        dialogAsliTersimpan = dialogAsli;
+        dialogDimatikan = true;
         kaprodi.dialogueManager = null;
 
         kaprodiTiba = false;
@@ -173,6 +225,7 @@ public class AdeganLevel2Scene1 : MonoBehaviour
 
         kaprodi.SaatTibaDanDuduk -= SaatKaprodiTiba;
         kaprodi.dialogueManager = dialogAsli;
+        dialogDimatikan = false;
 
         // 5. Setelah Kaprodi keluar: box tutorial
         if (kaprodiTiba)
@@ -215,6 +268,7 @@ public class AdeganLevel2Scene1 : MonoBehaviour
             yield break;
         }
 
+        tutorialAktif = true;
         if (hentikanWaktuSaatTutorial) Time.timeScale = 0f;
 
         // Urutan penting: overlay dulu, baru box (box harus tampil di atas overlay)
@@ -247,10 +301,13 @@ public class AdeganLevel2Scene1 : MonoBehaviour
         if (overlayHitam != null) overlayHitam.SetActive(false);
 
         if (hentikanWaktuSaatTutorial) Time.timeScale = 1f;
+        tutorialAktif = false;
     }
 
     private void Selesai()
     {
+        sudahSelesai = true;
+
         // MC bebas berdiri lagi
         if (kursiDosen != null) kursiDosen.TerkunciEksternal = false;
 
