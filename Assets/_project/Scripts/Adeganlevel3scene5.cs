@@ -10,10 +10,12 @@ using TMPro;
 //   2. MC ke ruang dosen dan duduk di kursinya (kursi dosen). Bisa duduk sendiri, atau otomatis kalau "Duduk Otomatis" dicentang
 //   3. Rekan dosen muncul di pintu, berjalan lewat jalur, lalu duduk di kursi di sampingnya
 //   4. Tiga box dialog (Rekan Dosen, Pemain, Rekan Dosen), Space untuk lanjut
-//   5. Ikon E muncul di laptop (selama MC duduk). Tekan E: muncul box pilihan jurnal (klik salah satu)
+//   5. Ikon E muncul di laptop (selama MC duduk). Tekan E: muncul dua box pilihan dulu, jujur (atas) atau bohong (bawah, integritas -15),
+//      lalu box pilihan jurnal (klik salah satu)
 //        Jurnal Sinta 1-2 : poin 10
 //        Jurnal Sinta 3-4 : poin 8
 //        Jurnal Sinta 5-6 : poin 6
+//      Lama bar bergantung pada pilihan jujur / bohong (bukan pilihan Sinta): jujur 15 detik, bohong 10 detik
 //   6. Bar hijau berputar, poin bertambah, reward, lalu box tutorial (di atas overlay hitam, sekali saja)
 //   7. Energi berkurang, cooldown baterai mulai (layar laptop redup + baterai terisi)
 //   8. Setelah cooldown penuh, MC bisa memakai laptop lagi (berulang): ikon E, pilihan jurnal, bar, poin, reward
@@ -65,19 +67,27 @@ public class AdeganLevel3Scene5 : MonoBehaviour
     public GameObject ikonE;                    // Ikon "E" di atas laptop dosen, muncul selama MC duduk setelah dialog selesai
     public KeyCode tombolInteraksi = KeyCode.E;
 
+    [Header("Pilihan Jujur / Bohong (muncul dulu sebelum pilihan jurnal)")]
+    public GameObject boxJujur;                 // Box pilihan atas: jujur
+    public GameObject boxBohong;                // Box pilihan bawah: bohong
+    public Button tombolJujur;                  // Button di box jujur (jangan isi On Click di Inspector, dipasang lewat script)
+    public Button tombolBohong;                 // Button di box bohong (jangan isi On Click di Inspector, dipasang lewat script)
+    public float penguranganIntegritasBohong = 15f;   // Integritas berkurang kalau memilih bohong
+
     [Header("Box Pilihan Jurnal (pertanyaannya berbeda dari Scene 4, tombolnya sama)")]
     public GameObject boxPilihan;               // Panel pilihan (judul + tiga tombol)
     public Button tombolSinta12;                // Button Jurnal Sinta 1-2 (jangan isi On Click di Inspector, dipasang lewat script)
     public Button tombolSinta34;                // Button Jurnal Sinta 3-4
     public Button tombolSinta56;                // Button Jurnal Sinta 5-6
 
-    [Header("Poin dan Lama Bar per Pilihan")]
+    [Header("Poin per Pilihan Jurnal")]
     public int poinSinta12 = 10;
-    public float durasiSinta12 = 15f;
     public int poinSinta34 = 8;
-    public float durasiSinta34 = 10f;
     public int poinSinta56 = 6;
-    public float durasiSinta56 = 5f;
+
+    [Header("Lama Bar Berdasarkan Pilihan Jujur / Bohong (berlaku untuk semua pilihan Sinta)")]
+    public float durasiJujur = 15f;             // Lama bar berputar kalau memilih jujur (detik)
+    public float durasiBohong = 10f;            // Lama bar berputar kalau memilih bohong (detik)
 
     [Header("Bar Hijau Berputar")]
     public GameObject canvasProgressBar;        // Objek induk bar (boleh objek yang sama dengan Scene 4)
@@ -123,6 +133,7 @@ public class AdeganLevel3Scene5 : MonoBehaviour
     private bool eventSudahDipanggil = false;
     private bool tutorialSudahTampil = false;
     private bool peringatanKursiDitampilkan = false;
+    private int pilihanJujur = 0;               // 0 = belum memilih, 1 = jujur, 2 = bohong
     private int pilihan = 0;                    // 0 = belum memilih, 1 = Sinta 1-2, 2 = Sinta 3-4, 3 = Sinta 5-6
 
     private PlayerMovement pm;
@@ -167,6 +178,10 @@ public class AdeganLevel3Scene5 : MonoBehaviour
         if (spriteLaptop != null) spriteLaptop.color = warnaNormal;
         TampilkanPilihan(false);
 
+        TampilkanPilihanJujur(false);
+        if (tombolJujur != null) tombolJujur.onClick.AddListener(PilihJujur);
+        if (tombolBohong != null) tombolBohong.onClick.AddListener(PilihBohong);
+
         if (tombolSinta12 != null) tombolSinta12.onClick.AddListener(PilihSinta12);
         if (tombolSinta34 != null) tombolSinta34.onClick.AddListener(PilihSinta34);
         if (tombolSinta56 != null) tombolSinta56.onClick.AddListener(PilihSinta56);
@@ -182,6 +197,9 @@ public class AdeganLevel3Scene5 : MonoBehaviour
 
     void OnDestroy()
     {
+        if (tombolJujur != null) tombolJujur.onClick.RemoveListener(PilihJujur);
+        if (tombolBohong != null) tombolBohong.onClick.RemoveListener(PilihBohong);
+
         if (tombolSinta12 != null) tombolSinta12.onClick.RemoveListener(PilihSinta12);
         if (tombolSinta34 != null) tombolSinta34.onClick.RemoveListener(PilihSinta34);
         if (tombolSinta56 != null) tombolSinta56.onClick.RemoveListener(PilihSinta56);
@@ -203,6 +221,17 @@ public class AdeganLevel3Scene5 : MonoBehaviour
         siap = true;
         sudahJalan = true;
         StartCoroutine(Alur());
+    }
+
+    public void PilihJujur() { if (pilihanJujur == 0) pilihanJujur = 1; }
+    public void PilihBohong() { if (pilihanJujur == 0) pilihanJujur = 2; }
+
+    private void TampilkanPilihanJujur(bool tampil)
+    {
+        if (boxJujur != null) boxJujur.SetActive(tampil);
+        if (boxBohong != null) boxBohong.SetActive(tampil);
+        if (tombolJujur != null) tombolJujur.gameObject.SetActive(tampil);
+        if (tombolBohong != null) tombolBohong.gameObject.SetActive(tampil);
     }
 
     public void PilihSinta12() { if (pilihan == 0) pilihan = 1; }
@@ -398,6 +427,27 @@ public class AdeganLevel3Scene5 : MonoBehaviour
         // MC tidak bisa berdiri selama aktivitas berjalan
         kursiDosen.TerkunciEksternal = true;
 
+        // 0. Dua box pilihan dulu: jujur (atas) atau bohong (bawah). Bohong mengurangi integritas
+        pilihanJujur = 0;
+        TampilkanPilihanJujur(true);
+
+        while (pilihanJujur == 0) yield return null;
+
+        TampilkanPilihanJujur(false);
+
+        if (pilihanJujur == 2)
+        {
+            if (IntegritasManager.Instance != null)
+            {
+                IntegritasManager.Instance.ReduceIntegritas(penguranganIntegritasBohong);
+                Debug.Log("[" + GetType().Name + "] Memilih bohong, integritas berkurang " + penguranganIntegritasBohong + ".");
+            }
+            else
+            {
+                Debug.LogWarning("[" + GetType().Name + "] IntegritasManager.Instance tidak ditemukan di Scene!");
+            }
+        }
+
         // 1. Box pilihan jurnal
         pilihan = 0;
         TampilkanPilihan(true);
@@ -407,19 +457,17 @@ public class AdeganLevel3Scene5 : MonoBehaviour
         TampilkanPilihan(false);
 
         int poin = poinSinta12;
-        float durasi = durasiSinta12;
+        float durasi = (pilihanJujur == 2) ? durasiBohong : durasiJujur;   // jujur 15 detik, bohong 10 detik, apa pun pilihan Sinta-nya
         string namaPilihan = "Sinta 1-2";
 
         if (pilihan == 2)
         {
             poin = poinSinta34;
-            durasi = durasiSinta34;
             namaPilihan = "Sinta 3-4";
         }
         else if (pilihan == 3)
         {
             poin = poinSinta56;
-            durasi = durasiSinta56;
             namaPilihan = "Sinta 5-6";
         }
 
