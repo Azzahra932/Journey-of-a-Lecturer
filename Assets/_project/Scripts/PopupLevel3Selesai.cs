@@ -1,6 +1,4 @@
 using System.Collections;
-using System.Collections.Generic;
-using System.Reflection;
 using UnityEngine;
 using UnityEngine.Events;
 using UnityEngine.UI;
@@ -18,10 +16,8 @@ using TMPro;
 // Semua bagian yang tidak diisi di Inspector dilewati, jadi pop-up ini bisa dipakai sebagai penutup Level 3 saja,
 // lalu disambung ke apa pun yang datang sesudahnya lewat event.
 //
-// Kalau poin tercapai saat sebuah aktivitas masih berjalan (laptop, adegan Level 3, tutorial, reward),
-// pop-up menunggu sampai aktivitas itu selesai. Adegan Level 3 dikenali otomatis dari nama script-nya (AdeganLevel3Scene...),
-// dan dianggap sibuk kalau script itu punya properti SedangSibuk (atau MasihBerlangsung untuk Scene 6) yang bernilai true.
-// Cara ini tidak membuat error compile kalau salah satu script adegan belum punya properti tersebut.
+// Kalau poin tercapai saat sebuah aktivitas masih berjalan (laptop, adegan Level 3 yang sedang mengunci MC di kursi, tutorial, reward),
+// pop-up menunggu sampai aktivitas itu selesai. Pop-up ini TIDAK membaca script adegan Level 3 mana pun, jadi script adegan tidak perlu diubah.
 //
 // Pasang script ini di satu objek kosong (mis. "ManagerLevel3Selesai").
 public class PopupLevel3Selesai : MonoBehaviour
@@ -49,7 +45,6 @@ public class PopupLevel3Selesai : MonoBehaviour
     public LaptopKelas laptopKelas;
     public LaptopInteraction laptopDosen;
     public LaptopPerpusInteraction laptopPerpus;
-    public bool tungguScene6Selesai = true;     // true = kalau Scene 6 (Evaluasi) sudah dimulai atau siap, pop-up menunggu sampai Scene 6 selesai
 
     [Header("0. Box Pengantar (opsional, muncul setelah MC kembali ke ruang dosen)")]
     public GameObject[] boxPengantar;               // Box tampil berurutan setelah transisi. Kosong = langsung lanjut
@@ -97,8 +92,9 @@ public class PopupLevel3Selesai : MonoBehaviour
     private bool sudahDilaporkanMenunggu = false;
     private PlayerMovement pm;
 
-    // Script adegan Level 3 (AdeganLevel3Scene...) yang dipantau, ditemukan otomatis lewat nama script-nya
-    private readonly List<MonoBehaviour> adeganLevel3 = new List<MonoBehaviour>();
+    // Semua kursi di scene: selama sebuah adegan berjalan, kursi MC dikunci (TerkunciEksternal), jadi ini dipakai untuk tahu adegan masih berlangsung
+    private InteractiveDesk[] semuaKursiDesk;
+    private KursiPerpusInteraction[] semuaKursiPerpus;
 
     void Start()
     {
@@ -117,16 +113,11 @@ public class PopupLevel3Selesai : MonoBehaviour
         if (laptopKelas == null) laptopKelas = FindFirstObjectByType<LaptopKelas>();
         if (laptopDosen == null) laptopDosen = FindFirstObjectByType<LaptopInteraction>();
         if (laptopPerpus == null) laptopPerpus = FindFirstObjectByType<LaptopPerpusInteraction>(FindObjectsInactive.Include);
+        semuaKursiDesk = FindObjectsByType<InteractiveDesk>(FindObjectsInactive.Include, FindObjectsSortMode.None);
+        semuaKursiPerpus = FindObjectsByType<KursiPerpusInteraction>(FindObjectsInactive.Include, FindObjectsSortMode.None);
         if (transisi == null) transisi = FindFirstObjectByType<TransisiKembaliKeAwal>();
         if (energyBar == null) energyBar = FindFirstObjectByType<EnergyBar>();
         if (timeManager == null) timeManager = FindFirstObjectByType<GameTimeManager>();
-
-        // Cari semua script adegan Level 3 lewat nama class-nya
-        foreach (MonoBehaviour mb in FindObjectsByType<MonoBehaviour>(FindObjectsInactive.Include, FindObjectsSortMode.None))
-        {
-            if (mb != null && mb.GetType().Name.StartsWith("AdeganLevel3Scene"))
-                adeganLevel3.Add(mb);
-        }
     }
 
     void OnDestroy()
@@ -167,23 +158,6 @@ public class PopupLevel3Selesai : MonoBehaviour
         Tampilkan();
     }
 
-    // Membaca nilai bool dari properti atau field publik bernama tertentu (false kalau tidak ada)
-    private static bool BacaBool(object obj, string nama)
-    {
-        System.Type tipe = obj.GetType();
-        BindingFlags bendera = BindingFlags.Public | BindingFlags.Instance;
-
-        PropertyInfo p = tipe.GetProperty(nama, bendera);
-        if (p != null && p.PropertyType == typeof(bool) && p.CanRead)
-            return (bool)p.GetValue(obj, null);
-
-        FieldInfo f = tipe.GetField(nama, bendera);
-        if (f != null && f.FieldType == typeof(bool))
-            return (bool)f.GetValue(obj);
-
-        return false;
-    }
-
     // Mengembalikan alasan pop-up harus menunggu, atau null kalau tidak ada aktivitas yang berjalan
     private string AlasanMasihSibuk()
     {
@@ -192,13 +166,21 @@ public class PopupLevel3Selesai : MonoBehaviour
         if (laptopDosen != null && laptopDosen.SedangSibuk) return "laptop dosen sedang dipakai";
         if (laptopPerpus != null && laptopPerpus.SedangSibuk) return "laptop perpustakaan sedang dipakai";
 
-        // Adegan Level 3: sibuk kalau script-nya punya SedangSibuk = true (atau MasihBerlangsung = true untuk Scene 6)
-        foreach (MonoBehaviour a in adeganLevel3)
+        // Adegan Level 3 mengunci MC di kursi selama berjalan (dialog, bar, poin, reward, tutorial), dan melepasnya setelah selesai
+        if (semuaKursiDesk != null)
         {
-            if (a == null) continue;
+            foreach (InteractiveDesk d in semuaKursiDesk)
+            {
+                if (d != null && d.TerkunciEksternal) return "MC sedang dikunci di kursi '" + d.name + "' oleh adegan yang berjalan";
+            }
+        }
 
-            if (BacaBool(a, "SedangSibuk")) return a.GetType().Name + " sedang berjalan";
-            if (tungguScene6Selesai && BacaBool(a, "MasihBerlangsung")) return a.GetType().Name + " belum selesai";
+        if (semuaKursiPerpus != null)
+        {
+            foreach (KursiPerpusInteraction k in semuaKursiPerpus)
+            {
+                if (k != null && k.TerkunciEksternal) return "MC sedang dikunci di kursi '" + k.name + "' oleh adegan yang berjalan";
+            }
         }
 
         // MC dikunci (adegan atau aktivitas sedang berjalan)

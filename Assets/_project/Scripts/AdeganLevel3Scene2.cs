@@ -87,6 +87,9 @@ public class AdeganLevel3Scene2 : MonoBehaviour
     private bool siap = false;
     private bool dialogSelesai = false;
     private bool sedangBerjalan = false;
+
+    // True selama adegan / aktivitas berjalan (dipakai PopupLevel3Selesai supaya pop-up menunggu sampai selesai)
+    public bool SedangSibuk { get { return sedangBerjalan; } }
     private bool sudahPernahSelesai = false;
     private bool eventSudahDipanggil = false;
     private bool peringatanKursiDitampilkan = false;
