@@ -6,6 +6,7 @@ using UnityEngine.Events;
 // Level 4 - Scene 1 (Onboarding dan Pendidikan S3), Lokasi: Ruang Dosen -> Titik Panah
 //   1. Level 4 dimulai (event "Saat Masuk Level Berikutnya" di PopupLevel3Selesai) -> Scene 1 siap
 //   2. MC duduk di kursi dosen (sendiri, atau otomatis kalau "Duduk Otomatis" dicentang)
+//      Sprite duduk MC level 4 (kalau diisi) dipasang ke Sit Sprite milik Kursi Dosen sebelum MC duduk
 //   3. Kaprodi masuk menghampiri (jalur waypoint yang sama dengan Level 3 Scene 1) dan duduk
 //   4. Empat box dialog (Kaprodi, Pemain, Kaprodi, Pemain), Space untuk lanjut
 //   5. Kaprodi berjalan keluar. Box tutorial (opsional) lalu tampil
@@ -18,7 +19,7 @@ using UnityEngine.Events;
 // Script ini dipasang di objek apa saja (tidak perlu collider).
 // Cara menyambung: di PopupLevel3Selesai, event "Saat Masuk Level Berikutnya",
 // tambahkan objek ini dan pilih fungsi SiapkanScene.
-// Bagian yang tidak diisi di Inspector (mis. tutorial, poin, reward) dilewati.
+// Bagian yang tidak diisi di Inspector (mis. tutorial, poin, reward, sprite duduk) dilewati.
 public class AdeganLevel4Scene1 : MonoBehaviour
 {
     [Header("Syarat Mulai")]
@@ -29,6 +30,9 @@ public class AdeganLevel4Scene1 : MonoBehaviour
     public NPCCutscene kaprodi;                 // Kaprodi (kapdiam), jalur waypoint sama seperti Level 3 Scene 1
     public bool dudukOtomatis = false;          // false = MC berjalan ke kursi dan duduk sendiri. true = MC langsung didudukkan saat Scene 1 mulai
     public bool lepasEvaluasiLevel1 = true;     // true = duduk di kursi dosen tidak lagi memicu evaluasi / bimbingan level 1
+
+    [Header("Sprite Duduk MC Level 4 (opsional)")]
+    public Sprite spriteDudukMCLevel4;          // Sprite MC level 4 saat duduk (tampak belakang). Dipasang ke field Sit Sprite di Kursi Dosen. Kosong = sprite lama tidak diganti
 
     [Header("Dijeda Selama Adegan (opsional)")]
     [Tooltip("Script adegan Level 3 yang masih aktif dan bisa ikut membaca tombol E / Space di ruang dosen (mis. AdeganLevel3Scene5, AdeganLevel3Scene4). Dimatikan selama adegan ini, dinyalakan lagi di akhir.")]
@@ -101,6 +105,9 @@ public class AdeganLevel4Scene1 : MonoBehaviour
 
         transisi = FindFirstObjectByType<TransisiKembaliKeAwal>();
 
+        // Mode tes: sprite duduk level 4 langsung dipasang (di game biasa, dipasang lewat SiapkanScene)
+        if (langsungSiap) TerapkanSpriteMC();
+
         // Pengaman: script ini hanya boleh dipasang di SATU objek
         AdeganLevel4Scene1[] semua = FindObjectsByType<AdeganLevel4Scene1>(FindObjectsSortMode.None);
         if (semua.Length > 1)
@@ -121,6 +128,7 @@ public class AdeganLevel4Scene1 : MonoBehaviour
     {
         siap = true;
         LepasEvaluasiLevel1();
+        TerapkanSpriteMC();
         Debug.Log("[Adegan L4-S1] Scene 1 Level 4 siap, menunggu MC duduk di kursi dosen.");
     }
 
@@ -131,6 +139,7 @@ public class AdeganLevel4Scene1 : MonoBehaviour
         if (sudahJalan) return;
         siap = true;
         sudahJalan = true;
+        TerapkanSpriteMC();
         StartCoroutine(Alur());
     }
 
@@ -228,10 +237,25 @@ public class AdeganLevel4Scene1 : MonoBehaviour
         if (kursiDosen.bimbinganScript != null) kursiDosen.bimbinganScript = null;
     }
 
+    // Pasang sprite MC level 4 sebagai sprite duduk di kursi dosen (harus sebelum MC duduk).
+    // InteractiveDesk memakai field sitSprite saat SitDown() (sprite pemain sendiri diganti, Animator dimatikan),
+    // jadi cukup diisi dari sini.
+    private void TerapkanSpriteMC()
+    {
+        if (kursiDosen == null || spriteDudukMCLevel4 == null) return;
+
+        if (kursiDosen.sitSprite != spriteDudukMCLevel4)
+        {
+            kursiDosen.sitSprite = spriteDudukMCLevel4;
+            Debug.Log("[Adegan L4-S1] Sprite duduk kursi dosen diganti ke sprite level 4.");
+        }
+    }
+
     // ---------- Alur lengkap ----------
     private IEnumerator Alur()
     {
         LepasEvaluasiLevel1();
+        TerapkanSpriteMC();
         JedaScriptLain(true);
 
         // 1. MC duduk di kursi dosen (otomatis kalau diatur begitu), lalu dikunci di kursi
