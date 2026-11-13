@@ -1,10 +1,12 @@
 using System.Collections;
 using UnityEngine;
 using UnityEngine.Events;
+using UnityEngine.SceneManagement;
 using UnityEngine.UI;
 using TMPro;
 
 // Memunculkan pop-up "Status Baru" saat poin mencapai target (150), menampilkan XP dan Integritas.
+// Pop-up punya dua tombol: Home (ikon rumah, muncul konfirmasi keluar lalu pindah ke menu utama) dan Lanjut.
 // Tombol Lanjut (tetap di scene yang sama) akan:
 //   1. mengganti tampilan MC (animator berjalan/diam, dan sprite MC saat duduk)
 //   2. mengganti nama MC di top bar
@@ -26,6 +28,19 @@ public class PopupLevelSelesai : MonoBehaviour
     public TMP_Text teksXP;                 // Teks angka di sebelah ikon bintang
     public TMP_Text teksIntegritas;         // Teks angka di sebelah ikon perisai
     public Button tombolLanjut;             // Tombol "Lanjut" (jangan isi On Click di Inspector, dipasang lewat script)
+
+    [Header("Tombol Home (ikon rumah di pop-up)")]
+    public Button tombolHome;               // Tombol "Home" (jangan isi On Click di Inspector, dipasang lewat script). Kosong = tombol home tidak dipakai
+
+    [Header("Konfirmasi Keluar (muncul saat tombol Home ditekan)")]
+    public GameObject boxKonfirmasi;        // Box kalimat: "Apakah Anda ingin keluar dari permainan?" Kosong = tombol Home langsung pindah scene tanpa konfirmasi
+    public GameObject boxYa;                // Box tombol "Ya" (di bawah box kalimat)
+    public GameObject boxTidak;             // Box tombol "Tidak" (di bawah box kalimat)
+    public Button tombolYa;                 // Button di box Ya: ke halaman home (jangan isi On Click di Inspector, dipasang lewat script)
+    public Button tombolTidak;              // Button di box Tidak: kembali ke pop-up (jangan isi On Click di Inspector, dipasang lewat script)
+    [Tooltip("Nama scene menu utama persis seperti di Build Profiles / Scene List (huruf besar kecil berpengaruh). Kosong = tidak pindah scene, hanya event Saat Tombol Home yang jalan.")]
+    public string namaSceneMenuUtama = "";
+    public UnityEvent saatTombolHome;       // Dipanggil begitu tombol Ya ditekan (mis. menyimpan data), sebelum pindah scene
 
     [Header("0. Box Pengantar Level 2 (muncul dulu, baru masuk ruang dosen)")]
     public GameObject[] boxPengantarLevel2;         // Box tampil berurutan setelah Lanjut diklik. Kosong = langsung masuk ruang dosen
@@ -92,7 +107,14 @@ public class PopupLevelSelesai : MonoBehaviour
                 if (b != null) b.SetActive(false);
             }
         }
+
+        TampilkanKonfirmasi(false);
+
         if (tombolLanjut != null) tombolLanjut.onClick.AddListener(Lanjut);
+        if (tombolHome != null) tombolHome.onClick.AddListener(BukaKonfirmasiHome);
+        if (tombolYa != null) tombolYa.onClick.AddListener(KeHome);
+        if (tombolTidak != null) tombolTidak.onClick.AddListener(TutupKonfirmasiHome);
+
         if (tutorialManager == null) tutorialManager = FindFirstObjectByType<TutorialManager>();
         if (transisi == null) transisi = FindFirstObjectByType<TransisiKembaliKeAwal>();
         if (energyBar == null) energyBar = FindFirstObjectByType<EnergyBar>();
@@ -102,6 +124,9 @@ public class PopupLevelSelesai : MonoBehaviour
     void OnDestroy()
     {
         if (tombolLanjut != null) tombolLanjut.onClick.RemoveListener(Lanjut);
+        if (tombolHome != null) tombolHome.onClick.RemoveListener(BukaKonfirmasiHome);
+        if (tombolYa != null) tombolYa.onClick.RemoveListener(KeHome);
+        if (tombolTidak != null) tombolTidak.onClick.RemoveListener(TutupKonfirmasiHome);
     }
 
     void Update()
@@ -154,6 +179,91 @@ public class PopupLevelSelesai : MonoBehaviour
 
         Debug.Log("[Level] Target poin tercapai. Pop-up status baru ditampilkan.");
     }
+
+    // ---------- Tombol Home dan konfirmasi keluar ----------
+
+    // Menampilkan / menyembunyikan tiga box konfirmasi (box kalimat, box Ya, box Tidak)
+    private void TampilkanKonfirmasi(bool tampil)
+    {
+        if (boxKonfirmasi != null) boxKonfirmasi.SetActive(tampil);
+        if (boxYa != null) boxYa.SetActive(tampil);
+        if (boxTidak != null) boxTidak.SetActive(tampil);
+        if (tombolYa != null) tombolYa.gameObject.SetActive(tampil);
+        if (tombolTidak != null) tombolTidak.gameObject.SetActive(tampil);
+
+        if (tampil)
+        {
+            // Urutan penting: box tampil di atas overlay
+            if (boxKonfirmasi != null) boxKonfirmasi.transform.SetAsLastSibling();
+            if (boxYa != null) boxYa.transform.SetAsLastSibling();
+            if (boxTidak != null) boxTidak.transform.SetAsLastSibling();
+        }
+
+        // Selama konfirmasi tampil, tombol Home dan Lanjut tidak bisa diklik
+        if (tombolHome != null) tombolHome.interactable = !tampil;
+        if (tombolLanjut != null) tombolLanjut.interactable = !tampil;
+    }
+
+    // Dipanggil tombol Home: pop-up disembunyikan, muncul konfirmasi "ingin keluar?" (kalau box konfirmasi diisi), kalau tidak langsung ke home
+    public void BukaKonfirmasiHome()
+    {
+        if (sudahLanjut) return;
+
+        if (boxKonfirmasi == null)
+        {
+            KeHome();
+            return;
+        }
+
+        // Pop-up disembunyikan dulu, yang tampil hanya box konfirmasi (overlay hitam tetap ada)
+        if (panelPopup != null) panelPopup.SetActive(false);
+        TampilkanKonfirmasi(true);
+    }
+
+    // Dipanggil tombol Tidak: konfirmasi ditutup, pop-up muncul lagi
+    public void TutupKonfirmasiHome()
+    {
+        TampilkanKonfirmasi(false);
+
+        if (panelPopup != null)
+        {
+            panelPopup.SetActive(true);
+            panelPopup.transform.SetAsLastSibling();
+        }
+    }
+
+    // Dipanggil tombol Ya: pop-up ditutup, game dilanjutkan (timeScale 1), lalu pindah ke scene menu utama
+    public void KeHome()
+    {
+        if (sudahLanjut) return;   // cegah klik ganda, dan tidak bentrok dengan tombol Lanjut
+        sudahLanjut = true;
+
+        TampilkanKonfirmasi(false);
+        if (panelPopup != null) panelPopup.SetActive(false);
+        if (overlayHitam != null) overlayHitam.SetActive(false);
+
+        // Waktu dikembalikan supaya scene tujuan tidak ikut berhenti (pop-up menghentikan waktu)
+        Time.timeScale = 1f;
+
+        saatTombolHome.Invoke();
+
+        if (string.IsNullOrEmpty(namaSceneMenuUtama))
+        {
+            Debug.LogWarning("[Level] Tombol Home ditekan, tapi Nama Scene Menu Utama masih kosong di Inspector. Scene tidak dipindah.");
+            return;
+        }
+
+        if (!Application.CanStreamedLevelBeLoaded(namaSceneMenuUtama))
+        {
+            Debug.LogWarning("[Level] Scene '" + namaSceneMenuUtama + "' tidak ditemukan. Cek ejaannya, dan pastikan scene sudah ditambahkan di Build Profiles (Scene List).");
+            return;
+        }
+
+        Debug.Log("[Level] Tombol Home ditekan, pindah ke scene '" + namaSceneMenuUtama + "'.");
+        SceneManager.LoadScene(namaSceneMenuUtama);
+    }
+
+    // ---------- Tombol Lanjut ----------
 
     // Dipanggil tombol Lanjut: masuk ke level 2 tanpa pindah scene
     public void Lanjut()
