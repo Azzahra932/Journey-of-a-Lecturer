@@ -57,6 +57,16 @@ public class IntegritasManager : MonoBehaviour
         UpdateUI();
     }
 
+    // TAMBAHAN BARU: mengatur integritas ke angka tertentu (dipakai pop-up Game Over, mis. dipulihkan ke 50%)
+    public void SetIntegritas(float nilai)
+    {
+        currentIntegritas = Mathf.Clamp(nilai, 0f, maxIntegritas);
+        integritasTersimpan = currentIntegritas;   // supaya terbawa ke level berikutnya
+
+        Debug.Log($"[IntegritasManager] Integritas diatur ke {currentIntegritas}%.");
+        UpdateUI();
+    }
+
     void UpdateUI()
     {
         if (integritasSlider != null)
