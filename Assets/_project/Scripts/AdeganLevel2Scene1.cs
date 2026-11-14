@@ -10,6 +10,7 @@ using UnityEngine.Events;
 //   5. Setelah Kaprodi keluar, box tutorial tampil satu per satu, Space untuk lanjut
 //   6. MC dibebaskan
 // Tidak ada panah petunjuk di level 2, dan tidak ada ikon E / RPS di laptop dosen selama Scene 1.
+// Selama Scene 1 berjalan, semua ikon E laptop (laptop dosen, laptop kelas, dan yang diisi di "Ikon E Disembunyikan") juga disembunyikan.
 //
 // Cara menyambung: di ManagerLevel1Selesai (PopupLevelSelesai), event "Saat Masuk Level 2",
 // tambahkan objek ini dan pilih fungsi MulaiAdegan.
@@ -22,6 +23,12 @@ public class AdeganLevel2Scene1 : MonoBehaviour
     public InteractiveDesk kursiDosen;          // Objek yang memasang InteractiveDesk (kursi dosen)
     public NPCCutscene kaprodi;                 // Objek Kaprodi (kapdiam)
     public LaptopInteraction laptopDosen;       // Kosong = dicari otomatis. Ikon E dan RPS di laptop dosen dimatikan selama Scene 1
+
+    [Header("Ikon E Disembunyikan Selama Scene 1")]
+    public bool sembunyikanIkonELaptop = true;  // true = ikon E laptop dosen dan laptop kelas ikut disembunyikan selama Scene 1 berjalan
+    public LaptopKelas laptopKelas;             // Kosong = dicari otomatis. Ikon E laptop kelas disembunyikan selama Scene 1
+    [Tooltip("Ikon E lain yang tidak boleh muncul selama Scene 1 level 2 (mis. ikon E laptop perpustakaan atau laboratorium). Dimatikan terus selama Scene 1 berjalan, dan dibiarkan bebas setelah Scene 1 selesai.")]
+    public GameObject[] ikonEDisembunyikan;
 
     [Header("Box Dialog Level 2 - Scene 1 (dibuat di Hierarchy, urut dari atas)")]
     public GameObject[] boxDialog;              // Box 1 = Kaprodi, Box 2 = Pemain, dst. Otomatis disembunyikan saat Play
@@ -62,6 +69,7 @@ public class AdeganLevel2Scene1 : MonoBehaviour
         SembunyikanSemuaBox(boxTutorial);
 
         if (laptopDosen == null) laptopDosen = FindFirstObjectByType<LaptopInteraction>();
+        if (laptopKelas == null) laptopKelas = FindFirstObjectByType<LaptopKelas>();
     }
 
     // LateUpdate jalan setelah semua Update: panah yang dinyalakan script lain langsung dimatikan lagi
@@ -77,6 +85,18 @@ public class AdeganLevel2Scene1 : MonoBehaviour
         }
 
         MatikanPanahDaftar(panahLainDimatikan);
+
+        // Ikon E disembunyikan selama Scene 1 berjalan (setelah Scene 1 selesai atau dibatalkan, dibiarkan bebas)
+        if (!sudahSelesai && !dibatalkan)
+        {
+            if (sembunyikanIkonELaptop)
+            {
+                if (laptopDosen != null) MatikanPanah(laptopDosen.petunjukTekanE);
+                if (laptopKelas != null) MatikanPanah(laptopKelas.promptPressE);
+            }
+
+            MatikanPanahDaftar(ikonEDisembunyikan);
+        }
     }
 
     private void MatikanPanah(GameObject p)

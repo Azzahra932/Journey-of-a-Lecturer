@@ -9,15 +9,20 @@ public class DialogueDuaBox : MonoBehaviour
     public GameObject boxMahasiswa;
 
     private int tahap = 0;
+    private int frameAktif = -1;   // frame saat dialog ini muncul (Spasi untuk duduk tidak ikut melewati dialog)
 
     void OnEnable()
     {
         tahap = 0;
+        frameAktif = Time.frameCount;
         TampilkanDialog();
     }
 
     void Update()
     {
+        // Spasi yang menyalakan dialog ini (duduk di kursi) tidak boleh ikut dihitung untuk lanjut
+        if (Time.frameCount == frameAktif) return;
+
         // Hanya pakai Spasi untuk lanjut
         if (Input.GetKeyDown(KeyCode.Space))
         {

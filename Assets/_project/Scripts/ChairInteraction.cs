@@ -8,6 +8,13 @@ public class ChairInteraction : MonoBehaviour
     public GameObject lecturerSitting;    // Tpngajar (player versi duduk)
     public GameObject promptUI;
 
+    [Header("Tombol Duduk")]
+    public KeyCode tombolDuduk = KeyCode.Space;     // Tombol untuk duduk di kursi (sebelumnya E)
+
+    [Header("Syarat Scene 1 (kursi baru bisa dipakai setelah Scene 1 selesai)")]
+    public bool butuhScene1Selesai = true;          // true = kursi kelas terkunci sampai BukaScene2() dipanggil dari akhir Scene 1
+    public bool kunciUlangDiLevel2 = true;          // true = saat level 2 dimulai kursi terkunci lagi sampai BukaScene2() dipanggil dari akhir Scene 1 level 2. Matikan kalau Scene 1 level 2 belum disambungkan
+
     [Header("Referensi Panah & Dialog")]
     public GameObject panahKeKursi;       // Panah kursi yang akan dimatikan
     public GameObject dialogueBoxUI;      // Box Teks / Dialogue Manager
@@ -32,12 +39,18 @@ public class ChairInteraction : MonoBehaviour
     // True setelah player duduk di kursi ini untuk pertama kali (akhir Scene 2)
     public bool SudahPernahDuduk { get; private set; }
 
+    // True kalau Scene 1 sudah selesai, jadi kursi kelas (Scene 2: mengajar) boleh dipakai
+    public bool Scene2Terbuka { get; private set; }
+
+    private bool panahTertunda = false;      // true kalau panah kursi sempat menyala saat kursi masih terkunci (dimunculkan lagi saat Scene 1 selesai)
     private bool level2Aktif = false;        // true setelah SiapkanLevelBaru() dipanggil: panah selalu dimatikan di level 2
     private bool sudahPernahDialog = false;   // true setelah dialog muncul di duduk pertama
     private float waktuDuduk = 0f;
 
     void Start()
     {
+        Scene2Terbuka = !butuhScene1Selesai;
+
         if (lecturerSitting != null) lecturerSitting.SetActive(false);
         if (promptUI != null) promptUI.SetActive(false);
 
@@ -58,14 +71,43 @@ public class ChairInteraction : MonoBehaviour
     {
         sudahPernahDialog = false;
         level2Aktif = true;   // panah kursi kelas (dan panah lain di daftar) dimatikan terus di level 2
+
+        // Level 2 punya Scene 1 sendiri: kursi terkunci lagi sampai Scene 1 level 2 selesai
+        if (butuhScene1Selesai && kunciUlangDiLevel2) Scene2Terbuka = false;
+
         Debug.Log("[ChairInteraction] Level 2: box percakapan akan muncul lagi saat duduk (tanpa panah).");
+    }
+
+    // Dipanggil dari akhir Scene 1 (level 1 dan level 2), lewat event di Inspector: kursi kelas boleh dipakai
+    public void BukaScene2()
+    {
+        Scene2Terbuka = true;
+
+        // Panah yang sempat dimatikan selama terkunci dimunculkan lagi (kecuali sudah pernah duduk atau sudah level 2)
+        if (panahTertunda && !SudahPernahDuduk && !level2Aktif && panahKeKursi != null)
+            panahKeKursi.SetActive(true);
+        panahTertunda = false;
+
+        Debug.Log("[ChairInteraction] Scene 1 selesai, kursi kelas (Scene 2) sekarang bisa dipakai.");
+    }
+
+    // Opsional: mengunci kursi kelas lagi secara manual
+    public void KunciScene2()
+    {
+        Scene2Terbuka = false;
     }
 
     void Update()
     {
         // Duduk
-        if (playerIsClose && !isSitting && Input.GetKeyDown(KeyCode.E))
+        if (playerIsClose && !isSitting && Input.GetKeyDown(tombolDuduk))
         {
+            if (!Scene2Terbuka)
+            {
+                Debug.Log("[ChairInteraction] Tombol duduk ditekan, tapi kursi kelas belum bisa dipakai: Scene 1 belum selesai.");
+                return;
+            }
+
             DudukKeKursi();
             return;
         }
@@ -85,6 +127,13 @@ public class ChairInteraction : MonoBehaviour
     // sebelum sempat tampil di layar.
     void LateUpdate()
     {
+        // Selama Scene 1 belum selesai, panah ke kursi kelas tidak boleh tampil (siapa pun yang menyalakannya)
+        if (!Scene2Terbuka && panahKeKursi != null && panahKeKursi.activeSelf)
+        {
+            panahKeKursi.SetActive(false);
+            panahTertunda = true;
+        }
+
         if (!panahHanyaSekali || !(SudahPernahDuduk || level2Aktif)) return;
 
         if (panahKeKursi != null && panahKeKursi.activeSelf) panahKeKursi.SetActive(false);
@@ -194,7 +243,7 @@ public class ChairInteraction : MonoBehaviour
         if (other.CompareTag("Player") || other.gameObject == playerCharacter)
         {
             playerIsClose = true;
-            if (promptUI != null && !isSitting) promptUI.SetActive(true);
+            if (promptUI != null && !isSitting && Scene2Terbuka) promptUI.SetActive(true);
         }
     }
 

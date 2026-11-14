@@ -1,5 +1,6 @@
 using System.Collections;
 using UnityEngine;
+using UnityEngine.Events;
 using UnityEngine.UI;
 using TMPro;
 
@@ -65,6 +66,9 @@ public class LaptopInteraction : MonoBehaviour
     [Header("Reward (Setelah Tugas Selesai)")]
     public int indexReward = 0;                 // Nomor reward di RewardManager (0 = RPS). -1 = tanpa reward
 
+    [Header("Setelah Tugas RPS Pertama Selesai (Scene 1 Level 1 selesai)")]
+    public UnityEvent saatTugasPertamaSelesai;  // Dipanggil sekali, setelah tugas RPS pertama selesai (mis. membuka kursi kelas: ChairInteraction.BukaScene2)
+
     private bool modeBerulang = false;           // True setelah Scene 5 (RPS bisa diulang dengan cooldown)
     private float cooldownSelesaiPada = 0f;
     private float teksSembunyiPada = 0f;
@@ -73,6 +77,7 @@ public class LaptopInteraction : MonoBehaviour
     private bool isWorking = false;
     private bool isCompleted = false;
     private bool fungsiDimatikan = false;        // True setelah fungsi RPS dimatikan di level 2
+    private bool eventPertamaSudahDipanggil = false;   // True setelah event tugas RPS pertama dipanggil
 
     // True selama tugas RPS berjalan (sampai box hasil ditutup), dipakai pop-up level selesai
     public bool SedangSibuk { get { return isWorking; } }
@@ -361,6 +366,14 @@ public class LaptopInteraction : MonoBehaviour
         if (panahKeKelas != null && !modeBerulang && !PintuKelasTrigger.sudahPernahKeKelas)
         {
             panahKeKelas.SetActive(true);
+        }
+
+        // Tugas RPS pertama selesai (Scene 1 Level 1 selesai): beri tahu script lain, hanya sekali
+        if (!modeBerulang && !eventPertamaSudahDipanggil)
+        {
+            eventPertamaSudahDipanggil = true;
+            saatTugasPertamaSelesai.Invoke();
+            Debug.Log("[Laptop] Tugas RPS pertama selesai, event Saat Tugas Pertama Selesai dipanggil.");
         }
     }
 

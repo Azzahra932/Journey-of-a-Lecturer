@@ -201,6 +201,12 @@ public class LaptopKelas : MonoBehaviour
         return Time.time - waktuMulaiDuduk >= jedaSetelahDuduk;
     }
 
+    // True selama box dialog di kursi kelas masih tampil (ikon E menunggu dialog selesai)
+    bool DialogSedangTampil()
+    {
+        return kursiKelas != null && kursiKelas.dialogueBoxUI != null && kursiKelas.dialogueBoxUI.activeInHierarchy;
+    }
+
     void Update()
     {
         // Catat saat player baru saja duduk (Tpngajar baru aktif)
@@ -223,7 +229,8 @@ public class LaptopKelas : MonoBehaviour
     // ---------- SIAP: layar terang, ikon E ----------
     void UpdateSiap()
     {
-        bool boleh = PlayerBolehInteraksi();
+        // Ikon E dan tombol E menunggu sampai dialog di kursi selesai
+        bool boleh = PlayerBolehInteraksi() && !DialogSedangTampil();
         if (promptPressE != null) promptPressE.SetActive(boleh);
 
         if (boleh && BolehTekanE() && Input.GetKeyDown(tombolInteraksi))
