@@ -5,13 +5,13 @@ using UnityEngine.UI;
 using TMPro;
 
 // Level 5 - Scene 2 (Memimpin Pengembangan Ilmu Pengetahuan), Lokasi: Research Center
-// Alurnya sama persis dengan Level 4 Scene 3, bedanya pilihannya hanya dua (jujur / curang) dan poinnya tetap:
+// Alurnya sama persis dengan Level 4 Scene 3, termasuk box pilihannya (jujur / bohong, lalu empat pilihan):
 //   1. Scene 1 Level 5 selesai -> Scene 2 siap, Peneliti sudah duduk menunggu di Research Center
 //   2. MC masuk zona Research Center: MC duduk di kursi, dua box dialog (Peneliti lalu Pemain), Space untuk lanjut
 //   3. Setelah dialog, MC dilepas. Saat MC duduk di kursi, ikon E muncul di laptop
-//   4. Tekan E: dua box pilihan, jujur (atas) atau curang (bawah, integritas berkurang)
-//      Lama bar bergantung pada pilihan: jujur 15 detik, curang 10 detik
-//   5. Bar hijau berputar, poin bertambah (15), reward, box tutorial (opsional, sekali saja)
+//   4. Tekan E: dua box pilihan jujur (atas) / bohong (bawah, integritas berkurang), lalu box pilihan (4 pilihan)
+//      Lama bar bergantung pada jujur / bohong: jujur 15 detik, bohong 10 detik
+//   5. Bar hijau berputar, poin bertambah (sesuai pilihan), reward, box tutorial (opsional, sekali saja)
 //   6. Energi berkurang, cooldown baterai mulai (layar laptop redup). Setelah penuh, laptop bisa dipakai lagi (berulang)
 //
 // Pasang script ini di objek ZONA BARU (objek sendiri, bukan objek zona Level 4) yang punya Collider2D dengan Is Trigger dicentang (di Research Center).
@@ -61,21 +61,35 @@ public class AdeganLevel5Scene2 : MonoBehaviour
     public bool harusDudukUntukLaptop = true;   // true = ikon E muncul saat MC duduk. false = muncul saat MC dekat laptop (Jarak Laptop)
     public float jarakLaptop = 1.5f;
 
-    [Header("Pilihan Jujur / Curang (dua box)")]
+    [Header("Pilihan Jujur / Bohong (muncul dulu sebelum pilihan)")]
     public GameObject boxJujur;                 // Box pilihan atas: jujur
-    public GameObject boxCurang;                // Box pilihan bawah: curang
+    public GameObject boxBohong;                // Box pilihan bawah: bohong
     public Button tombolJujur;                  // Jangan isi On Click di Inspector, dipasang lewat script
-    public Button tombolCurang;                 // Jangan isi On Click di Inspector, dipasang lewat script
-    public float penguranganIntegritasCurang = 15f;   // Integritas berkurang kalau memilih curang
-    public float durasiJujur = 15f;             // Lama bar berputar kalau jujur (detik)
-    public float durasiCurang = 10f;            // Lama bar berputar kalau curang (detik)
+    public Button tombolBohong;                 // Jangan isi On Click di Inspector, dipasang lewat script
+    public float penguranganIntegritasBohong = 15f;
+
+    [Header("Box Pilihan Scene 2 (empat pilihan, urut dari atas ke bawah)")]
+    public GameObject boxPilihan;               // Panel pilihan (judul + empat tombol)
+    public Button tombolPilihan1;               // Jangan isi On Click di Inspector, dipasang lewat script
+    public Button tombolPilihan2;
+    public Button tombolPilihan3;
+    public Button tombolPilihan4;
+
+    [Header("Poin per Pilihan")]
+    public int poinPilihan1 = 15;
+    public int poinPilihan2 = 15;
+    public int poinPilihan3 = 15;
+    public int poinPilihan4 = 15;
+
+    [Header("Lama Bar Berdasarkan Pilihan Jujur / Bohong")]
+    public float durasiJujur = 15f;
+    public float durasiBohong = 10f;
 
     [Header("Bar Hijau Berputar (kosong = diambil dari Level 4 Scene 3)")]
     public GameObject canvasProgressBar;
     public Image circularProgressBar;           // Image Type: Filled
 
-    [Header("Hasil Setelah Bar Selesai")]
-    public int jumlahPoin = 15;                 // Poin yang didapat tiap selesai (jujur maupun curang)
+    [Header("Setelah Bar Selesai")]
     public int indexReward = -1;                // Nomor reward di RewardManager. -1 = pakai Box Reward di bawah (kalau diisi)
     public GameObject boxReward;                // Kosong = diambil dari Level 4 Scene 3
     public float lamaBoxReward = 2f;
@@ -108,7 +122,8 @@ public class AdeganLevel5Scene2 : MonoBehaviour
     private bool tutorialBarSudahTampil = false;
     private bool peringatanBelumSiap = false;
     private bool level4Dimatikan = false;
-    private int pilihan = 0;                    // 0 = belum, 1 = jujur, 2 = curang
+    private int pilihanJujur = 0;               // 0 = belum, 1 = jujur, 2 = bohong
+    private int pilihan = 0;                    // 0 = belum, 1 sampai 4
 
     private Transform pemainTf;
 
@@ -137,10 +152,15 @@ public class AdeganLevel5Scene2 : MonoBehaviour
         if (ikonBateraiLemah != null) ikonBateraiLemah.SetActive(false);
         if (teksCooldown != null) teksCooldown.gameObject.SetActive(false);
         if (teksIstirahat != null) teksIstirahat.SetActive(false);
+        TampilkanPilihanJujur(false);
         TampilkanPilihan(false);
 
         if (tombolJujur != null) tombolJujur.onClick.AddListener(PilihJujur);
-        if (tombolCurang != null) tombolCurang.onClick.AddListener(PilihCurang);
+        if (tombolBohong != null) tombolBohong.onClick.AddListener(PilihBohong);
+        if (tombolPilihan1 != null) tombolPilihan1.onClick.AddListener(Pilih1);
+        if (tombolPilihan2 != null) tombolPilihan2.onClick.AddListener(Pilih2);
+        if (tombolPilihan3 != null) tombolPilihan3.onClick.AddListener(Pilih3);
+        if (tombolPilihan4 != null) tombolPilihan4.onClick.AddListener(Pilih4);
 
         if (energyBar == null) energyBar = FindFirstObjectByType<EnergyBar>();
 
@@ -166,7 +186,11 @@ public class AdeganLevel5Scene2 : MonoBehaviour
     void OnDestroy()
     {
         if (tombolJujur != null) tombolJujur.onClick.RemoveListener(PilihJujur);
-        if (tombolCurang != null) tombolCurang.onClick.RemoveListener(PilihCurang);
+        if (tombolBohong != null) tombolBohong.onClick.RemoveListener(PilihBohong);
+        if (tombolPilihan1 != null) tombolPilihan1.onClick.RemoveListener(Pilih1);
+        if (tombolPilihan2 != null) tombolPilihan2.onClick.RemoveListener(Pilih2);
+        if (tombolPilihan3 != null) tombolPilihan3.onClick.RemoveListener(Pilih3);
+        if (tombolPilihan4 != null) tombolPilihan4.onClick.RemoveListener(Pilih4);
     }
 
     // Lingkaran hijau di tab Scene (saat objek ini dipilih): jarak laptop
@@ -342,8 +366,12 @@ public class AdeganLevel5Scene2 : MonoBehaviour
         StartCoroutine(AlurDialog());
     }
 
-    public void PilihJujur() { if (pilihan == 0) pilihan = 1; }
-    public void PilihCurang() { if (pilihan == 0) pilihan = 2; }
+    public void PilihJujur() { if (pilihanJujur == 0) pilihanJujur = 1; }
+    public void PilihBohong() { if (pilihanJujur == 0) pilihanJujur = 2; }
+    public void Pilih1() { if (pilihan == 0) pilihan = 1; }
+    public void Pilih2() { if (pilihan == 0) pilihan = 2; }
+    public void Pilih3() { if (pilihan == 0) pilihan = 3; }
+    public void Pilih4() { if (pilihan == 0) pilihan = 4; }
 
     void Update()
     {
@@ -423,12 +451,21 @@ public class AdeganLevel5Scene2 : MonoBehaviour
         }
     }
 
-    private void TampilkanPilihan(bool tampil)
+    private void TampilkanPilihanJujur(bool tampil)
     {
         if (boxJujur != null) boxJujur.SetActive(tampil);
-        if (boxCurang != null) boxCurang.SetActive(tampil);
+        if (boxBohong != null) boxBohong.SetActive(tampil);
         if (tombolJujur != null) tombolJujur.gameObject.SetActive(tampil);
-        if (tombolCurang != null) tombolCurang.gameObject.SetActive(tampil);
+        if (tombolBohong != null) tombolBohong.gameObject.SetActive(tampil);
+    }
+
+    private void TampilkanPilihan(bool tampil)
+    {
+        if (boxPilihan != null) boxPilihan.SetActive(tampil);
+        if (tombolPilihan1 != null) tombolPilihan1.gameObject.SetActive(tampil);
+        if (tombolPilihan2 != null) tombolPilihan2.gameObject.SetActive(tampil);
+        if (tombolPilihan3 != null) tombolPilihan3.gameObject.SetActive(tampil);
+        if (tombolPilihan4 != null) tombolPilihan4.gameObject.SetActive(tampil);
     }
 
     // ---------- Duduk dan dialog dengan Peneliti ----------
@@ -510,24 +547,20 @@ public class AdeganLevel5Scene2 : MonoBehaviour
         // MC tidak bisa berdiri selama aktivitas berjalan
         if (kursiPeneliti != null) kursiPeneliti.TerkunciEksternal = true;
 
-        // 1. Dua box pilihan: jujur (atas) atau curang (bawah). Curang mengurangi integritas
-        pilihan = 0;
-        TampilkanPilihan(true);
+        // 0. Dua box pilihan: jujur (atas) atau bohong (bawah). Bohong mengurangi integritas
+        pilihanJujur = 0;
+        TampilkanPilihanJujur(true);
 
-        while (pilihan == 0) yield return null;
+        while (pilihanJujur == 0) yield return null;
 
-        TampilkanPilihan(false);
+        TampilkanPilihanJujur(false);
 
-        float durasi = durasiJujur;
-
-        if (pilihan == 2)
+        if (pilihanJujur == 2)
         {
-            durasi = durasiCurang;
-
             if (IntegritasManager.Instance != null)
             {
-                IntegritasManager.Instance.ReduceIntegritas(penguranganIntegritasCurang);
-                Debug.Log("[Adegan L5-S2] Memilih curang, integritas berkurang " + penguranganIntegritasCurang + ".");
+                IntegritasManager.Instance.ReduceIntegritas(penguranganIntegritasBohong);
+                Debug.Log("[Adegan L5-S2] Memilih bohong, integritas berkurang " + penguranganIntegritasBohong + ".");
             }
             else
             {
@@ -535,7 +568,22 @@ public class AdeganLevel5Scene2 : MonoBehaviour
             }
         }
 
-        Debug.Log("[Adegan L5-S2] Memilih " + (pilihan == 2 ? "curang" : "jujur") + ": bar " + durasi + " detik, poin " + jumlahPoin + ".");
+        // 1. Box pilihan (empat pilihan)
+        pilihan = 0;
+        TampilkanPilihan(true);
+
+        while (pilihan == 0) yield return null;
+
+        TampilkanPilihan(false);
+
+        int poin = poinPilihan1;
+        float durasi = (pilihanJujur == 2) ? durasiBohong : durasiJujur;   // jujur 15 detik, bohong 10 detik, apa pun pilihannya
+
+        if (pilihan == 2) poin = poinPilihan2;
+        else if (pilihan == 3) poin = poinPilihan3;
+        else if (pilihan == 4) poin = poinPilihan4;
+
+        Debug.Log("[Adegan L5-S2] Memilih pilihan " + pilihan + ": bar " + durasi + " detik, poin " + poin + ".");
 
         // 2. Bar hijau berputar
         if (canvasProgressBar != null) canvasProgressBar.SetActive(true);
@@ -556,8 +604,8 @@ public class AdeganLevel5Scene2 : MonoBehaviour
         // 3. Poin
         if (ScoreManager.Instance != null)
         {
-            ScoreManager.Instance.AddScore(jumlahPoin);
-            Debug.Log("[Adegan L5-S2] Pengembangan penelitian selesai! Skor bertambah +" + jumlahPoin);
+            ScoreManager.Instance.AddScore(poin);
+            Debug.Log("[Adegan L5-S2] Pengembangan penelitian selesai! Skor bertambah +" + poin);
         }
         else
         {

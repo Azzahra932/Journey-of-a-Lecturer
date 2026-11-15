@@ -27,6 +27,13 @@ public class GameTimeManager : MonoBehaviour
     private bool sudahDipicuHariIni = false;
     // ======================================
 
+    // ===== TAMBAHAN BARU: Level terakhir (tanpa tidur malam) =====
+    // Di level terakhir, jam 20.00 TIDAK memicu transisi tidur. Jam berhenti dan SudahJamPenutup jadi true,
+    // lalu pop-up penutup (PopupLevel5Selesai) yang muncul.
+    public bool LevelTerakhirAktif { get; private set; }   // true setelah AktifkanModeLevelTerakhir() dipanggil
+    public bool SudahJamPenutup { get; private set; }      // true saat jam level terakhir mencapai jam tidur (20.00)
+    // =============================================================
+
     // Menyimpan total langkah waktu yang sudah berjalan
     private int currentTimeStep = 0;
 
@@ -39,8 +46,8 @@ public class GameTimeManager : MonoBehaviour
 
     void Update()
     {
-        // TAMBAHAN BARU: jam berhenti selama transisi tidur
-        if (WaktuBerhenti) return;
+        // TAMBAHAN BARU: jam berhenti selama transisi tidur, dan setelah jam penutup level terakhir tercapai
+        if (WaktuBerhenti || SudahJamPenutup) return;
 
         // Menghitung waktu berjalan secara otomatis
         timer += Time.deltaTime;
@@ -80,20 +87,38 @@ public class GameTimeManager : MonoBehaviour
 
     // ===== TAMBAHAN BARU =====
 
+    // Dipanggil saat level terakhir dimulai (dari PopupLevel4Selesai): jam 20.00 tidak lagi memicu tidur malam
+    public void AktifkanModeLevelTerakhir()
+    {
+        LevelTerakhirAktif = true;
+        SudahJamPenutup = false;
+        Debug.Log("[GameTimeManager] Mode level terakhir aktif: jam " + jamTidur.ToString("D2") + "." + menitTidur.ToString("D2") + " memunculkan pop-up penutup, bukan tidur malam.");
+    }
+
     // Dipakai untuk mengecek waktu tidur: jam sekarang >= jam tidur (>= supaya tidak terlewat bila lompatan jam tidak pas 19.30)
     private void CekWaktuTidur()
     {
-        if (transisiMalam == null || sudahDipicuHariIni) return;
+        if (sudahDipicuHariIni) return;
 
         int totalMinutes = (startHour * 60) + startMinute + (currentTimeStep * intervalMinutes);
         int batasTidur = (jamTidur * 60) + menitTidur;
 
-        if (totalMinutes >= batasTidur)
+        if (totalMinutes < batasTidur) return;
+
+        // Level terakhir: tidak tidur. Hari berakhir, jam berhenti, pop-up penutup yang muncul
+        if (LevelTerakhirAktif)
         {
             sudahDipicuHariIni = true;
-            Debug.Log("[GameTimeManager] Sudah waktunya tidur, memulai transisi malam.");
-            transisiMalam.MulaiTidur();
+            SudahJamPenutup = true;
+            Debug.Log("[GameTimeManager] Level terakhir: jam penutup tercapai, pop-up penutup akan muncul.");
+            return;
         }
+
+        if (transisiMalam == null) return;
+
+        sudahDipicuHariIni = true;
+        Debug.Log("[GameTimeManager] Sudah waktunya tidur, memulai transisi malam.");
+        transisiMalam.MulaiTidur();
     }
 
     // Dipanggil TransisiTidurMalam saat pagi tiba: jam kembali 08.00. Data permainan lain TIDAK disentuh.
@@ -103,6 +128,7 @@ public class GameTimeManager : MonoBehaviour
         timer = 0f;
         HariKe++;
         sudahDipicuHariIni = false;
+        SudahJamPenutup = false;
         UpdateClockUI();
     }
 }

@@ -14,16 +14,21 @@ public class ScoreManager : MonoBehaviour
     public Slider scoreSlider;
     public TMP_Text scoreText;
 
+    // TAMBAHAN BARU: mode tanpa target (level terakhir). Skor terus bertambah tanpa batas dan tidak ada pop-up target.
+    public bool TanpaTarget { get; private set; }
+
     // Skor dan target disimpan di sini (static) supaya terbawa ke level berikutnya.
     // Tidak memakai DontDestroyOnLoad, jadi objek ini boleh berada di mana saja di Hierarchy (mis. di dalam Canvas).
     private static bool adaTersimpan = false;
     private static int skorTersimpan = 0;
     private static int targetTersimpan = 150;
+    private static bool tanpaTargetTersimpan = false;   // TAMBAHAN BARU
 
     // Panggil ini kalau mau mulai permainan baru dari awal (mis. dari menu utama)
     public static void ResetProgres()
     {
         adaTersimpan = false;
+        tanpaTargetTersimpan = false;
     }
 
     private void Awake()
@@ -35,6 +40,7 @@ public class ScoreManager : MonoBehaviour
         {
             currentScore = skorTersimpan;
             targetScore = targetTersimpan;
+            TanpaTarget = tanpaTargetTersimpan;
         }
     }
 
@@ -55,19 +61,29 @@ public class ScoreManager : MonoBehaviour
         UpdateScoreUI();
     }
 
+    // TAMBAHAN BARU: dipanggil saat level terakhir dimulai (dari PopupLevel4Selesai).
+    // Skor tidak lagi dibatasi target, bar poin tampil penuh, dan teks hanya menampilkan jumlah poin.
+    public void AktifkanModeTanpaTarget()
+    {
+        TanpaTarget = true;
+        tanpaTargetTersimpan = true;
+        UpdateScoreUI();
+        Debug.Log("[ScoreManager] Mode tanpa target aktif, poin terus bertambah tanpa batas.");
+    }
+
     // Fungsi universal untuk menambah skor dari scene manapun
     public void AddScore(int amount)
     {
         currentScore += amount;
 
-        if (currentScore > targetScore)
+        if (!TanpaTarget && currentScore > targetScore)
         {
             currentScore = targetScore;
         }
 
         UpdateScoreUI();
 
-        if (currentScore >= targetScore)
+        if (!TanpaTarget && currentScore >= targetScore)
         {
             OnTargetReached();
         }
@@ -98,7 +114,11 @@ public class ScoreManager : MonoBehaviour
 
         if (scoreText != null)
         {
-            scoreText.text = $"{currentScore}/{targetScore}";
+            // Mode tanpa target: hanya jumlah poin. Mode biasa: poin/target
+            if (TanpaTarget)
+                scoreText.text = currentScore.ToString();
+            else
+                scoreText.text = $"{currentScore}/{targetScore}";
         }
     }
 

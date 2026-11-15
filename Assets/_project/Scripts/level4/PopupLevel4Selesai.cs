@@ -89,6 +89,10 @@ public class PopupLevel4Selesai : MonoBehaviour
     [Header("4. Target Poin Berikutnya, opsional")]
     public int targetSkorBerikutnya = 0;        // 0 = target tidak diubah (Level 4 sebagai level terakhir)
 
+    [Header("4b. Level Berikutnya Adalah Level Terakhir (Level 5)")]
+    [Tooltip("true = di level berikutnya tidak ada target poin (poin lanjut tanpa batas) dan jam 20.00 tidak memicu tidur malam, tapi memunculkan pop-up penutup (PopupLevel5Selesai).")]
+    public bool levelBerikutnyaAdalahLevelTerakhir = true;
+
     [Header("5. Membuka Ruangan, opsional")]
     public RuangTerkunci[] ruangYangDibuka;     // Isi dengan objek RuangTerkunci yang ingin dibuka
 
@@ -379,6 +383,7 @@ public class PopupLevel4Selesai : MonoBehaviour
         NaikkanTargetSkor();
         BukaRuangan();
         MatikanScriptLevel4();
+        AktifkanModeLevelTerakhir();
 
         // Riwayat reward dikosongkan untuk jenjang berikutnya
         if (RewardManager.Instance != null) RewardManager.Instance.MulaiLevelBaru();
@@ -524,6 +529,19 @@ public class PopupLevel4Selesai : MonoBehaviour
         {
             if (r != null) r.Buka();
         }
+    }
+
+    // 4b. Level terakhir: tanpa target poin, dan jam 20.00 memunculkan pop-up penutup (bukan tidur malam)
+    private void AktifkanModeLevelTerakhir()
+    {
+        if (!levelBerikutnyaAdalahLevelTerakhir) return;
+
+        if (ScoreManager.Instance != null) ScoreManager.Instance.AktifkanModeTanpaTarget();
+
+        if (timeManager == null) timeManager = FindFirstObjectByType<GameTimeManager>();
+        if (timeManager != null) timeManager.AktifkanModeLevelTerakhir();
+
+        Debug.Log("[Level 4] Level berikutnya adalah level terakhir: tanpa target poin, jam 20.00 memunculkan pop-up penutup.");
     }
 
     // 5b. Matikan script adegan Level 4 yang tidak boleh aktif lagi
