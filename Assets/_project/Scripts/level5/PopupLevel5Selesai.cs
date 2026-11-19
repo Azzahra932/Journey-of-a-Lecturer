@@ -9,7 +9,7 @@ using TMPro;
 //   1. Box penutup tampil, Space (atau klik kiri) untuk lanjut. Box yang muncul bergantung pada pilihan MC di Scene 3 Level 5
 //      (tawaran Dewan Profesor): Ya (menerima) memunculkan Box Penutup Ya, Tidak (menolak) memunculkan Box Penutup Tidak
 //      Khusus pilihan Tidak: setelah box penutup, muncul popup "Achievement Academic Legacy terbuka!" (Space untuk lanjut)
-//   2. Setelah Space terakhir, langsung muncul pop-up hasil: XP (angka), Integritas (angka), dan Rank (huruf S, A, B, C, atau F dari integritas: S >= 95%, A 85-94%, B 75-84%, C 65-74%, F di bawah 65%), dengan SATU tombol saja: Home
+//   2. Setelah Space terakhir, langsung muncul pop-up hasil: XP (angka), Integritas (angka), dan Rank (huruf S, A, B, C, atau F dari integritas: S = 100%, A >= 90%, B >= 85%, C >= 80%, F >= 75%), dengan SATU tombol saja: Home
 //   3. Home memunculkan konfirmasi keluar (Ya / Tidak). Ya = pindah ke scene menu utama, Tidak = kembali ke pop-up hasil
 // Level 5 hanya satu hari (08.00 sampai 20.00) dan tidak punya target poin: poin lanjut dari level sebelumnya.
 //
@@ -45,13 +45,20 @@ public class PopupLevel5Selesai : MonoBehaviour
     public TMP_Text teksIntegritas;             // Teks angka di sebelah ikon perisai
     public bool hentikanWaktuSaatTampil = true; // Game berhenti selama box penutup dan pop-up tampil
 
-    [Header("Rank Akhir (berdasarkan integritas, Guru Besar)")]
-    [Tooltip("Teks huruf rank (S, A, B, C, F) di pop-up hasil. Teks Integritas di atas tetap menampilkan angka persen.")]
-    public TMP_Text teksRank;
-    public int batasRankS = 95;                 // Integritas >= angka ini: Rank S
-    public int batasRankA = 85;                 // Integritas >= angka ini (dan di bawah batas S): Rank A
-    public int batasRankB = 75;                 // Integritas >= angka ini (dan di bawah batas A): Rank B
-    public int batasRankC = 65;                 // Integritas >= angka ini (dan di bawah batas B): Rank C. Di bawahnya: Rank F
+    [Header("Badge Rank (berdasarkan integritas, Guru Besar; dari Hierarchy, satu objek per rank)")]
+    [Tooltip("Buat satu objek badge per rank di dalam pop-up hasil, lalu drag ke slot di bawah. Hanya objek yang sesuai rank yang dinyalakan, yang lain dimatikan.")]
+    public GameObject objekRankS;               // Objek badge Rank S
+    public GameObject objekRankA;               // Objek badge Rank A
+    public GameObject objekRankB;               // Objek badge Rank B
+    public GameObject objekRankC;               // Objek badge Rank C
+    public GameObject objekRankF;               // Objek badge Rank F
+
+    [Header("Batas Rank (integritas dalam persen)")]
+    public int batasRankS = 100;                // Integritas >= angka ini: Rank S
+    public int batasRankA = 90;                 // Integritas >= angka ini (dan di bawah batas S): Rank A
+    public int batasRankB = 85;                 // Integritas >= angka ini (dan di bawah batas A): Rank B
+    public int batasRankC = 80;                 // Integritas >= angka ini (dan di bawah batas B): Rank C
+    public int batasRankF = 75;                 // Integritas >= angka ini (dan di bawah batas C): Rank F. Di bawah ini pun tetap Rank F (rank terendah)
 
     // Rank akhir (S, A, B, C, atau F), diisi saat pop-up hasil ditampilkan. Bisa dibaca script lain (mis. untuk achievement)
     public string RankAkhir { get; private set; }
@@ -133,14 +140,48 @@ public class PopupLevel5Selesai : MonoBehaviour
         }
     }
 
-    // Rank akhir dari integritas (dibulatkan seperti angka di top bar): S >= 95, A 85-94, B 75-84, C 65-74, F di bawah 65
+    // Menyalakan objek badge yang sesuai rank dan mematikan yang lain. Mengembalikan false kalau tidak ada slot objek rank yang diisi
+    private bool TampilkanObjekRank(string rank)
+    {
+        bool adaIsi = objekRankS != null || objekRankA != null || objekRankB != null || objekRankC != null || objekRankF != null;
+        if (!adaIsi)
+        {
+            Debug.LogWarning("[Level 5] Slot Objek Rank S/A/B/C/F belum diisi di Inspector, tidak ada badge yang tampil.");
+            return false;
+        }
+
+        if (objekRankS != null) objekRankS.SetActive(rank == "S");
+        if (objekRankA != null) objekRankA.SetActive(rank == "A");
+        if (objekRankB != null) objekRankB.SetActive(rank == "B");
+        if (objekRankC != null) objekRankC.SetActive(rank == "C");
+        if (objekRankF != null) objekRankF.SetActive(rank == "F");
+
+        GameObject dipakai = null;
+        switch (rank)
+        {
+            case "S": dipakai = objekRankS; break;
+            case "A": dipakai = objekRankA; break;
+            case "B": dipakai = objekRankB; break;
+            case "C": dipakai = objekRankC; break;
+            case "F": dipakai = objekRankF; break;
+        }
+
+        if (dipakai == null)
+            Debug.LogWarning("[Level 5] Objek badge untuk Rank " + rank + " belum diisi di Inspector, tidak ada badge yang tampil.");
+        else if (!dipakai.activeInHierarchy)
+            Debug.LogWarning("[Level 5] Objek badge '" + dipakai.name + "' sudah dinyalakan tapi induknya nonaktif, jadi tidak tampil. Pastikan objek badge ada di dalam pop-up hasil.");
+
+        return true;
+    }
+
+    // Rank akhir dari integritas (dibulatkan seperti angka di top bar): S = 100, A >= 90, B >= 85, C >= 80, F >= 75 (di bawah 75 tetap F)
     private string HitungRank(int persenIntegritas)
     {
         if (persenIntegritas >= batasRankS) return "S";
         if (persenIntegritas >= batasRankA) return "A";
         if (persenIntegritas >= batasRankB) return "B";
         if (persenIntegritas >= batasRankC) return "C";
-        return "F";
+        return "F";   // batasRankF (75) dan di bawahnya: Rank F
     }
 
     // Memilih daftar box penutup sesuai pilihan MC di Scene 3 (Ya = menerima tawaran, Tidak = menolak)
@@ -323,7 +364,7 @@ public class PopupLevel5Selesai : MonoBehaviour
         if (teksXP != null && ScoreManager.Instance != null)
             teksXP.text = ScoreManager.Instance.currentScore.ToString();
 
-        // Integritas tampil sebagai angka persen, dan rank (S, A, B, C, F) tampil sebagai huruf di teks sendiri
+        // Integritas tampil sebagai angka persen, dan rank (S, A, B, C, F) tampil sebagai gambar badge
         if (IntegritasManager.Instance != null)
         {
             int persen = Mathf.RoundToInt(IntegritasManager.Instance.CurrentIntegritas);
@@ -331,13 +372,17 @@ public class PopupLevel5Selesai : MonoBehaviour
             Debug.Log("[Level 5] Integritas akhir " + persen + "%, rank " + RankAkhir + ".");
 
             if (teksIntegritas != null) teksIntegritas.text = persen + "%";
-            if (teksRank != null) teksRank.text = RankAkhir;
+            TampilkanObjekRank(RankAkhir);
         }
         else
         {
             RankAkhir = "-";
             if (teksIntegritas != null) teksIntegritas.text = "-";
-            if (teksRank != null) teksRank.text = "-";
+            if (objekRankS != null) objekRankS.SetActive(false);
+            if (objekRankA != null) objekRankA.SetActive(false);
+            if (objekRankB != null) objekRankB.SetActive(false);
+            if (objekRankC != null) objekRankC.SetActive(false);
+            if (objekRankF != null) objekRankF.SetActive(false);
         }
 
         panelPopup.SetActive(true);
@@ -430,6 +475,9 @@ public class PopupLevel5Selesai : MonoBehaviour
         {
             ScoreManager.ResetProgres();
             IntegritasManager.ResetProgres();
+
+            // Permainan tamat: progres tersimpan dihapus supaya Continue tidak kembali ke awal level 5
+            //ProgresPermainan.Hapus();
         }
 
         Debug.Log("[Level 5] Tombol Home ditekan, pindah ke scene '" + namaSceneMenuUtama + "'.");
