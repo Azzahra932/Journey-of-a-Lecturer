@@ -19,6 +19,14 @@ public class IntegritasManager : MonoBehaviour
         integritasTersimpan = -1f;
     }
 
+    // TAMBAHAN BARU (Continue): memasang nilai integritas dari data simpanan.
+    // Dipanggil ProgresPermainan.SiapkanContinue() dari menu utama, sebelum scene gameplay dimuat.
+    // Nilainya dibaca di Start() saat scene gameplay dimuat.
+    public static void TerapkanProgresTersimpan(float nilai)
+    {
+        integritasTersimpan = nilai;
+    }
+
     // TAMBAHAN BARU: supaya script lain (pop-up level selesai) bisa membaca nilai integritas
     public float CurrentIntegritas { get { return currentIntegritas; } }
 

@@ -558,4 +558,18 @@ public class PopupLevel4Selesai : MonoBehaviour
             }
         }
     }
+
+    // Continue: terapkan perubahan menuju Level 5 tanpa pop-up dan tanpa transisi (dipanggil PemulihProgres)
+    public void PulihkanPerubahan()
+    {
+        sudahTampil = true;
+        sudahLanjut = true;
+
+        GantiKarakterMC();
+        GantiSpriteMCDuduk();
+        GantiNamaDanIconTopBar();
+        BukaRuangan();
+        MatikanScriptLevel4();
+        AktifkanModeLevelTerakhir();
+    }
 }

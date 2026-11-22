@@ -51,6 +51,8 @@ public class PopupLevel2Selesai : MonoBehaviour
     [Tooltip("Nama scene menu utama persis seperti di Build Profiles / Scene List (huruf besar kecil berpengaruh). Kosong = tidak pindah scene, hanya event Saat Tombol Home yang jalan.")]
     public string namaSceneMenuUtama = "";
     public UnityEvent saatTombolHome;           // Dipanggil begitu tombol Ya ditekan (mis. menyimpan data), sebelum pindah scene
+    [Tooltip("Centang = kalau pemain keluar lewat Home di pop-up ini (lalu Ya), yang tersimpan adalah awal Level 3 (target poin level 3, jam 08.00), jadi Continue langsung masuk Level 3 Scene 1, bukan mengulang Level 2.")]
+    public bool simpanAwalLevel3SaatHome = true;
 
     [Header("Menunggu Aktivitas Selesai (kosong = dicari otomatis)")]
     public LaptopKelas laptopKelas;
@@ -305,6 +307,8 @@ public class PopupLevel2Selesai : MonoBehaviour
         // Waktu dikembalikan supaya scene tujuan tidak ikut berhenti (pop-up menghentikan waktu)
         Time.timeScale = 1f;
 
+        if (simpanAwalLevel3SaatHome) SimpanAwalLevel3SebelumKeluar();
+
         saatTombolHome.Invoke();
 
         if (string.IsNullOrEmpty(namaSceneMenuUtama))
@@ -321,6 +325,17 @@ public class PopupLevel2Selesai : MonoBehaviour
 
         Debug.Log("[Level 2] Tombol Home ditekan, pindah ke scene '" + namaSceneMenuUtama + "'.");
         SceneManager.LoadScene(namaSceneMenuUtama);
+    }
+
+    // Home dari pop-up: yang tersimpan adalah awal Level 3, seperti kalau tombol Lanjut ditekan (target poin level 3 dan jam 08.00),
+    // supaya Continue langsung masuk Level 3 Scene 1. Scene ini ditinggalkan, jadi perubahan nilai ini tidak berdampak ke permainan.
+    private void SimpanAwalLevel3SebelumKeluar()
+    {
+        NaikkanTargetSkor();
+        if (timeManager != null) timeManager.ResetKeJamPagi();
+
+        ProgresPermainan.SimpanCheckpoint(3);
+        Debug.Log("[Level 2] Keluar lewat Home dari pop-up: checkpoint awal Level 3 disimpan.");
     }
 
     // ---------- Tombol Lanjut ----------
@@ -495,5 +510,25 @@ public class PopupLevel2Selesai : MonoBehaviour
         {
             if (r != null) r.Buka();
         }
+    }
+
+    // Continue: terapkan perubahan menuju Level 3 tanpa pop-up dan tanpa transisi (dipanggil PemulihProgres).
+    // Pop-up ditandai sudah tampil, supaya tidak muncul lagi setelah scene dimuat ulang. Target poin tidak diubah di sini (sudah dipulihkan ScoreManager).
+    public void PulihkanPerubahan()
+    {
+        sudahTampil = true;
+        sudahLanjut = true;
+
+        GantiKarakterMC();
+        GantiSpriteMCDuduk();
+        GantiNamaDanIconTopBar();
+        BukaRuangan();
+    }
+
+    // Continue ke awal Level 3 (dipanggil PemulihProgres): box pengantar Level 3 tampil dulu seperti setelah tombol Lanjut,
+    // lalu event "Saat Masuk Level 3" dijalankan.
+    public void MulaiDariContinue()
+    {
+        StartCoroutine(AlurBoxPengantar());
     }
 }

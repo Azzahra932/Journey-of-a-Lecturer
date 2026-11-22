@@ -1164,7 +1164,7 @@ RectTransform:
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
   m_AnchorMin: {x: 0.5, y: 0.5}
   m_AnchorMax: {x: 0.5, y: 0.5}
-  m_AnchoredPosition: {x: -1, y: -43}
+  m_AnchoredPosition: {x: -1, y: 1}
   m_SizeDelta: {x: 1022.18286, y: 857.0369}
   m_Pivot: {x: 0.5, y: 0.5}
 --- !u!114 &751414866
@@ -1187,7 +1187,7 @@ MonoBehaviour:
   m_OnCullStateChanged:
     m_PersistentCalls:
       m_Calls: []
-  m_Sprite: {fileID: 21300000, guid: 2c25258085fce0f4789482644eada138, type: 3}
+  m_Sprite: {fileID: 21300000, guid: 89b7e224ff0d5a54aa8d7d8c091afd08, type: 3}
   m_Type: 0
   m_PreserveAspect: 0
   m_FillCenter: 1
@@ -1847,8 +1847,8 @@ RectTransform:
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
   m_AnchorMin: {x: 0.5, y: 0.5}
   m_AnchorMax: {x: 0.5, y: 0.5}
-  m_AnchoredPosition: {x: 4.200012, y: -351}
-  m_SizeDelta: {x: 490.0569, y: 106.1921}
+  m_AnchoredPosition: {x: -6, y: -321}
+  m_SizeDelta: {x: 490.0569, y: 127.3464}
   m_Pivot: {x: 0.5, y: 0.5}
 --- !u!114 &1704840272
 MonoBehaviour:
@@ -1870,7 +1870,7 @@ MonoBehaviour:
   m_OnCullStateChanged:
     m_PersistentCalls:
       m_Calls: []
-  m_Sprite: {fileID: 21300000, guid: d27f3dccef8f46142b93a4daf974d49f, type: 3}
+  m_Sprite: {fileID: 21300000, guid: 7d717200490ce1a42827e1c377da6bdf, type: 3}
   m_Type: 0
   m_PreserveAspect: 0
   m_FillCenter: 1
@@ -2144,6 +2144,54 @@ MonoBehaviour:
   m_OnClick:
     m_PersistentCalls:
       m_Calls: []
+--- !u!1 &1914263478
+GameObject:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  serializedVersion: 6
+  m_Component:
+  - component: {fileID: 1914263480}
+  - component: {fileID: 1914263479}
+  m_Layer: 0
+  m_Name: suaratombol
+  m_TagString: Untagged
+  m_Icon: {fileID: 0}
+  m_NavMeshLayer: 0
+  m_StaticEditorFlags: 0
+  m_IsActive: 1
+--- !u!114 &1914263479
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1914263478}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 125354f382c695b40ade1a21603e9183, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Assembly-CSharp::SuaraTombol
+  suaraKlik: {fileID: 8300000, guid: 154d1f5b9f28269459649b8b28f916b5, type: 3}
+  volume: 1
+  sumber: {fileID: 0}
+  tombolDikecualikan: []
+--- !u!4 &1914263480
+Transform:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1914263478}
+  serializedVersion: 2
+  m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
+  m_LocalPosition: {x: 922.60205, y: 565.55786, z: 0}
+  m_LocalScale: {x: 1, y: 1, z: 1}
+  m_ConstrainProportionsScale: 0
+  m_Children: []
+  m_Father: {fileID: 0}
+  m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
 --- !u!1 &1920789058
 GameObject:
   m_ObjectHideFlags: 0
@@ -2324,7 +2372,6 @@ MonoBehaviour:
   tombolAbout: {fileID: 1662906827}
   tombolSettings: {fileID: 648974535}
   tombolKeluar: {fileID: 0}
-  continueAktif: 0
   sembunyikanContinueSaatNonaktif: 0
   panelAbout: {fileID: 0}
   tombolTutupAbout: {fileID: 0}
@@ -2403,3 +2450,4 @@ SceneRoots:
   - {fileID: 27417263}
   - {fileID: 1947033958}
   - {fileID: 348261189}
+  - {fileID: 1914263480}

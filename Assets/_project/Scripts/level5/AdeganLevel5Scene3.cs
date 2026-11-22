@@ -197,6 +197,13 @@ public class AdeganLevel5Scene3 : MonoBehaviour
     public bool SudahMemilih { get { return pilihan != 0; } }
     public bool MenerimaTawaran { get { return pilihan == 1; } }
 
+    // Continue: pilihan MC di tawaran dipulihkan dari data simpanan (1 = Ya / menerima, 2 = Tidak / menolak).
+    // Dipanggil PemulihProgres, supaya dialog Scene 4 dan penutup Level 5 tetap sesuai pilihan sebelumnya.
+    public void PulihkanPilihan(int nilai)
+    {
+        if (nilai == 1 || nilai == 2) pilihan = nilai;
+    }
+
     // Menunggu MC duduk di kursinya (atau langsung mulai kalau Duduk Otomatis dicentang)
     void Update()
     {

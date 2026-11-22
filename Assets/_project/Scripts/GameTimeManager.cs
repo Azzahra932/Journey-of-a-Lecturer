@@ -131,4 +131,25 @@ public class GameTimeManager : MonoBehaviour
         SudahJamPenutup = false;
         UpdateClockUI();
     }
+
+    // TAMBAHAN BARU (Continue): memulihkan hari ke berapa dari data simpanan
+    public void AturHariKe(int hari)
+    {
+        HariKe = Mathf.Max(1, hari);
+        Debug.Log("[GameTimeManager] Hari diatur ke " + HariKe + ".");
+    }
+
+    // TAMBAHAN BARU (Continue): jam game disimpan sebagai jumlah lompatan waktu sejak 08.00 (0 = 08.00, 1 = 09.30, dst)
+    public int LangkahWaktu { get { return currentTimeStep; } }
+
+    // TAMBAHAN BARU (Continue): jam dipulihkan ke langkah tersimpan, jadi jam lanjut dari waktu terakhir (tidak kembali 08.00)
+    public void AturLangkahWaktu(int langkah)
+    {
+        currentTimeStep = Mathf.Max(0, langkah);
+        timer = 0f;
+        sudahDipicuHariIni = false;
+        SudahJamPenutup = false;
+        UpdateClockUI();
+        Debug.Log("[GameTimeManager] Jam dipulihkan ke langkah " + currentTimeStep + ".");
+    }
 }

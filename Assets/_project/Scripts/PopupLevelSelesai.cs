@@ -461,4 +461,18 @@ public class PopupLevelSelesai : MonoBehaviour
             if (r != null) r.Buka();
         }
     }
+
+    // Continue: terapkan perubahan menuju Level 2 tanpa pop-up dan tanpa transisi (dipanggil PemulihProgres).
+    // Pop-up ditandai sudah tampil, supaya tidak muncul lagi setelah scene dimuat ulang. Target poin tidak diubah di sini (sudah dipulihkan ScoreManager).
+    public void PulihkanPerubahan()
+    {
+        sudahTampil = true;
+        sudahLanjut = true;
+
+        GantiKarakterMC();
+        GantiSpriteMCDuduk();
+        GantiNamaDanIconTopBar();
+        BukaRuangan();
+        GantiObjekLevel2();
+    }
 }

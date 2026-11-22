@@ -9104,6 +9104,18 @@ MonoBehaviour:
           m_StringArgument: 
           m_BoolArgument: 0
         m_CallState: 2
+      - m_Target: {fileID: 870532426}
+        m_TargetAssemblyTypeName: PenyimpanCheckpoint, Assembly-CSharp
+        m_MethodName: SimpanTitik
+        m_Mode: 5
+        m_Arguments:
+          m_ObjectArgument: {fileID: 0}
+          m_ObjectArgumentAssemblyTypeName: UnityEngine.Object, UnityEngine
+          m_IntArgument: 0
+          m_FloatArgument: 0
+          m_StringArgument: L2S7
+          m_BoolArgument: 0
+        m_CallState: 2
 --- !u!4 &88820140
 Transform:
   m_ObjectHideFlags: 0
@@ -9241,6 +9253,7 @@ MonoBehaviour:
   saatTombolHome:
     m_PersistentCalls:
       m_Calls: []
+  simpanAwalLevel4SaatHome: 1
   laptopKelas: {fileID: 1423579088}
   laptopDosen: {fileID: 1372169988}
   laptopPerpus: {fileID: 1848934461}
@@ -9281,6 +9294,18 @@ MonoBehaviour:
           m_ObjectArgument: {fileID: 0}
           m_ObjectArgumentAssemblyTypeName: UnityEngine.Object, UnityEngine
           m_IntArgument: 0
+          m_FloatArgument: 0
+          m_StringArgument: 
+          m_BoolArgument: 0
+        m_CallState: 2
+      - m_Target: {fileID: 870532426}
+        m_TargetAssemblyTypeName: PenyimpanCheckpoint, Assembly-CSharp
+        m_MethodName: SimpanAwalLevel
+        m_Mode: 3
+        m_Arguments:
+          m_ObjectArgument: {fileID: 0}
+          m_ObjectArgumentAssemblyTypeName: UnityEngine.Object, UnityEngine
+          m_IntArgument: 4
           m_FloatArgument: 0
           m_StringArgument: 
           m_BoolArgument: 0
@@ -9895,6 +9920,18 @@ MonoBehaviour:
           m_IntArgument: 0
           m_FloatArgument: 0
           m_StringArgument: 
+          m_BoolArgument: 0
+        m_CallState: 2
+      - m_Target: {fileID: 870532426}
+        m_TargetAssemblyTypeName: PenyimpanCheckpoint, Assembly-CSharp
+        m_MethodName: SimpanTitik
+        m_Mode: 5
+        m_Arguments:
+          m_ObjectArgument: {fileID: 0}
+          m_ObjectArgumentAssemblyTypeName: UnityEngine.Object, UnityEngine
+          m_IntArgument: 0
+          m_FloatArgument: 0
+          m_StringArgument: L3S2
           m_BoolArgument: 0
         m_CallState: 2
 --- !u!4 &109965929
@@ -17145,8 +17182,8 @@ RectTransform:
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
   m_AnchorMin: {x: 0.5, y: 0.5}
   m_AnchorMax: {x: 0.5, y: 0.5}
-  m_AnchoredPosition: {x: -39.676, y: -11.5}
-  m_SizeDelta: {x: 1521.9397, y: 380.0579}
+  m_AnchoredPosition: {x: -25.644, y: -18.97}
+  m_SizeDelta: {x: 1422.9, y: 197.31}
   m_Pivot: {x: 0.47393078, y: 0.4697412}
 --- !u!114 &319527589
 MonoBehaviour:
@@ -18569,6 +18606,18 @@ MonoBehaviour:
           m_IntArgument: 0
           m_FloatArgument: 0
           m_StringArgument: 
+          m_BoolArgument: 0
+        m_CallState: 2
+      - m_Target: {fileID: 870532426}
+        m_TargetAssemblyTypeName: PenyimpanCheckpoint, Assembly-CSharp
+        m_MethodName: SimpanTitik
+        m_Mode: 5
+        m_Arguments:
+          m_ObjectArgument: {fileID: 0}
+          m_ObjectArgumentAssemblyTypeName: UnityEngine.Object, UnityEngine
+          m_IntArgument: 0
+          m_FloatArgument: 0
+          m_StringArgument: L2S6
           m_BoolArgument: 0
         m_CallState: 2
 --- !u!1 &373250699
@@ -21604,6 +21653,18 @@ MonoBehaviour:
           m_IntArgument: 0
           m_FloatArgument: 0
           m_StringArgument: 
+          m_BoolArgument: 0
+        m_CallState: 2
+      - m_Target: {fileID: 870532426}
+        m_TargetAssemblyTypeName: PenyimpanCheckpoint, Assembly-CSharp
+        m_MethodName: SimpanTitik
+        m_Mode: 5
+        m_Arguments:
+          m_ObjectArgument: {fileID: 0}
+          m_ObjectArgumentAssemblyTypeName: UnityEngine.Object, UnityEngine
+          m_IntArgument: 0
+          m_FloatArgument: 0
+          m_StringArgument: L3S5
           m_BoolArgument: 0
         m_CallState: 2
 --- !u!4 &452670000
@@ -35909,6 +35970,51 @@ SpriteRenderer:
   m_SpriteTileMode: 0
   m_WasSpriteAssigned: 1
   m_SpriteSortPoint: 0
+--- !u!1 &870532425
+GameObject:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  serializedVersion: 6
+  m_Component:
+  - component: {fileID: 870532427}
+  - component: {fileID: 870532426}
+  m_Layer: 0
+  m_Name: PenyimpanCheckpoint
+  m_TagString: Untagged
+  m_Icon: {fileID: 0}
+  m_NavMeshLayer: 0
+  m_StaticEditorFlags: 0
+  m_IsActive: 1
+--- !u!114 &870532426
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 870532425}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 7438150e350f06041b5e2bef640fa480, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Assembly-CSharp::PenyimpanCheckpoint
+  adeganScene3: {fileID: 1507182975}
+--- !u!4 &870532427
+Transform:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 870532425}
+  serializedVersion: 2
+  m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
+  m_LocalPosition: {x: 926.67487, y: 491.8699, z: 0}
+  m_LocalScale: {x: 1, y: 1, z: 1}
+  m_ConstrainProportionsScale: 0
+  m_Children: []
+  m_Father: {fileID: 0}
+  m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
 --- !u!1 &878046968
 GameObject:
   m_ObjectHideFlags: 0
@@ -39388,7 +39494,31 @@ MonoBehaviour:
   batasWaktuAdegan: 120
   saatAdeganSelesai:
     m_PersistentCalls:
-      m_Calls: []
+      m_Calls:
+      - m_Target: {fileID: 870532426}
+        m_TargetAssemblyTypeName: PenyimpanCheckpoint, Assembly-CSharp
+        m_MethodName: SimpanTitik
+        m_Mode: 5
+        m_Arguments:
+          m_ObjectArgument: {fileID: 0}
+          m_ObjectArgumentAssemblyTypeName: UnityEngine.Object, UnityEngine
+          m_IntArgument: 0
+          m_FloatArgument: 0
+          m_StringArgument: L2S2
+          m_BoolArgument: 0
+        m_CallState: 2
+      - m_Target: {fileID: 727798937}
+        m_TargetAssemblyTypeName: ChairInteraction, Assembly-CSharp
+        m_MethodName: BukaScene2
+        m_Mode: 1
+        m_Arguments:
+          m_ObjectArgument: {fileID: 0}
+          m_ObjectArgumentAssemblyTypeName: UnityEngine.Object, UnityEngine
+          m_IntArgument: 0
+          m_FloatArgument: 0
+          m_StringArgument: L2S2
+          m_BoolArgument: 0
+        m_CallState: 2
 --- !u!4 &968708533
 Transform:
   m_ObjectHideFlags: 0
@@ -42628,6 +42758,18 @@ MonoBehaviour:
           m_IntArgument: 0
           m_FloatArgument: 0
           m_StringArgument: 
+          m_BoolArgument: 0
+        m_CallState: 2
+      - m_Target: {fileID: 870532426}
+        m_TargetAssemblyTypeName: PenyimpanCheckpoint, Assembly-CSharp
+        m_MethodName: SimpanTitik
+        m_Mode: 5
+        m_Arguments:
+          m_ObjectArgument: {fileID: 0}
+          m_ObjectArgumentAssemblyTypeName: UnityEngine.Object, UnityEngine
+          m_IntArgument: 0
+          m_FloatArgument: 0
+          m_StringArgument: L2S4
           m_BoolArgument: 0
         m_CallState: 2
 --- !u!61 &1072558274
@@ -46623,6 +46765,7 @@ MonoBehaviour:
   saatTombolHome:
     m_PersistentCalls:
       m_Calls: []
+  simpanAwalLevel3SaatHome: 1
   laptopKelas: {fileID: 1423579088}
   laptopDosen: {fileID: 1372169988}
   laptopPerpus: {fileID: 1848934461}
@@ -46663,6 +46806,18 @@ MonoBehaviour:
           m_ObjectArgument: {fileID: 0}
           m_ObjectArgumentAssemblyTypeName: UnityEngine.Object, UnityEngine
           m_IntArgument: 0
+          m_FloatArgument: 0
+          m_StringArgument: 
+          m_BoolArgument: 0
+        m_CallState: 2
+      - m_Target: {fileID: 870532426}
+        m_TargetAssemblyTypeName: PenyimpanCheckpoint, Assembly-CSharp
+        m_MethodName: SimpanAwalLevel
+        m_Mode: 3
+        m_Arguments:
+          m_ObjectArgument: {fileID: 0}
+          m_ObjectArgumentAssemblyTypeName: UnityEngine.Object, UnityEngine
+          m_IntArgument: 3
           m_FloatArgument: 0
           m_StringArgument: 
           m_BoolArgument: 0
@@ -47184,6 +47339,18 @@ MonoBehaviour:
           m_IntArgument: 0
           m_FloatArgument: 0
           m_StringArgument: 
+          m_BoolArgument: 0
+        m_CallState: 2
+      - m_Target: {fileID: 870532426}
+        m_TargetAssemblyTypeName: PenyimpanCheckpoint, Assembly-CSharp
+        m_MethodName: SimpanTitik
+        m_Mode: 5
+        m_Arguments:
+          m_ObjectArgument: {fileID: 0}
+          m_ObjectArgumentAssemblyTypeName: UnityEngine.Object, UnityEngine
+          m_IntArgument: 0
+          m_FloatArgument: 0
+          m_StringArgument: L2S5
           m_BoolArgument: 0
         m_CallState: 2
 --- !u!4 &1192827904
@@ -50318,6 +50485,277 @@ Transform:
   m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
   m_LocalPosition: {x: 6.42, y: -1.28, z: 0}
   m_LocalScale: {x: 0.1922571, y: 0.1922571, z: 0.1922571}
+  m_ConstrainProportionsScale: 0
+  m_Children: []
+  m_Father: {fileID: 0}
+  m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
+--- !u!1 &1292569114
+GameObject:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  serializedVersion: 6
+  m_Component:
+  - component: {fileID: 1292569116}
+  - component: {fileID: 1292569115}
+  m_Layer: 0
+  m_Name: PemulihProgres
+  m_TagString: Untagged
+  m_Icon: {fileID: 0}
+  m_NavMeshLayer: 0
+  m_StaticEditorFlags: 0
+  m_IsActive: 1
+--- !u!114 &1292569115
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1292569114}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 71206cc98909c49458f53c42bcceea74, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Assembly-CSharp::PemulihProgres
+  popupLevel1: {fileID: 1343480147}
+  popupLevel2: {fileID: 1184540245}
+  popupLevel3: {fileID: 91040299}
+  popupLevel4: {fileID: 901640838}
+  titikPulih:
+  - id: L2S2
+    saatDipulihkan:
+      m_PersistentCalls:
+        m_Calls:
+        - m_Target: {fileID: 727798937}
+          m_TargetAssemblyTypeName: ChairInteraction, Assembly-CSharp
+          m_MethodName: BukaScene2
+          m_Mode: 1
+          m_Arguments:
+            m_ObjectArgument: {fileID: 0}
+            m_ObjectArgumentAssemblyTypeName: UnityEngine.Object, UnityEngine
+            m_IntArgument: 0
+            m_FloatArgument: 0
+            m_StringArgument: 
+            m_BoolArgument: 0
+          m_CallState: 2
+  - id: L2S3
+    saatDipulihkan:
+      m_PersistentCalls:
+        m_Calls:
+        - m_Target: {fileID: 1072558273}
+          m_TargetAssemblyTypeName: AdeganLevel2Scene3, Assembly-CSharp
+          m_MethodName: SiapkanScene
+          m_Mode: 1
+          m_Arguments:
+            m_ObjectArgument: {fileID: 0}
+            m_ObjectArgumentAssemblyTypeName: UnityEngine.Object, UnityEngine
+            m_IntArgument: 0
+            m_FloatArgument: 0
+            m_StringArgument: 
+            m_BoolArgument: 0
+          m_CallState: 2
+  - id: L2S4
+    saatDipulihkan:
+      m_PersistentCalls:
+        m_Calls:
+        - m_Target: {fileID: 1192827903}
+          m_TargetAssemblyTypeName: AdeganLevel2Scene4, Assembly-CSharp
+          m_MethodName: SiapkanScene
+          m_Mode: 1
+          m_Arguments:
+            m_ObjectArgument: {fileID: 0}
+            m_ObjectArgumentAssemblyTypeName: UnityEngine.Object, UnityEngine
+            m_IntArgument: 0
+            m_FloatArgument: 0
+            m_StringArgument: 
+            m_BoolArgument: 0
+          m_CallState: 2
+  - id: L2S5
+    saatDipulihkan:
+      m_PersistentCalls:
+        m_Calls:
+        - m_Target: {fileID: 370464226}
+          m_TargetAssemblyTypeName: AdeganLevel2Scene5, Assembly-CSharp
+          m_MethodName: SiapkanScene
+          m_Mode: 1
+          m_Arguments:
+            m_ObjectArgument: {fileID: 0}
+            m_ObjectArgumentAssemblyTypeName: UnityEngine.Object, UnityEngine
+            m_IntArgument: 0
+            m_FloatArgument: 0
+            m_StringArgument: 
+            m_BoolArgument: 0
+          m_CallState: 2
+  - id: L2S6
+    saatDipulihkan:
+      m_PersistentCalls:
+        m_Calls:
+        - m_Target: {fileID: 88820139}
+          m_TargetAssemblyTypeName: AdeganLevel2Scene6, Assembly-CSharp
+          m_MethodName: SiapkanScene
+          m_Mode: 1
+          m_Arguments:
+            m_ObjectArgument: {fileID: 0}
+            m_ObjectArgumentAssemblyTypeName: UnityEngine.Object, UnityEngine
+            m_IntArgument: 0
+            m_FloatArgument: 0
+            m_StringArgument: 
+            m_BoolArgument: 0
+          m_CallState: 2
+  - id: L2S7
+    saatDipulihkan:
+      m_PersistentCalls:
+        m_Calls:
+        - m_Target: {fileID: 224737676}
+          m_TargetAssemblyTypeName: AdeganLevel2Scene7, Assembly-CSharp
+          m_MethodName: SiapkanScene
+          m_Mode: 1
+          m_Arguments:
+            m_ObjectArgument: {fileID: 0}
+            m_ObjectArgumentAssemblyTypeName: UnityEngine.Object, UnityEngine
+            m_IntArgument: 0
+            m_FloatArgument: 0
+            m_StringArgument: 
+            m_BoolArgument: 0
+          m_CallState: 2
+  - id: L3S2
+    saatDipulihkan:
+      m_PersistentCalls:
+        m_Calls:
+        - m_Target: {fileID: 2065398850}
+          m_TargetAssemblyTypeName: AdeganLevel3Scene2, Assembly-CSharp
+          m_MethodName: SiapkanScene
+          m_Mode: 1
+          m_Arguments:
+            m_ObjectArgument: {fileID: 0}
+            m_ObjectArgumentAssemblyTypeName: UnityEngine.Object, UnityEngine
+            m_IntArgument: 0
+            m_FloatArgument: 0
+            m_StringArgument: 
+            m_BoolArgument: 0
+          m_CallState: 2
+  - id: L3S3
+    saatDipulihkan:
+      m_PersistentCalls:
+        m_Calls:
+        - m_Target: {fileID: 2123994722}
+          m_TargetAssemblyTypeName: AdeganLevel3Scene3, Assembly-CSharp
+          m_MethodName: SiapkanScene
+          m_Mode: 1
+          m_Arguments:
+            m_ObjectArgument: {fileID: 0}
+            m_ObjectArgumentAssemblyTypeName: UnityEngine.Object, UnityEngine
+            m_IntArgument: 0
+            m_FloatArgument: 0
+            m_StringArgument: 
+            m_BoolArgument: 0
+          m_CallState: 2
+  - id: L3S4
+    saatDipulihkan:
+      m_PersistentCalls:
+        m_Calls:
+        - m_Target: {fileID: 452669999}
+          m_TargetAssemblyTypeName: AdeganLevel3Scene4, Assembly-CSharp
+          m_MethodName: SiapkanScene
+          m_Mode: 1
+          m_Arguments:
+            m_ObjectArgument: {fileID: 0}
+            m_ObjectArgumentAssemblyTypeName: UnityEngine.Object, UnityEngine
+            m_IntArgument: 0
+            m_FloatArgument: 0
+            m_StringArgument: 
+            m_BoolArgument: 0
+          m_CallState: 2
+  - id: L3S5
+    saatDipulihkan:
+      m_PersistentCalls:
+        m_Calls:
+        - m_Target: {fileID: 1965779401}
+          m_TargetAssemblyTypeName: AdeganLevel3Scene5, Assembly-CSharp
+          m_MethodName: SiapkanScene
+          m_Mode: 1
+          m_Arguments:
+            m_ObjectArgument: {fileID: 0}
+            m_ObjectArgumentAssemblyTypeName: UnityEngine.Object, UnityEngine
+            m_IntArgument: 0
+            m_FloatArgument: 0
+            m_StringArgument: 
+            m_BoolArgument: 0
+          m_CallState: 2
+  - id: L3S6
+    saatDipulihkan:
+      m_PersistentCalls:
+        m_Calls:
+        - m_Target: {fileID: 1116190393}
+          m_TargetAssemblyTypeName: AdeganLevel3Scene6, Assembly-CSharp
+          m_MethodName: SiapkanScene
+          m_Mode: 1
+          m_Arguments:
+            m_ObjectArgument: {fileID: 0}
+            m_ObjectArgumentAssemblyTypeName: UnityEngine.Object, UnityEngine
+            m_IntArgument: 0
+            m_FloatArgument: 0
+            m_StringArgument: 
+            m_BoolArgument: 0
+          m_CallState: 2
+  persiapanLevel1:
+    m_PersistentCalls:
+      m_Calls: []
+  persiapanLevel2:
+    m_PersistentCalls:
+      m_Calls:
+      - m_Target: {fileID: 727798937}
+        m_TargetAssemblyTypeName: ChairInteraction, Assembly-CSharp
+        m_MethodName: SiapkanLevelBaru
+        m_Mode: 1
+        m_Arguments:
+          m_ObjectArgument: {fileID: 0}
+          m_ObjectArgumentAssemblyTypeName: UnityEngine.Object, UnityEngine
+          m_IntArgument: 0
+          m_FloatArgument: 0
+          m_StringArgument: 
+          m_BoolArgument: 0
+        m_CallState: 2
+  persiapanLevel3:
+    m_PersistentCalls:
+      m_Calls: []
+  persiapanLevel4:
+    m_PersistentCalls:
+      m_Calls: []
+  persiapanLevel5:
+    m_PersistentCalls:
+      m_Calls: []
+  adeganScene3: {fileID: 1507182975}
+  tutorialManager: {fileID: 1852825601}
+  objekDimatikan:
+  - {fileID: 792113930}
+  - {fileID: 1246672391}
+  - {fileID: 1658593946}
+  - {fileID: 118157954}
+  - {fileID: 945603200}
+  - {fileID: 540551036}
+  - {fileID: 232154175}
+  - {fileID: 991676802}
+  - {fileID: 1285812101}
+  - {fileID: 1121371826}
+  - {fileID: 1923359178}
+  scriptDimatikan: []
+  kursiDibersihkan:
+  - {fileID: 558640735}
+  objekDinyalakan: []
+  tesPulihkanKeTitik: 
+--- !u!4 &1292569116
+Transform:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1292569114}
+  serializedVersion: 2
+  m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
+  m_LocalPosition: {x: 926.67487, y: 491.8699, z: 0}
+  m_LocalScale: {x: 1, y: 1, z: 1}
   m_ConstrainProportionsScale: 0
   m_Children: []
   m_Father: {fileID: 0}
@@ -54867,6 +55305,18 @@ MonoBehaviour:
           m_IntArgument: 0
           m_FloatArgument: 0
           m_StringArgument: 
+          m_BoolArgument: 0
+        m_CallState: 2
+      - m_Target: {fileID: 870532426}
+        m_TargetAssemblyTypeName: PenyimpanCheckpoint, Assembly-CSharp
+        m_MethodName: SimpanTitik
+        m_Mode: 5
+        m_Arguments:
+          m_ObjectArgument: {fileID: 0}
+          m_ObjectArgumentAssemblyTypeName: UnityEngine.Object, UnityEngine
+          m_IntArgument: 0
+          m_FloatArgument: 0
+          m_StringArgument: L2S3
           m_BoolArgument: 0
         m_CallState: 2
   suaraKetik: {fileID: 8300000, guid: 27be98eb86e09dc44809ec1be23aeb27, type: 3}
@@ -63295,8 +63745,8 @@ RectTransform:
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
   m_AnchorMin: {x: 0.5, y: 0.5}
   m_AnchorMax: {x: 0.5, y: 0.5}
-  m_AnchoredPosition: {x: -39.676, y: -11.5}
-  m_SizeDelta: {x: 1521.9397, y: 380.0579}
+  m_AnchoredPosition: {x: -25.644, y: -18.97}
+  m_SizeDelta: {x: 1422.9, y: 197.31}
   m_Pivot: {x: 0.47393078, y: 0.4697412}
 --- !u!114 &1700441104
 MonoBehaviour:
@@ -71783,6 +72233,18 @@ MonoBehaviour:
           m_StringArgument: 
           m_BoolArgument: 0
         m_CallState: 2
+      - m_Target: {fileID: 870532426}
+        m_TargetAssemblyTypeName: PenyimpanCheckpoint, Assembly-CSharp
+        m_MethodName: SimpanTitik
+        m_Mode: 5
+        m_Arguments:
+          m_ObjectArgument: {fileID: 0}
+          m_ObjectArgumentAssemblyTypeName: UnityEngine.Object, UnityEngine
+          m_IntArgument: 0
+          m_FloatArgument: 0
+          m_StringArgument: L3S6
+          m_BoolArgument: 0
+        m_CallState: 2
 --- !u!4 &1965779402
 Transform:
   m_ObjectHideFlags: 0
@@ -74781,6 +75243,18 @@ MonoBehaviour:
           m_StringArgument: 
           m_BoolArgument: 0
         m_CallState: 2
+      - m_Target: {fileID: 870532426}
+        m_TargetAssemblyTypeName: PenyimpanCheckpoint, Assembly-CSharp
+        m_MethodName: SimpanTitik
+        m_Mode: 5
+        m_Arguments:
+          m_ObjectArgument: {fileID: 0}
+          m_ObjectArgumentAssemblyTypeName: UnityEngine.Object, UnityEngine
+          m_IntArgument: 0
+          m_FloatArgument: 0
+          m_StringArgument: L3S3
+          m_BoolArgument: 0
+        m_CallState: 2
 --- !u!4 &2065398851
 Transform:
   m_ObjectHideFlags: 0
@@ -77131,6 +77605,18 @@ MonoBehaviour:
           m_StringArgument: 
           m_BoolArgument: 0
         m_CallState: 2
+      - m_Target: {fileID: 870532426}
+        m_TargetAssemblyTypeName: PenyimpanCheckpoint, Assembly-CSharp
+        m_MethodName: SimpanTitik
+        m_Mode: 5
+        m_Arguments:
+          m_ObjectArgument: {fileID: 0}
+          m_ObjectArgumentAssemblyTypeName: UnityEngine.Object, UnityEngine
+          m_IntArgument: 0
+          m_FloatArgument: 0
+          m_StringArgument: L3S4
+          m_BoolArgument: 0
+        m_CallState: 2
 --- !u!4 &2123994723
 Transform:
   m_ObjectHideFlags: 0
@@ -78254,3 +78740,5 @@ SceneRoots:
   - {fileID: 522501606}
   - {fileID: 907220240}
   - {fileID: 2110910777}
+  - {fileID: 1292569116}
+  - {fileID: 870532427}

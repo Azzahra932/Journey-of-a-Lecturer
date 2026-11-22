@@ -31,6 +31,17 @@ public class ScoreManager : MonoBehaviour
         tanpaTargetTersimpan = false;
     }
 
+    // TAMBAHAN BARU (Continue): memasang skor, target, dan mode tanpa target dari data simpanan.
+    // Dipanggil ProgresPermainan.SiapkanContinue() dari menu utama, sebelum scene gameplay dimuat.
+    // Nilainya dibaca di Awake() saat scene gameplay dimuat.
+    public static void TerapkanProgresTersimpan(int skor, int target, bool tanpaTarget)
+    {
+        adaTersimpan = true;
+        skorTersimpan = skor;
+        targetTersimpan = target;
+        tanpaTargetTersimpan = tanpaTarget;
+    }
+
     private void Awake()
     {
         Instance = this;

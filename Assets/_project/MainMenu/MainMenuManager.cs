@@ -2,11 +2,12 @@ using UnityEngine;
 using UnityEngine.SceneManagement;
 using UnityEngine.UI;
 
-// Menu utama: tombol Play (mulai game), Continue (opsional), About, Settings, dan Keluar (opsional).
+// Menu utama: tombol Play (permainan baru), Continue (lanjut dari checkpoint terakhir), About, Settings, dan Keluar (opsional).
 // Pasang script ini di satu objek kosong di scene MainMenu (mis. "MainMenuManager").
 // Semua tombol dipasang lewat script, jadi JANGAN isi On Click di Inspector.
 // Bagian yang tidak diisi di Inspector dilewati.
-// Play = game baru: skor dan integritas direset dulu supaya tidak terbawa dari permainan sebelumnya.
+//
+// Continue aktif otomatis kalau sudah ada data simpanan (ProgresPermainan.AdaSave), yaitu setelah pemain mencapai awal Level 2.
 public class MainMenuManager : MonoBehaviour
 {
     [Header("Scene Tujuan")]
@@ -14,16 +15,15 @@ public class MainMenuManager : MonoBehaviour
     public string namaSceneGameplay = "MainGameplay";
 
     [Header("Tombol Utama")]
-    public Button tombolPlay;                   // Mulai game dari awal
-    public Button tombolContinue;               // Opsional
+    public Button tombolPlay;                   // Mulai permainan baru dari awal
+    public Button tombolContinue;               // Lanjut dari checkpoint terakhir
     public Button tombolAbout;                  // Membuka panel About
     public Button tombolSettings;               // Membuka panel Settings (ikon gerigi)
     public Button tombolKeluar;                 // Opsional: keluar dari game
 
-    [Header("Continue (opsional)")]
-    [Tooltip("Game ini belum punya sistem simpan, jadi Continue dimatikan dulu. Centang kalau nanti sudah ada sistem simpan. Kalau dicentang, Continue memuat scene gameplay.")]
-    public bool continueAktif = false;
-    public bool sembunyikanContinueSaatNonaktif = false;   // true = tombol Continue disembunyikan, false = tampil tapi redup dan tidak bisa diklik
+    [Header("Continue")]
+    [Tooltip("true = tombol Continue disembunyikan kalau belum ada data simpanan. false = tampil tapi redup dan tidak bisa diklik.")]
+    public bool sembunyikanContinueSaatNonaktif = false;
 
     [Header("Panel About (opsional)")]
     public GameObject panelAbout;               // Panel berisi info game / pembuat
@@ -55,13 +55,15 @@ public class MainMenuManager : MonoBehaviour
         Pasang(tombolTutupAbout, TutupAbout);
         Pasang(tombolTutupSettings, TutupSettings);
 
-        // Continue
+        // Continue aktif kalau ada data simpanan
         if (tombolContinue != null)
         {
+            bool ada = ProgresPermainan.AdaSave();
+
             if (sembunyikanContinueSaatNonaktif)
-                tombolContinue.gameObject.SetActive(continueAktif);
+                tombolContinue.gameObject.SetActive(ada);
             else
-                tombolContinue.interactable = continueAktif;
+                tombolContinue.interactable = ada;
         }
 
         // Volume
@@ -103,24 +105,34 @@ public class MainMenuManager : MonoBehaviour
         if (suaraKlik != null) suaraKlik.Play();
     }
 
-    // ---------- Play / Continue ----------
-    // Play = game baru dari awal: skor dan integritas direset
+    // ---------- Play (permainan baru) / Continue ----------
     public void Play()
     {
         Klik();
-        MuatGameplay(true);
+
+        // Permainan baru: skor, integritas, dan penanda Continue dikembalikan ke awal
+        ProgresPermainan.MulaiBaru();
+
+        MuatGameplay();
     }
 
-    // Continue tidak mereset apa pun
     public void LanjutGame()
     {
-        if (!continueAktif) return;
+        if (!ProgresPermainan.AdaSave())
+        {
+            Debug.Log("[Menu] Continue ditekan, tapi belum ada data simpanan.");
+            return;
+        }
 
         Klik();
-        MuatGameplay(false);
+
+        // Skor dan integritas tersimpan dipasang, lalu penanda Continue dinyalakan (dibaca PemulihProgres di scene gameplay)
+        ProgresPermainan.SiapkanContinue();
+
+        MuatGameplay();
     }
 
-    private void MuatGameplay(bool mulaiBaru)
+    private void MuatGameplay()
     {
         if (string.IsNullOrEmpty(namaSceneGameplay))
         {
@@ -132,14 +144,6 @@ public class MainMenuManager : MonoBehaviour
         {
             Debug.LogWarning("[Menu] Scene '" + namaSceneGameplay + "' tidak ditemukan. Cek ejaannya, dan pastikan scene sudah ditambahkan di Build Profiles (Scene List).");
             return;
-        }
-
-        // Game baru: progres dari permainan sebelumnya dihapus (skor, target, integritas)
-        if (mulaiBaru)
-        {
-            ScoreManager.ResetProgres();
-            IntegritasManager.ResetProgres();
-            Debug.Log("[Menu] Game baru: skor dan integritas direset.");
         }
 
         Debug.Log("[Menu] Memuat scene '" + namaSceneGameplay + "'.");
