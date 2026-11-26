@@ -11,6 +11,7 @@ public class RewardItem
     public string nama = "Reward";          // Hanya pengingat di Inspector (contoh: RPS, Ngajar, Bimbingan, Referensi)
     public GameObject boxReward;            // Box + teks reward yang muncul sendiri saat aktivitas selesai
     public GameObject itemRiwayat;          // "Cetakan" entri di panel riwayat (biarkan nonaktif). Tiap reward diterima, salinannya ditambahkan ke riwayat
+    public AudioClip suara;                 // Opsional: suara khusus reward ini. Kosong = pakai Suara Reward Umum di Reward Manager
 
     [HideInInspector] public int jumlah = 0;
 }
@@ -27,6 +28,11 @@ public class RewardManager : MonoBehaviour
     public float lamaTampil = 1.2f;                 // Detik box reward tampil sebelum hilang otomatis
     public bool alurMenungguReward = false;         // false = aktivitas langsung lanjut (cepat), reward tampil sambil jalan. true = aktivitas menunggu box hilang dulu
     public GameObject overlayHitam;                 // Opsional: panel hitam transparan di belakang box reward (kosongkan kalau tidak mau)
+
+    [Header("Sound Effect Reward (berbunyi tiap box reward muncul)")]
+    public AudioClip suaraRewardUmum;               // Suara untuk semua reward. Kosong = tanpa suara (kecuali reward punya suara sendiri)
+    [Range(0f, 1f)] public float volumeSuaraReward = 1f;
+    public AudioSource audioSource;                 // Kosong = dibuat otomatis di objek ini
 
     [Header("Ikon Pesan & Riwayat")]
     public Button tombolIkonPesan;                  // Ikon pesan di HUD
@@ -146,12 +152,31 @@ public class RewardManager : MonoBehaviour
         if (overlayHitam != null) overlayHitam.SetActive(true);
         r.boxReward.SetActive(true);
 
+        MainkanSuaraReward(r);
+
         yield return new WaitForSecondsRealtime(lamaTampil);
 
         r.boxReward.SetActive(false);
         if (overlayHitam != null) overlayHitam.SetActive(false);
 
         sedangTampil = false;
+    }
+
+    // Memainkan suara saat box reward tampil. Ikut pengaturan Suara dari menu (Suara dimatikan = tidak berbunyi).
+    private void MainkanSuaraReward(RewardItem r)
+    {
+        AudioClip klip = (r.suara != null) ? r.suara : suaraRewardUmum;
+        if (klip == null) return;
+        if (PengaturanAudio.SuaraMati) return;
+
+        if (audioSource == null)
+        {
+            audioSource = gameObject.AddComponent<AudioSource>();
+            audioSource.playOnAwake = false;
+            audioSource.spatialBlend = 0f;   // suara 2D: sama keras di mana pun posisi kamera
+        }
+
+        audioSource.PlayOneShot(klip, volumeSuaraReward);
     }
 
     // Tiap reward diterima, salinan "cetakan" entri ditambahkan ke panel riwayat (terbaru di paling atas)

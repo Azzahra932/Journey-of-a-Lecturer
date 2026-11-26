@@ -63,6 +63,13 @@ public class PopupLevel5Selesai : MonoBehaviour
     // Rank akhir (S, A, B, C, atau F), diisi saat pop-up hasil ditampilkan. Bisa dibaca script lain (mis. untuk achievement)
     public string RankAkhir { get; private set; }
 
+    [Header("Sound Effect Pop-up")]
+    public AudioClip suaraPopup;                // Suara saat pop-up muncul. Kosong = tanpa suara
+    [Range(0f, 1f)] public float volumeSuaraPopup = 1f;
+    public AudioSource audioSource;             // Kosong = dibuat otomatis di objek ini
+    [Tooltip("Suara saat popup Achievement muncul (hanya kalau MC menolak tawaran). Kosong = tanpa suara.")]
+    public AudioClip suaraAchievement;
+
     [Header("Tombol Home (satu-satunya tombol di pop-up hasil)")]
     public Button tombolHome;                   // Tombol "Home" (jangan isi On Click di Inspector, dipasang lewat script)
 
@@ -280,6 +287,22 @@ public class PopupLevel5Selesai : MonoBehaviour
         Tampilkan();
     }
 
+    // Memainkan sound effect pop-up (suara tetap berbunyi walau game sedang berhenti). Ikut pengaturan Suara dari menu.
+    private void MainkanSuaraPopup(AudioClip klip)
+    {
+        if (klip == null) return;
+        if (PengaturanAudio.SuaraMati) return;
+
+        if (audioSource == null)
+        {
+            audioSource = gameObject.AddComponent<AudioSource>();
+            audioSource.playOnAwake = false;
+            audioSource.spatialBlend = 0f;   // suara 2D: sama keras di mana pun posisi kamera
+        }
+
+        audioSource.PlayOneShot(klip, volumeSuaraPopup);
+    }
+
     private void Tampilkan()
     {
         if (panelPopup == null)
@@ -336,6 +359,8 @@ public class PopupLevel5Selesai : MonoBehaviour
             popupAchievement.SetActive(true);
             popupAchievement.transform.SetAsLastSibling();
 
+            MainkanSuaraPopup(suaraAchievement);
+
             if (!popupAchievement.activeInHierarchy)
                 Debug.LogWarning("[Level 5] Popup Achievement sudah diaktifkan tapi induknya (Canvas) nonaktif, jadi tidak tampil. Aktifkan induknya di Hierarchy.");
 
@@ -387,6 +412,8 @@ public class PopupLevel5Selesai : MonoBehaviour
 
         panelPopup.SetActive(true);
         panelPopup.transform.SetAsLastSibling();
+
+        MainkanSuaraPopup(suaraPopup);
 
         if (!panelPopup.activeInHierarchy)
             Debug.LogWarning("[Level 5] Panel '" + panelPopup.name + "' sudah diaktifkan tapi induknya (Canvas) nonaktif, jadi tidak tampil.");

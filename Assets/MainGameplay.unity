@@ -9419,6 +9419,9 @@ MonoBehaviour:
   teksIntegritas: {fileID: 1760540227}
   tombolLanjut: {fileID: 180445645}
   hentikanWaktuSaatTampil: 1
+  suaraPopup: {fileID: 8300000, guid: 2a9dcd738b73d7d4296bd8740ef0e98e, type: 3}
+  volumeSuaraPopup: 1
+  audioSource: {fileID: 0}
   tombolHome: {fileID: 1114630448}
   boxKonfirmasi: {fileID: 622783454}
   boxYa: {fileID: 355180974}
@@ -25918,6 +25921,54 @@ CanvasRenderer:
   m_PrefabAsset: {fileID: 0}
   m_GameObject: {fileID: 547818563}
   m_CullTransparentMesh: 1
+--- !u!1 &548282482
+GameObject:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  serializedVersion: 6
+  m_Component:
+  - component: {fileID: 548282484}
+  - component: {fileID: 548282483}
+  m_Layer: 0
+  m_Name: suaratombol
+  m_TagString: Untagged
+  m_Icon: {fileID: 0}
+  m_NavMeshLayer: 0
+  m_StaticEditorFlags: 0
+  m_IsActive: 1
+--- !u!114 &548282483
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 548282482}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 125354f382c695b40ade1a21603e9183, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Assembly-CSharp::SuaraTombol
+  suaraKlik: {fileID: 8300000, guid: 154d1f5b9f28269459649b8b28f916b5, type: 3}
+  volume: 1
+  sumber: {fileID: 0}
+  tombolDikecualikan: []
+--- !u!4 &548282484
+Transform:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 548282482}
+  serializedVersion: 2
+  m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
+  m_LocalPosition: {x: 5.83011, y: -0.71835, z: 0}
+  m_LocalScale: {x: 1, y: 1, z: 1}
+  m_ConstrainProportionsScale: 0
+  m_Children: []
+  m_Father: {fileID: 0}
+  m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
 --- !u!1 &549910630
 GameObject:
   m_ObjectHideFlags: 0
@@ -39287,6 +39338,9 @@ MonoBehaviour:
   teksIntegritas: {fileID: 647957848}
   tombolLanjut: {fileID: 209771663}
   hentikanWaktuSaatTampil: 1
+  suaraPopup: {fileID: 8300000, guid: 2a9dcd738b73d7d4296bd8740ef0e98e, type: 3}
+  volumeSuaraPopup: 1
+  audioSource: {fileID: 0}
   tombolHome: {fileID: 131263919}
   boxKonfirmasi: {fileID: 939937512}
   boxYa: {fileID: 1722618573}
@@ -49197,6 +49251,9 @@ MonoBehaviour:
   teksIntegritas: {fileID: 556641485}
   tombolLanjut: {fileID: 896786678}
   hentikanWaktuSaatTampil: 1
+  suaraPopup: {fileID: 8300000, guid: 2a9dcd738b73d7d4296bd8740ef0e98e, type: 3}
+  volumeSuaraPopup: 1
+  audioSource: {fileID: 0}
   tombolHome: {fileID: 1215599504}
   boxKonfirmasi: {fileID: 276672740}
   boxYa: {fileID: 1477659801}
@@ -54535,6 +54592,9 @@ MonoBehaviour:
   teksXP: {fileID: 1880509682}
   teksIntegritas: {fileID: 1556664357}
   tombolLanjut: {fileID: 547818565}
+  suaraPopup: {fileID: 8300000, guid: 2a9dcd738b73d7d4296bd8740ef0e98e, type: 3}
+  volumeSuaraPopup: 1
+  audioSource: {fileID: 0}
   tombolHome: {fileID: 544758751}
   boxKonfirmasi: {fileID: 1445382240}
   boxYa: {fileID: 1056318447}
@@ -75925,7 +75985,7 @@ GameObject:
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
   m_StaticEditorFlags: 0
-  m_IsActive: 0
+  m_IsActive: 1
 --- !u!212 &1962182796
 SpriteRenderer:
   serializedVersion: 2
@@ -77298,6 +77358,7 @@ MonoBehaviour:
   titikPintu: {fileID: 2010840040}
   jarakPintu: 0.7
   sembunyikanTokohSetelahDialog: 0
+  sembunyikanTokohSaatDuduk: 1
   scriptLevel2Scene4: {fileID: 1192827903}
   bukuPerpus: {fileID: 717007524}
   laptopPerpus: {fileID: 1848934461}
@@ -81458,6 +81519,10 @@ MonoBehaviour:
   batasRankB: 85
   batasRankC: 80
   batasRankF: 75
+  suaraPopup: {fileID: 8300000, guid: 2a9dcd738b73d7d4296bd8740ef0e98e, type: 3}
+  volumeSuaraPopup: 1
+  audioSource: {fileID: 0}
+  suaraAchievement: {fileID: 0}
   tombolHome: {fileID: 1559633143}
   boxKonfirmasi: {fileID: 1018451121}
   boxYa: {fileID: 1355406303}
@@ -81674,74 +81739,94 @@ MonoBehaviour:
   - nama: RPS
     boxReward: {fileID: 425054498}
     itemRiwayat: {fileID: 644038603}
+    suara: {fileID: 0}
     jumlah: 0
   - nama: Ngajar
     boxReward: {fileID: 645345088}
     itemRiwayat: {fileID: 373250699}
+    suara: {fileID: 0}
     jumlah: 0
   - nama: Bimbingan
     boxReward: {fileID: 1257295767}
     itemRiwayat: {fileID: 950823002}
+    suara: {fileID: 0}
     jumlah: 0
   - nama: Referensi
     boxReward: {fileID: 289774429}
     itemRiwayat: {fileID: 1616574843}
+    suara: {fileID: 0}
     jumlah: 0
   - nama: Penelitian
     boxReward: {fileID: 862677107}
     itemRiwayat: {fileID: 960326650}
+    suara: {fileID: 0}
     jumlah: 0
   - nama: KaryaIlmiah
     boxReward: {fileID: 865868591}
     itemRiwayat: {fileID: 590686707}
+    suara: {fileID: 0}
     jumlah: 0
   - nama: Seminar
     boxReward: {fileID: 582185321}
     itemRiwayat: {fileID: 316912771}
+    suara: {fileID: 0}
     jumlah: 0
   - nama: pengmas
     boxReward: {fileID: 61586412}
     itemRiwayat: {fileID: 690119393}
+    suara: {fileID: 0}
     jumlah: 0
   - nama: pengembanganpenelitian
     boxReward: {fileID: 1578180838}
     itemRiwayat: {fileID: 2106834098}
+    suara: {fileID: 0}
     jumlah: 0
   - nama: publikasi
     boxReward: {fileID: 1474960499}
     itemRiwayat: {fileID: 2131937423}
+    suara: {fileID: 0}
     jumlah: 0
   - nama: lv3sn5
     boxReward: {fileID: 582386190}
     itemRiwayat: {fileID: 1126785926}
+    suara: {fileID: 0}
     jumlah: 0
   - nama: lv4sn2
     boxReward: {fileID: 2024099648}
     itemRiwayat: {fileID: 1976510130}
+    suara: {fileID: 0}
     jumlah: 0
   - nama: lv4sn3
     boxReward: {fileID: 1345586535}
     itemRiwayat: {fileID: 724243800}
+    suara: {fileID: 0}
     jumlah: 0
   - nama: lv4sn4
     boxReward: {fileID: 998128084}
     itemRiwayat: {fileID: 23431792}
+    suara: {fileID: 0}
     jumlah: 0
   - nama: lv4sn5
     boxReward: {fileID: 1586685510}
     itemRiwayat: {fileID: 157004556}
+    suara: {fileID: 0}
     jumlah: 0
   - nama: lv5sn2
     boxReward: {fileID: 467949057}
     itemRiwayat: {fileID: 64919544}
+    suara: {fileID: 0}
     jumlah: 0
   - nama: lv5sn4
     boxReward: {fileID: 1963105184}
     itemRiwayat: {fileID: 1577591904}
+    suara: {fileID: 0}
     jumlah: 0
   lamaTampil: 2.5
   alurMenungguReward: 0
   overlayHitam: {fileID: 0}
+  suaraRewardUmum: {fileID: 8300000, guid: fdfbea5a84102f94ba57131fca4b9e51, type: 3}
+  volumeSuaraReward: 1
+  audioSource: {fileID: 0}
   tombolIkonPesan: {fileID: 934345632}
   panelRiwayat: {fileID: 1971022028}
   tombolTutupRiwayat: {fileID: 0}
@@ -83211,3 +83296,4 @@ SceneRoots:
   - {fileID: 320476735}
   - {fileID: 662059420}
   - {fileID: 64092445}
+  - {fileID: 548282484}

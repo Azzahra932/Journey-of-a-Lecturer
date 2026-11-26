@@ -8,7 +8,7 @@ using TMPro;
 //   1. Scene 4 Level 4 selesai -> Scene 5 siap, tokoh (Kaprodi / peneliti) muncul di dekat pintu perpustakaan
 //   2. MC mendekati pintu: MC berhenti, dua box dialog (tokoh lalu Pemain), Space untuk lanjut
 //   3. Box tutorial pertama (setelah dialog)
-//   4. MC bebas, berjalan ke kursi perpustakaan dan duduk sendiri (Space di dekat kursi)
+//   4. MC bebas, berjalan ke kursi perpustakaan dan duduk sendiri (Space di dekat kursi). Begitu MC duduk, tokoh/peneliti hilang
 //   5. Saat MC duduk, ikon E muncul di laptop. Tekan E: dua box pilihan jujur (atas) / bohong (bawah, integritas berkurang),
 //      lalu box pilihan (4 pilihan). Lama bar bergantung pada jujur / bohong
 //   6. Bar hijau berputar, poin bertambah, reward, energi berkurang, ikon baterai muncul (cooldown), box tutorial kedua (sekali saja)
@@ -29,6 +29,7 @@ public class AdeganLevel4Scene5 : MonoBehaviour
     public Transform titikPintu;                // Objek kosong di dekat pintu (dialog mulai saat MC mendekat)
     public float jarakPintu = 1.5f;             // Jarak MC ke titik pintu supaya dialog mulai (lingkaran kuning terlihat di Scene saat objek ini dipilih)
     public bool sembunyikanTokohSetelahDialog = false;   // true = tokoh hilang setelah dialog dan tutorial pertama selesai
+    public bool sembunyikanTokohSaatDuduk = true;        // true = tokoh hilang begitu MC duduk di kursi perpustakaan
 
     [Header("Aktivitas Lama Perpustakaan (dimatikan sejak Scene 5 siap)")]
     public AdeganLevel2Scene4 scriptLevel2Scene4;        // Opsional: Scene 4 Level 2 yang memakai kursi dan laptop yang sama
@@ -298,6 +299,14 @@ public class AdeganLevel4Scene5 : MonoBehaviour
 
         // Baterai cooldown terisi bertahap
         if (cooldownAktif) TickCooldown();
+
+        // Tokoh / peneliti hilang begitu MC duduk di kursi perpustakaan (setelah dialog di pintu selesai)
+        if (sembunyikanTokohSaatDuduk && dialogSelesai && kursiPerpus != null && kursiPerpus.sedangDuduk
+            && tokohObjek != null && tokohObjek.activeSelf)
+        {
+            tokohObjek.SetActive(false);
+            Debug.Log("[Adegan L4-S5] MC duduk di kursi perpustakaan, tokoh dihilangkan.");
+        }
 
         if (sedangBerjalan) return;
 

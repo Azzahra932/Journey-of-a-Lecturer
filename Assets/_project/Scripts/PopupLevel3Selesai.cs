@@ -44,6 +44,11 @@ public class PopupLevel3Selesai : MonoBehaviour
     public Button tombolLanjut;                 // Tombol "Lanjut" (jangan isi On Click di Inspector, dipasang lewat script)
     public bool hentikanWaktuSaatTampil = true; // Game berhenti selama pop-up tampil
 
+    [Header("Sound Effect Pop-up")]
+    public AudioClip suaraPopup;                // Suara saat pop-up muncul. Kosong = tanpa suara
+    [Range(0f, 1f)] public float volumeSuaraPopup = 1f;
+    public AudioSource audioSource;             // Kosong = dibuat otomatis di objek ini
+
     [Header("Tombol Home (ikon rumah di pop-up)")]
     public Button tombolHome;                   // Tombol "Home" (jangan isi On Click di Inspector, dipasang lewat script). Kosong = tombol home tidak dipakai
 
@@ -231,6 +236,22 @@ public class PopupLevel3Selesai : MonoBehaviour
         Lanjut();
     }
 
+    // Memainkan sound effect pop-up (suara tetap berbunyi walau game sedang berhenti). Ikut pengaturan Suara dari menu.
+    private void MainkanSuaraPopup(AudioClip klip)
+    {
+        if (klip == null) return;
+        if (PengaturanAudio.SuaraMati) return;
+
+        if (audioSource == null)
+        {
+            audioSource = gameObject.AddComponent<AudioSource>();
+            audioSource.playOnAwake = false;
+            audioSource.spatialBlend = 0f;   // suara 2D: sama keras di mana pun posisi kamera
+        }
+
+        audioSource.PlayOneShot(klip, volumeSuaraPopup);
+    }
+
     private void Tampilkan()
     {
         sudahTampil = true;
@@ -261,6 +282,8 @@ public class PopupLevel3Selesai : MonoBehaviour
 
         panelPopup.SetActive(true);
         panelPopup.transform.SetAsLastSibling();
+
+        MainkanSuaraPopup(suaraPopup);
 
         if (!panelPopup.activeInHierarchy)
             Debug.LogWarning("[Level 3] Panel '" + panelPopup.name + "' sudah diaktifkan tapi induknya (Canvas) nonaktif, jadi tidak tampil.");
