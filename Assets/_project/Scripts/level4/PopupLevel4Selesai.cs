@@ -56,6 +56,8 @@ public class PopupLevel4Selesai : MonoBehaviour
     [Tooltip("Nama scene menu utama persis seperti di Build Profiles / Scene List (huruf besar kecil berpengaruh). Kosong = tidak pindah scene, hanya event Saat Tombol Home yang jalan.")]
     public string namaSceneMenuUtama = "";
     public UnityEvent saatTombolHome;           // Dipanggil begitu tombol Home ditekan (mis. menyimpan data atau menutup panel), sebelum pindah scene
+    [Tooltip("Centang = kalau pemain keluar lewat Home di pop-up ini (lalu Ya), yang tersimpan adalah awal Level 5 (mode level terakhir, jam 08.00), jadi Continue langsung masuk Level 5 Scene 1, bukan mengulang Level 4.")]
+    public bool simpanAwalLevel5SaatHome = true;
 
     [Header("Menunggu Aktivitas Selesai (kosong = dicari otomatis)")]
     public LaptopKelas laptopKelas;
@@ -220,6 +222,8 @@ public class PopupLevel4Selesai : MonoBehaviour
         // Waktu dikembalikan supaya scene tujuan tidak ikut berhenti (pop-up menghentikan waktu)
         Time.timeScale = 1f;
 
+        if (simpanAwalLevel5SaatHome) SimpanAwalLevel5SebelumKeluar();
+
         saatTombolHome.Invoke();
 
         if (string.IsNullOrEmpty(namaSceneMenuUtama))
@@ -355,6 +359,18 @@ public class PopupLevel4Selesai : MonoBehaviour
         if (hentikanWaktuSaatTampil) Time.timeScale = 0f;
 
         Debug.Log("[Level 4] Target poin level 4 tercapai. Pop-up level 4 ditampilkan.");
+    }
+
+    // Home dari pop-up: yang tersimpan adalah awal Level 5, seperti kalau tombol Lanjut ditekan (mode level terakhir dan jam 08.00),
+    // supaya Continue langsung masuk Level 5 Scene 1. Scene ini ditinggalkan, jadi perubahan nilai ini tidak berdampak ke permainan.
+    private void SimpanAwalLevel5SebelumKeluar()
+    {
+        NaikkanTargetSkor();
+        AktifkanModeLevelTerakhir();
+        if (timeManager != null) timeManager.ResetKeJamPagi();
+
+        ProgresPermainan.SimpanCheckpoint(5);
+        Debug.Log("[Level 4] Keluar lewat Home dari pop-up: checkpoint awal Level 5 disimpan.");
     }
 
     // Dipanggil tombol Lanjut
@@ -571,5 +587,12 @@ public class PopupLevel4Selesai : MonoBehaviour
         BukaRuangan();
         MatikanScriptLevel4();
         AktifkanModeLevelTerakhir();
+    }
+
+    // Continue ke awal Level 5 (dipanggil PemulihProgres): box pengantar tampil dulu seperti setelah tombol Lanjut,
+    // lalu event "Saat Masuk Level Berikutnya" dijalankan.
+    public void MulaiDariContinue()
+    {
+        StartCoroutine(AlurBoxPengantar());
     }
 }

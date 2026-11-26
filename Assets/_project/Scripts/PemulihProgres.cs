@@ -246,7 +246,7 @@ public class PemulihProgres : MonoBehaviour
                 if (popupLevel3 != null) popupLevel3.MulaiDariContinue();   // box pengantar Level 4 tampil dulu, lalu Saat Masuk Level Berikutnya
                 break;
             case 5:
-                if (popupLevel4 != null) popupLevel4.saatMasukLevelBerikutnya.Invoke();
+                if (popupLevel4 != null) popupLevel4.MulaiDariContinue();   // box pengantar Level 5 tampil dulu, lalu Saat Masuk Level Berikutnya
                 break;
             default:
                 // Level 1 scene 1: permainan baru dimulai oleh adegan awal biasa, tidak ada yang perlu dijalankan

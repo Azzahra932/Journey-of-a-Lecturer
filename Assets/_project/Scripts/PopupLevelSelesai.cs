@@ -171,9 +171,16 @@ public class PopupLevelSelesai : MonoBehaviour
             return;
         }
 
-        // Urutan penting: overlay dulu, baru panel (panel harus tampil di atas overlay)
-        if (overlayHitam != null) overlayHitam.SetActive(true);
+        // Urutan penting: overlay dulu, baru panel (panel harus tampil di atas overlay).
+        // SetAsLastSibling memaksa urutan ini walau ada script lain yang mengacak urutan objek di Hierarchy saat Play.
+        if (overlayHitam != null)
+        {
+            overlayHitam.SetActive(true);
+            overlayHitam.transform.SetAsLastSibling();
+        }
+
         panelPopup.SetActive(true);
+        panelPopup.transform.SetAsLastSibling();
 
         if (hentikanWaktuSaatTampil) Time.timeScale = 0f;
 
@@ -333,13 +340,18 @@ public class PopupLevelSelesai : MonoBehaviour
         {
             // Game berhenti dan layar digelapkan selama box tampil
             Time.timeScale = 0f;
-            if (overlayHitam != null) overlayHitam.SetActive(true);
+            if (overlayHitam != null)
+            {
+                overlayHitam.SetActive(true);
+                overlayHitam.transform.SetAsLastSibling();
+            }
 
             foreach (GameObject box in boxPengantarLevel2)
             {
                 if (box == null) continue;
 
                 box.SetActive(true);
+                box.transform.SetAsLastSibling();   // box pengantar selalu di depan overlay
 
                 // Jeda singkat supaya tombol yang masih tertekan tidak langsung menutup box
                 yield return new WaitForSecondsRealtime(0.25f);

@@ -6,7 +6,7 @@ using TMPro;
 // Level 2 - Laptop perpustakaan (menggantikan buku setelah Scene 4).
 // Terbuka setelah Scene 4 selesai (dipanggil otomatis dari AdeganLevel2Scene4, atau lewat BukaAktivitasBerulang()).
 // Alur: MC duduk di kursi perpustakaan -> ikon E -> tekan E -> dua box pilihan (Jujur / Curang)
-//       -> bar hijau berputar -> poin -> reward -> energi berkurang -> cooldown (layar laptop redup + baterai).
+//       -> bar hijau berputar (+ sound) -> poin -> reward -> energi berkurang -> cooldown (layar laptop redup + baterai).
 public class LaptopPerpusInteraction : MonoBehaviour
 {
     [Header("Status")]
@@ -31,6 +31,12 @@ public class LaptopPerpusInteraction : MonoBehaviour
     [Header("Bar Hijau Berputar")]
     public GameObject canvasProgressBar;        // Objek induk bar
     public Image circularProgressBar;           // Image bar (Image Type: Filled)
+
+    [Header("Sound Effect Bar Berputar")]
+    public AudioClip suaraKerja;                // File suara. Kosong = tanpa suara
+    [Range(0f, 1f)] public float volumeSuaraKerja = 1f;
+    public bool suaraDiulang = true;            // true = suara diulang terus selama bar berputar
+    public AudioSource audioSource;             // Kosong = dibuat otomatis di objek ini
 
     [Header("Hasil")]
     public int jumlahPoin = 10;                 // Poin tiap selesai
@@ -78,10 +84,40 @@ public class LaptopPerpusInteraction : MonoBehaviour
         if (tombolCurang != null) tombolCurang.onClick.AddListener(PilihCurang);
     }
 
+    void OnDisable()
+    {
+        HentikanSuaraKerja();
+    }
+
     void OnDestroy()
     {
         if (tombolJujur != null) tombolJujur.onClick.RemoveListener(PilihJujur);
         if (tombolCurang != null) tombolCurang.onClick.RemoveListener(PilihCurang);
+    }
+
+    // ---------- Sound effect bar berputar ----------
+    private void MulaiSuaraKerja()
+    {
+        if (suaraKerja == null) return;
+        if (PengaturanAudio.SuaraMati) return;   // ikut pengaturan suara dari menu
+
+        if (audioSource == null)
+        {
+            audioSource = gameObject.AddComponent<AudioSource>();
+            audioSource.playOnAwake = false;
+            audioSource.spatialBlend = 0f;   // suara 2D: sama keras di mana pun posisi kamera
+        }
+
+        audioSource.clip = suaraKerja;
+        audioSource.loop = suaraDiulang;
+        audioSource.volume = volumeSuaraKerja;
+        audioSource.Play();
+    }
+
+    private void HentikanSuaraKerja()
+    {
+        if (audioSource != null && audioSource.isPlaying && audioSource.clip == suaraKerja)
+            audioSource.Stop();
     }
 
     // Dipanggil setelah Scene 4 selesai
@@ -184,6 +220,9 @@ public class LaptopPerpusInteraction : MonoBehaviour
         if (canvasProgressBar != null) canvasProgressBar.SetActive(true);
         if (circularProgressBar != null) circularProgressBar.fillAmount = 0f;
 
+        // Suara mulai bersamaan dengan bar berputar
+        MulaiSuaraKerja();
+
         float timer = 0f;
         while (timer < durasi)
         {
@@ -191,6 +230,9 @@ public class LaptopPerpusInteraction : MonoBehaviour
             if (circularProgressBar != null) circularProgressBar.fillAmount = timer / durasi;
             yield return null;
         }
+
+        // Suara berhenti saat bar penuh
+        HentikanSuaraKerja();
 
         if (circularProgressBar != null) circularProgressBar.fillAmount = 1f;
         yield return new WaitForSeconds(0.3f);

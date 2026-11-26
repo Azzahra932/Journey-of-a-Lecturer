@@ -39,8 +39,14 @@ public class BukuInteraction : MonoBehaviour
     public GameObject progressBarCanvas;
     public Image progressCircleFill;            // Image Type: Filled
 
+    [Header("Sound Effect Membaca (selama bar bulat berputar)")]
+    public AudioClip suaraBaca;                 // File suara. Kosong = tanpa suara
+    [Range(0f, 1f)] public float volumeSuaraBaca = 1f;
+    public bool suaraDiulang = true;            // true = suara diulang terus selama bar berputar
+    public AudioSource audioSource;             // Kosong = dibuat otomatis di objek ini
+
     [Header("Cooldown (Bar Bulat)")]
-    public float durasiCooldown = 45f;          // Jeda (detik) sebelum buku bisa dibaca lagi
+    public float durasiCooldown = 45f;        // Jeda (detik) sebelum buku bisa dibaca lagi
     public GameObject barCooldownBulat;         // Objek induk bar bulat cooldown
     public Image isiBarCooldown;                // Image Type: Filled, terisi pelan-pelan saat cooldown
     public GameObject teksBukuIstirahat;        // Opsional: teks "Tunggu sebentar" saat E ditekan selama cooldown
@@ -156,6 +162,36 @@ public class BukuInteraction : MonoBehaviour
         }
     }
 
+    // ---------- Sound effect membaca ----------
+    private void MulaiSuaraBaca()
+    {
+        if (suaraBaca == null) return;
+        if (PengaturanAudio.SuaraMati) return;   // ikut pengaturan suara dari menu
+
+        if (audioSource == null)
+        {
+            audioSource = gameObject.AddComponent<AudioSource>();
+            audioSource.playOnAwake = false;
+            audioSource.spatialBlend = 0f;   // suara 2D: sama keras di mana pun posisi kamera
+        }
+
+        audioSource.clip = suaraBaca;
+        audioSource.loop = suaraDiulang;
+        audioSource.volume = volumeSuaraBaca;
+        audioSource.Play();
+    }
+
+    private void HentikanSuaraBaca()
+    {
+        if (audioSource != null && audioSource.isPlaying && audioSource.clip == suaraBaca)
+            audioSource.Stop();
+    }
+
+    void OnDisable()
+    {
+        HentikanSuaraBaca();
+    }
+
     // Dipanggil setelah Scene 5 selesai (lewat UnityEvent "Saat Dialog Selesai")
     public void BukaAktivitasBerulang()
     {
@@ -217,6 +253,9 @@ public class BukuInteraction : MonoBehaviour
         if (progressBarCanvas != null) progressBarCanvas.SetActive(true);
         if (progressCircleFill != null) progressCircleFill.fillAmount = 0f;
 
+        // Suara mulai bersamaan dengan bar berputar
+        MulaiSuaraBaca();
+
         float timer = 0f;
         while (timer < durasi)
         {
@@ -224,6 +263,9 @@ public class BukuInteraction : MonoBehaviour
             if (progressCircleFill != null) progressCircleFill.fillAmount = timer / durasi;
             yield return null;
         }
+
+        // Suara berhenti saat bar penuh
+        HentikanSuaraBaca();
 
         if (progressCircleFill != null) progressCircleFill.fillAmount = 1f;
         yield return new WaitForSeconds(0.3f);

@@ -33,6 +33,9 @@ public class LaptopKelas : MonoBehaviour
     public GameObject boxTutorialLevel2;     // Box tutorial khusus level 2 (dibuat di Hierarchy). Dipakai setelah MasukLevel2() dipanggil
     public UnityEvent saatMengajarPertamaLevel2Selesai;   // Dipanggil sekali: setelah mengajar pertama di level 2 selesai (tutorial, reward, energi). Dipakai untuk membuka Scene 3
 
+    [Header("Level 1 - Setelah Mengajar Pertama Selesai")]
+    public UnityEvent saatMengajarPertamaLevel1Selesai;   // Dipanggil sekali di level 1: setelah mengajar pertama selesai (tutorial, reward, energi). Dipakai untuk mencentang misi 2
+
     [Header("Sound Effect Mengetik (selama bar bulat berputar)")]
     public AudioClip suaraKetik;                // File mp3 suara mengetik. Kosong = tanpa suara
     [Range(0f, 1f)] public float volumeSuaraKetik = 1f;
@@ -46,6 +49,7 @@ public class LaptopKelas : MonoBehaviour
     private bool sedangTutorial = false;   // true selama box tutorial tampil
     private bool level2Aktif = false;      // True setelah MasukLevel2() dipanggil
     private bool mengajarLevel2Dilaporkan = false;   // True setelah event mengajar pertama level 2 dipanggil
+    private bool mengajarLevel1Dilaporkan = false;   // True setelah event mengajar pertama level 1 dipanggil
 
     [Header("Efek Layar Laptop")]
     public SpriteRenderer spriteLaptop;    // kosong = ambil dari objek ini
@@ -323,6 +327,13 @@ public class LaptopKelas : MonoBehaviour
         {
             energyBar.DecreaseEnergy(biayaEnergi);
             energyBar.CekEnergiHabis();
+        }
+
+        // Level 1: mengajar pertama selesai (sekali saja, sebelum Scene 5 / mode berulang)
+        if (!level2Aktif && !modeBerulang && !mengajarLevel1Dilaporkan)
+        {
+            mengajarLevel1Dilaporkan = true;
+            saatMengajarPertamaLevel1Selesai.Invoke();
         }
 
         // Level 2: mengajar pertama selesai -> beri tahu adegan berikutnya (Scene 3 Research Center)

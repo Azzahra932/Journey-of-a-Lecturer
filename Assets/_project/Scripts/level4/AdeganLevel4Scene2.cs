@@ -75,6 +75,16 @@ public class AdeganLevel4Scene2 : MonoBehaviour
     public int poinJurnal3 = 20;
     public int poinJurnal4 = 15;
 
+    [Header("Pilihan 3 dan 4 Belum Terbuka (box pemberitahuan)")]
+    [Tooltip("Centang = pilihan 3 belum terbuka: kalau diklik, tidak memilih apa pun dan box pemberitahuan tampil. Hilangkan centang kalau pilihan ini sudah dibuka.")]
+    public bool pilihan3Terkunci = true;
+    [Tooltip("Centang = pilihan 4 belum terbuka: kalau diklik, tidak memilih apa pun dan box pemberitahuan tampil. Hilangkan centang kalau pilihan ini sudah dibuka.")]
+    public bool pilihan4Terkunci = true;
+    public GameObject boxNotifPilihan3;         // Box pemberitahuan untuk pilihan 3 (nonaktif di awal, diatur script)
+    public GameObject boxNotifPilihan4;         // Box pemberitahuan untuk pilihan 4
+    [Tooltip("0 = box pemberitahuan ditutup dengan Space atau klik. Lebih dari 0 = otomatis tertutup setelah sekian detik (Space atau klik tetap bisa menutup lebih cepat).")]
+    public float lamaNotifOtomatis = 0f;
+
     [Header("Lama Bar Berdasarkan Pilihan Jujur / Bohong (berlaku untuk semua pilihan Sinta)")]
     public float durasiJujur = 15f;             // Lama bar berputar kalau memilih jujur (detik)
     public float durasiBohong = 10f;            // Lama bar berputar kalau memilih bohong (detik)
@@ -121,6 +131,8 @@ public class AdeganLevel4Scene2 : MonoBehaviour
     private int pilihanJujur = 0;               // 0 = belum memilih, 1 = jujur, 2 = bohong
     private int pilihan = 0;                    // 0 = belum memilih, 1 sampai 4 = pilihan jurnal dari atas ke bawah
 
+    private bool sedangNotif = false;       // true selama box pemberitahuan pilihan terkunci tampil
+
     private PlayerMovement pm;
     private bool pemainDikunci = false;
 
@@ -151,6 +163,8 @@ public class AdeganLevel4Scene2 : MonoBehaviour
         if (spriteLaptop != null) spriteLaptop.color = warnaNormal;
         TampilkanPilihanJujur(false);
         TampilkanPilihan(false);
+        if (boxNotifPilihan3 != null) boxNotifPilihan3.SetActive(false);
+        if (boxNotifPilihan4 != null) boxNotifPilihan4.SetActive(false);
 
         if (tombolJujur != null) tombolJujur.onClick.AddListener(PilihJujur);
         if (tombolBohong != null) tombolBohong.onClick.AddListener(PilihBohong);
@@ -239,8 +253,48 @@ public class AdeganLevel4Scene2 : MonoBehaviour
     public void PilihBohong() { if (pilihanJujur == 0) pilihanJujur = 2; }
     public void PilihJurnal1() { if (pilihan == 0) pilihan = 1; }
     public void PilihJurnal2() { if (pilihan == 0) pilihan = 2; }
-    public void PilihJurnal3() { if (pilihan == 0) pilihan = 3; }
-    public void PilihJurnal4() { if (pilihan == 0) pilihan = 4; }
+    public void PilihJurnal3() { if (pilihan == 0) { if (pilihan3Terkunci) TampilkanNotifTerkunci(boxNotifPilihan3); else pilihan = 3; } }
+    public void PilihJurnal4() { if (pilihan == 0) { if (pilihan4Terkunci) TampilkanNotifTerkunci(boxNotifPilihan4); else pilihan = 4; } }
+
+    // Pilihan yang belum terbuka: tidak memilih apa pun, hanya menampilkan box pemberitahuan
+    private void TampilkanNotifTerkunci(GameObject box)
+    {
+        if (sedangNotif) return;
+
+        if (box == null)
+        {
+            Debug.LogWarning("[Adegan L4-S2] Pilihan ini belum terbuka, tapi Box Notif Pilihan untuk pilihan ini belum diisi di Inspector.");
+            return;
+        }
+
+        StartCoroutine(AlurNotifTerkunci(box));
+    }
+
+    private IEnumerator AlurNotifTerkunci(GameObject box)
+    {
+        sedangNotif = true;
+
+        box.SetActive(true);
+        box.transform.SetAsLastSibling();   // Tampil paling depan di Canvas-nya, di atas pilihan
+
+        // Jeda singkat (waktu nyata) supaya klik yang membuka box tidak langsung menutupnya
+        yield return new WaitForSecondsRealtime(0.25f);
+
+        float lama = 0f;
+        while (!(Input.GetKeyDown(tombolLanjutBox) || (bolehKlikMouse && Input.GetMouseButtonDown(0))))
+        {
+            if (lamaNotifOtomatis > 0f)
+            {
+                lama += Time.unscaledDeltaTime;
+                if (lama >= lamaNotifOtomatis) break;
+            }
+
+            yield return null;
+        }
+
+        box.SetActive(false);
+        sedangNotif = false;
+    }
 
     void Update()
     {
