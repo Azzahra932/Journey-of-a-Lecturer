@@ -377,6 +377,18 @@ public class LaptopInteraction : MonoBehaviour
         }
     }
 
+    // Continue ke Level 1 Scene 2 atau lebih (dipanggil PemulihProgres lewat Titik Pulih): tugas RPS pertama dianggap sudah selesai.
+    // tampilkanPanah = true hanya untuk Scene 2 (panah ke kelas), false untuk scene sesudahnya.
+    // Tidak memanggil event "Saat Tugas Pertama Selesai" supaya checkpoint tidak tertimpa.
+    public void PulihkanTugasPertamaSelesai(bool tampilkanPanah)
+    {
+        isCompleted = true;
+        eventPertamaSudahDipanggil = true;
+
+        if (petunjukTekanE != null) petunjukTekanE.SetActive(false);
+        if (panahKeKelas != null) panahKeKelas.SetActive(tampilkanPanah && !PintuKelasTrigger.sudahPernahKeKelas);
+    }
+
     // Dipanggil setelah Scene 5 selesai (lewat UnityEvent "Saat Dialog Selesai")
     // RPS di laptop dosen bisa dikerjakan lagi, dengan cooldown antar pengerjaan
     public void BukaAktivitasBerulang()

@@ -84,6 +84,18 @@ public class NPCDosenSenior : MonoBehaviour
         playerMovement = FindFirstObjectByType<PlayerMovement>();
     }
 
+    // Continue ke Level 1 Scene 5 (dipanggil PemulihProgres lewat Titik Pulih): Scene 4 dianggap sudah selesai (syarat Scene 5).
+    // Dosen senior tidak muncul lagi. tampilkanPanahLaptop = true menyalakan panah ke laptop seperti setelah dialog Scene 4 selesai.
+    // Tidak memanggil event "Saat Dialog Selesai" supaya checkpoint tidak tertimpa.
+    public void PulihkanSelesai(bool tampilkanPanahLaptop)
+    {
+        tahap = Tahap.Selesai;
+
+        if (dosenSenior != null) dosenSenior.SetActive(false);
+        if (panahKeDosenSenior != null) panahKeDosenSenior.SetActive(false);
+        if (panahKeLaptop != null) panahKeLaptop.SetActive(tampilkanPanahLaptop);
+    }
+
     // Dipanggil dari DialogBimbingan.saatBimbinganSelesai
     public void MulaiMasuk()
     {

@@ -91,6 +91,18 @@ public class ChairInteraction : MonoBehaviour
         Debug.Log("[ChairInteraction] Scene 1 selesai, kursi kelas (Scene 2) sekarang bisa dipakai.");
     }
 
+    // Continue ke Level 1 Scene 3 atau lebih (dipanggil PemulihProgres lewat Titik Pulih): Scene 2 dianggap sudah lewat.
+    // Kursi boleh dipakai, dan dialog serta panah duduk pertama kali tidak muncul lagi.
+    public void PulihkanScene2Selesai()
+    {
+        Scene2Terbuka = true;
+        SudahPernahDuduk = true;
+        sudahPernahDialog = true;
+        panahTertunda = false;
+
+        if (panahKeKursi != null) panahKeKursi.SetActive(false);
+    }
+
     // Opsional: mengunci kursi kelas lagi secara manual
     public void KunciScene2()
     {

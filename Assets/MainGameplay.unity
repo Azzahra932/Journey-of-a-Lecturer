@@ -716,6 +716,18 @@ MonoBehaviour:
           m_StringArgument: 
           m_BoolArgument: 0
         m_CallState: 2
+      - m_Target: {fileID: 870532426}
+        m_TargetAssemblyTypeName: PenyimpanCheckpoint, Assembly-CSharp
+        m_MethodName: SimpanTitik
+        m_Mode: 5
+        m_Arguments:
+          m_ObjectArgument: {fileID: 0}
+          m_ObjectArgumentAssemblyTypeName: UnityEngine.Object, UnityEngine
+          m_IntArgument: 4
+          m_FloatArgument: 0
+          m_StringArgument: L1S5
+          m_BoolArgument: 0
+        m_CallState: 2
 --- !u!4 &31818946
 Transform:
   m_ObjectHideFlags: 0
@@ -36788,6 +36800,18 @@ MonoBehaviour:
           m_StringArgument: 
           m_BoolArgument: 0
         m_CallState: 2
+      - m_Target: {fileID: 870532426}
+        m_TargetAssemblyTypeName: PenyimpanCheckpoint, Assembly-CSharp
+        m_MethodName: SimpanTitik
+        m_Mode: 5
+        m_Arguments:
+          m_ObjectArgument: {fileID: 0}
+          m_ObjectArgumentAssemblyTypeName: UnityEngine.Object, UnityEngine
+          m_IntArgument: 3
+          m_FloatArgument: 0
+          m_StringArgument: L1S4
+          m_BoolArgument: 0
+        m_CallState: 2
 --- !u!1 &841562555
 GameObject:
   m_ObjectHideFlags: 0
@@ -53377,6 +53401,130 @@ MonoBehaviour:
             m_StringArgument: 
             m_BoolArgument: 0
           m_CallState: 2
+  - id: L1S2
+    saatDipulihkan:
+      m_PersistentCalls:
+        m_Calls:
+        - m_Target: {fileID: 727798937}
+          m_TargetAssemblyTypeName: ChairInteraction, Assembly-CSharp
+          m_MethodName: BukaScene2
+          m_Mode: 1
+          m_Arguments:
+            m_ObjectArgument: {fileID: 0}
+            m_ObjectArgumentAssemblyTypeName: UnityEngine.Object, UnityEngine
+            m_IntArgument: 0
+            m_FloatArgument: 0
+            m_StringArgument: 
+            m_BoolArgument: 0
+          m_CallState: 2
+  - id: L1S3
+    saatDipulihkan:
+      m_PersistentCalls:
+        m_Calls:
+        - m_Target: {fileID: 727798937}
+          m_TargetAssemblyTypeName: ChairInteraction, Assembly-CSharp
+          m_MethodName: PulihkanScene2Selesai
+          m_Mode: 1
+          m_Arguments:
+            m_ObjectArgument: {fileID: 0}
+            m_ObjectArgumentAssemblyTypeName: UnityEngine.Object, UnityEngine
+            m_IntArgument: 0
+            m_FloatArgument: 0
+            m_StringArgument: 
+            m_BoolArgument: 0
+          m_CallState: 2
+        - m_Target: {fileID: 1423579088}
+          m_TargetAssemblyTypeName: LaptopKelas, Assembly-CSharp
+          m_MethodName: PulihkanSudahMengajar
+          m_Mode: 6
+          m_Arguments:
+            m_ObjectArgument: {fileID: 0}
+            m_ObjectArgumentAssemblyTypeName: UnityEngine.Object, UnityEngine
+            m_IntArgument: 0
+            m_FloatArgument: 0
+            m_StringArgument: 
+            m_BoolArgument: 1
+          m_CallState: 2
+  - id: L1S4
+    saatDipulihkan:
+      m_PersistentCalls:
+        m_Calls:
+        - m_Target: {fileID: 727798937}
+          m_TargetAssemblyTypeName: ChairInteraction, Assembly-CSharp
+          m_MethodName: PulihkanScene2Selesai
+          m_Mode: 1
+          m_Arguments:
+            m_ObjectArgument: {fileID: 0}
+            m_ObjectArgumentAssemblyTypeName: UnityEngine.Object, UnityEngine
+            m_IntArgument: 0
+            m_FloatArgument: 0
+            m_StringArgument: 
+            m_BoolArgument: 0
+          m_CallState: 2
+        - m_Target: {fileID: 1423579088}
+          m_TargetAssemblyTypeName: LaptopKelas, Assembly-CSharp
+          m_MethodName: PulihkanSudahMengajar
+          m_Mode: 6
+          m_Arguments:
+            m_ObjectArgument: {fileID: 0}
+            m_ObjectArgumentAssemblyTypeName: UnityEngine.Object, UnityEngine
+            m_IntArgument: 0
+            m_FloatArgument: 0
+            m_StringArgument: 
+            m_BoolArgument: 0
+          m_CallState: 2
+        - m_Target: {fileID: 31818945}
+          m_TargetAssemblyTypeName: NPCDosenSenior, Assembly-CSharp
+          m_MethodName: MulaiMasuk
+          m_Mode: 1
+          m_Arguments:
+            m_ObjectArgument: {fileID: 0}
+            m_ObjectArgumentAssemblyTypeName: UnityEngine.Object, UnityEngine
+            m_IntArgument: 0
+            m_FloatArgument: 0
+            m_StringArgument: 
+            m_BoolArgument: 1
+          m_CallState: 2
+  - id: L1S5
+    saatDipulihkan:
+      m_PersistentCalls:
+        m_Calls:
+        - m_Target: {fileID: 727798937}
+          m_TargetAssemblyTypeName: ChairInteraction, Assembly-CSharp
+          m_MethodName: PulihkanScene2Selesai
+          m_Mode: 1
+          m_Arguments:
+            m_ObjectArgument: {fileID: 0}
+            m_ObjectArgumentAssemblyTypeName: UnityEngine.Object, UnityEngine
+            m_IntArgument: 0
+            m_FloatArgument: 0
+            m_StringArgument: 
+            m_BoolArgument: 0
+          m_CallState: 2
+        - m_Target: {fileID: 1423579088}
+          m_TargetAssemblyTypeName: LaptopKelas, Assembly-CSharp
+          m_MethodName: PulihkanSudahMengajar
+          m_Mode: 6
+          m_Arguments:
+            m_ObjectArgument: {fileID: 0}
+            m_ObjectArgumentAssemblyTypeName: UnityEngine.Object, UnityEngine
+            m_IntArgument: 0
+            m_FloatArgument: 0
+            m_StringArgument: 
+            m_BoolArgument: 0
+          m_CallState: 2
+        - m_Target: {fileID: 31818945}
+          m_TargetAssemblyTypeName: NPCDosenSenior, Assembly-CSharp
+          m_MethodName: PulihkanSelesai
+          m_Mode: 6
+          m_Arguments:
+            m_ObjectArgument: {fileID: 0}
+            m_ObjectArgumentAssemblyTypeName: UnityEngine.Object, UnityEngine
+            m_IntArgument: 0
+            m_FloatArgument: 0
+            m_StringArgument: 
+            m_BoolArgument: 1
+          m_CallState: 2
   persiapanLevel1:
     m_PersistentCalls:
       m_Calls: []
@@ -53421,6 +53569,12 @@ MonoBehaviour:
   scriptDimatikan: []
   kursiDibersihkan:
   - {fileID: 558640735}
+  daftarMisi:
+  - {fileID: 139977051}
+  - {fileID: 322747900}
+  - {fileID: 1644356827}
+  - {fileID: 320476734}
+  - {fileID: 662059419}
   objekDinyalakan: []
   tesPulihkanKeTitik: 
 --- !u!4 &1292569116
@@ -56159,6 +56313,18 @@ MonoBehaviour:
           m_StringArgument: 
           m_BoolArgument: 0
         m_CallState: 2
+      - m_Target: {fileID: 870532426}
+        m_TargetAssemblyTypeName: PenyimpanCheckpoint, Assembly-CSharp
+        m_MethodName: SimpanTitik
+        m_Mode: 5
+        m_Arguments:
+          m_ObjectArgument: {fileID: 0}
+          m_ObjectArgumentAssemblyTypeName: UnityEngine.Object, UnityEngine
+          m_IntArgument: 1
+          m_FloatArgument: 0
+          m_StringArgument: L1S2
+          m_BoolArgument: 0
+        m_CallState: 2
 --- !u!61 &1372169989
 BoxCollider2D:
   m_ObjectHideFlags: 0
@@ -58216,6 +58382,18 @@ MonoBehaviour:
           m_IntArgument: 2
           m_FloatArgument: 0
           m_StringArgument: 
+          m_BoolArgument: 0
+        m_CallState: 2
+      - m_Target: {fileID: 870532426}
+        m_TargetAssemblyTypeName: PenyimpanCheckpoint, Assembly-CSharp
+        m_MethodName: SimpanTitik
+        m_Mode: 5
+        m_Arguments:
+          m_ObjectArgument: {fileID: 0}
+          m_ObjectArgumentAssemblyTypeName: UnityEngine.Object, UnityEngine
+          m_IntArgument: 2
+          m_FloatArgument: 0
+          m_StringArgument: L1S3
           m_BoolArgument: 0
         m_CallState: 2
   suaraKetik: {fileID: 8300000, guid: 27be98eb86e09dc44809ec1be23aeb27, type: 3}
@@ -72149,6 +72327,14 @@ MonoBehaviour:
     hanyaLevel1: 0
   - tutorialSprite: {fileID: 21300000, guid: 026d6301b9c62b94ca9e77dc7c6045bc, type: 3}
     anchoredPosition: {x: -465, y: 237}
+    sizeDelta: {x: 785.006, y: 368.8982}
+    hanyaLevel1: 0
+  - tutorialSprite: {fileID: 21300000, guid: e839789e39299dd46855281748fe0b45, type: 3}
+    anchoredPosition: {x: 420, y: 200}
+    sizeDelta: {x: 785.006, y: 368.8982}
+    hanyaLevel1: 0
+  - tutorialSprite: {fileID: 21300000, guid: 17727b5c8426bfc4e86e5742c0370707, type: 3}
+    anchoredPosition: {x: 420, y: 159}
     sizeDelta: {x: 785.006, y: 368.8982}
     hanyaLevel1: 0
   - tutorialSprite: {fileID: 21300000, guid: 3224597461e7d364081c72e138cdb57a, type: 3}

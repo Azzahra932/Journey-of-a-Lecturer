@@ -131,6 +131,18 @@ public class LaptopKelas : MonoBehaviour
         if (mulaiModeBerulang) BukaAktivitasBerulang();
     }
 
+    // Continue ke Level 1 Scene 3 atau lebih (dipanggil PemulihProgres lewat Titik Pulih): mengajar pertama dianggap sudah selesai.
+    // tampilkanPanah = true untuk Scene 3 (panah ke ruang dosen), false untuk scene sesudahnya.
+    // Tidak memanggil event "Saat Mengajar Pertama Level 1 Selesai" supaya checkpoint tidak tertimpa.
+    public void PulihkanSudahMengajar(bool tampilkanPanah)
+    {
+        SudahMengajar = true;
+        tutorialSudahTampil = true;
+        mengajarLevel1Dilaporkan = true;
+
+        if (panahKeRuangDosen != null) panahKeRuangDosen.SetActive(tampilkanPanah && !modeBerulang && !level2Aktif);
+    }
+
     // Dipanggil setelah Scene 5 selesai (lewat UnityEvent "Saat Dialog Selesai", opsional)
     // Setelah itu mengajar tidak lagi memunculkan panah petunjuk dan box tutorial
     public void BukaAktivitasBerulang()

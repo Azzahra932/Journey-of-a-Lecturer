@@ -62,6 +62,10 @@ public class PemulihProgres : MonoBehaviour
     [Tooltip("Kursi InteractiveDesk yang pemicu adegan level 1-nya dilepas (Kaprodi Script, Bimbingan Script, Evaluasi Script dikosongkan), supaya duduk di kursi tidak mengulang adegan Level 1.")]
     public InteractiveDesk[] kursiDibersihkan;
 
+    [Header("Daftar Misi (centang misi dipulihkan sesuai level dan scene)")]
+    [Tooltip("Isi DaftarMisi tiap level (objek DaftarMisiLevel1 sampai 5). Level yang sudah lewat dicentang semua, level sekarang dicentang sesuai Scene Selesai Misi.")]
+    public DaftarMisi[] daftarMisi;
+
     [Header("Dinyalakan Saat Continue (opsional)")]
     public GameObject[] objekDinyalakan;
 
@@ -111,6 +115,14 @@ public class PemulihProgres : MonoBehaviour
         }
 
         if (levelTujuan < 1) return;
+
+        // Level 1 Scene 1 = awal permainan biasa: tidak ada yang perlu dipulihkan, jalan seperti game baru
+        if (levelTujuan == 1 && sceneTujuan <= 1)
+        {
+            levelTujuan = 0;
+            ProgresPermainan.LanjutDipilih = false;
+            return;
+        }
 
         Debug.Log("[Pemulih] Continue ke awal Level " + levelTujuan + " Scene " + sceneTujuan + ": awal permainan dimatikan.");
 
@@ -187,7 +199,21 @@ public class PemulihProgres : MonoBehaviour
         EnergyBar energi = FindFirstObjectByType<EnergyBar>();
         if (energi != null) energi.IsiPenuh();
 
-        // 5. Pemicu adegan level 1 dilepas dari kursi, supaya duduk di kursi tidak mengulang adegan Level 1
+        // 4b. Centang daftar misi
+        if (daftarMisi != null)
+        {
+            foreach (DaftarMisi dm in daftarMisi)
+            {
+                if (dm == null) continue;
+
+                if (dm.level < level) dm.CentangSemuaTanpaPopup();
+                else if (dm.level == level) dm.PulihkanDariScene(sceneTujuan);
+            }
+        }
+
+        // 5. Pemicu adegan level 1 dilepas dari kursi, supaya duduk di kursi tidak mengulang adegan yang sudah lewat.
+        //    Onboarding Kaprodi selalu dilepas (sudah lewat). Bimbingan (Scene 3) dilepas kalau Continue di Level 1 Scene 4 atau lebih.
+        //    Evaluasi (Scene 5) dilepas hanya kalau Continue ke Level 2 atau lebih.
         if (kursiDibersihkan != null)
         {
             foreach (InteractiveDesk d in kursiDibersihkan)
@@ -195,8 +221,8 @@ public class PemulihProgres : MonoBehaviour
                 if (d == null) continue;
 
                 d.kaprodiScript = null;
-                d.bimbinganScript = null;
-                d.evaluasiScript = null;
+                if (level >= 2 || sceneTujuan >= 4) d.bimbinganScript = null;
+                if (level >= 2) d.evaluasiScript = null;
             }
         }
 
