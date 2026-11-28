@@ -54,6 +54,12 @@ public class AdeganLevel2Scene5 : MonoBehaviour
     public Image circularProgressBar;           // Image bar (Image Type: Filled)
     public float durasiBar = 10f;               // Lama bar berputar (detik)
 
+    [Header("Sound Effect Bar Berputar")]
+    public AudioClip suaraBar;                  // File suara. Kosong = tanpa suara
+    [Range(0f, 1f)] public float volumeSuaraBar = 1f;
+    public bool suaraDiulang = true;            // true = suara diulang terus selama bar berputar
+    public AudioSource audioSource;             // Kosong = dibuat otomatis di objek ini
+
     [Header("Hasil Setelah Bar Selesai")]
     public int jumlahPoin = 15;                 // Poin yang didapat tiap selesai
     public GameObject overlayHitam;             // Opsional: panel hitam transparan di belakang box tutorial
@@ -126,6 +132,36 @@ public class AdeganLevel2Scene5 : MonoBehaviour
         AdeganLevel2Scene5[] semua = FindObjectsByType<AdeganLevel2Scene5>(FindObjectsSortMode.None);
         if (semua.Length > 1)
             Debug.LogWarning("[Adegan L2-S5] Ada " + semua.Length + " objek yang memasang script AdeganLevel2Scene5. Pakai satu saja, dan sambungkan event Scene 4 ke objek itu.");
+    }
+
+    void OnDisable()
+    {
+        HentikanSuaraBar();
+    }
+
+    // ---------- Sound effect bar berputar ----------
+    private void MulaiSuaraBar()
+    {
+        if (suaraBar == null) return;
+        if (PengaturanAudio.SuaraMati) return;   // ikut pengaturan suara dari menu
+
+        if (audioSource == null)
+        {
+            audioSource = gameObject.AddComponent<AudioSource>();
+            audioSource.playOnAwake = false;
+            audioSource.spatialBlend = 0f;   // suara 2D: sama keras di mana pun posisi kamera
+        }
+
+        audioSource.clip = suaraBar;
+        audioSource.loop = suaraDiulang;
+        audioSource.volume = volumeSuaraBar;
+        audioSource.Play();
+    }
+
+    private void HentikanSuaraBar()
+    {
+        if (audioSource != null && audioSource.isPlaying && audioSource.clip == suaraBar)
+            audioSource.Stop();
     }
 
     // Lingkaran kuning di tab Scene (saat objek ini dipilih): area MC bisa menekan Space di podium
@@ -297,6 +333,9 @@ public class AdeganLevel2Scene5 : MonoBehaviour
         if (canvasProgressBar != null) canvasProgressBar.SetActive(true);
         if (circularProgressBar != null) circularProgressBar.fillAmount = 0f;
 
+        // Suara mulai bersamaan dengan bar berputar
+        MulaiSuaraBar();
+
         float timer = 0f;
         while (timer < durasiBar)
         {
@@ -304,6 +343,9 @@ public class AdeganLevel2Scene5 : MonoBehaviour
             if (circularProgressBar != null) circularProgressBar.fillAmount = timer / durasiBar;
             yield return null;
         }
+
+        // Suara berhenti saat bar penuh
+        HentikanSuaraBar();
 
         if (circularProgressBar != null) circularProgressBar.fillAmount = 1f;
         yield return new WaitForSeconds(0.3f);

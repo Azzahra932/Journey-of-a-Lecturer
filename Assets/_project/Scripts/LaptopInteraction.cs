@@ -14,6 +14,20 @@ public class LaptopInteraction : MonoBehaviour
     public float biayaEnergi = 15f;             // Energi yang berkurang setelah tugas RPS selesai
     public EnergyBar energyBar;                 // Kosong = dicari otomatis
 
+    [Header("Level 1 Scene 1: Tunggu Kaprodi Keluar dari Kursi")]
+    [Tooltip("Centang = ikon E dan tombol E laptop baru aktif setelah Kaprodi keluar dari kursi (hanya berlaku pada pengerjaan RPS pertama, bukan mode berulang).")]
+    public bool tungguKaprodiKeluar = true;
+    [Tooltip("Cara 1 (disarankan): seret objek Kaprodi yang sedang duduk di kursi ke sini. Selama objek ini AKTIF, E belum bisa dipakai. Begitu objek ini nonaktif (Kaprodi keluar), E langsung aktif.")]
+    public GameObject objekKaprodiDiKursi;
+    [Tooltip("Cara 2: kalau slot di atas kosong, E baru aktif setelah fungsi KaprodiSudahKeluar() dipanggil (mis. dari UnityEvent di script dialog Kaprodi).")]
+    public bool kaprodiSudahKeluar = false;
+    [Tooltip("Centang = selama menunggu Kaprodi keluar, MC yang sudah duduk di Kursi Dosen dikunci (tidak bisa berdiri). Kunci dibuka otomatis begitu Kaprodi keluar. Perlu slot Kursi Dosen terisi.")]
+    public bool kunciMCSaatMenunggu = true;
+
+    [Header("Syarat Duduk di Kursi Dosen")]
+    [Tooltip("Seret objek kursi dosen yang memasang script InteractiveDesk. Kalau diisi, ikon E dan tombol E laptop HANYA aktif saat MC duduk di kursi ini (mendekati kursi saja tidak memunculkan ikon). Kosong = tanpa syarat duduk.")]
+    public InteractiveDesk kursiDosen;
+
     [Header("Level 2 (RPS tidak dipakai)")]
     public bool nonaktifDiLevel2 = true;        // true = di level 2 laptop tetap terlihat, tapi RPS dan ikon E tidak berfungsi
     public int targetSkorLevel1 = 150;          // Target skor level 1. Target skor yang lebih besar dari ini berarti level 2 sudah dimulai
@@ -78,6 +92,13 @@ public class LaptopInteraction : MonoBehaviour
     private bool isCompleted = false;
     private bool fungsiDimatikan = false;        // True setelah fungsi RPS dimatikan di level 2
     private bool eventPertamaSudahDipanggil = false;   // True setelah event tugas RPS pertama dipanggil
+    private bool peringatanKaprodiDitampilkan = false;
+    private bool kursiDikunciLaptop = false;     // True kalau kunci kursi saat ini dipasang oleh script ini
+
+    // Cegah tombol E untuk DUDUK ikut terbaca sebagai E untuk laptop (kursi dan laptop sama-sama memakai E)
+    private bool dudukSebelumnya = false;
+    private float waktuMulaiDuduk = 0f;
+    private const float jedaSetelahDuduk = 0.3f;
 
     // True selama tugas RPS berjalan (sampai box hasil ditutup), dipakai pop-up level selesai
     public bool SedangSibuk { get { return isWorking; } }
@@ -136,6 +157,48 @@ public class LaptopInteraction : MonoBehaviour
         if (mulaiModeBerulang) BukaAktivitasBerulang();
     }
 
+    // ---------- Kaprodi di kursi ----------
+    // Dipanggil dari UnityEvent (mis. di script dialog Kaprodi) begitu Kaprodi keluar dari kursi
+    public void KaprodiSudahKeluar()
+    {
+        kaprodiSudahKeluar = true;
+        Debug.Log("[Laptop] Kaprodi sudah keluar dari kursi, laptop bisa dipakai (tekan E).");
+    }
+
+    // True kalau Kaprodi masih di kursi dan E belum boleh dipakai
+    private bool KaprodiMasihDiKursi()
+    {
+        if (objekKaprodiDiKursi != null) return objekKaprodiDiKursi.activeInHierarchy;
+
+        if (!kaprodiSudahKeluar && !peringatanKaprodiDitampilkan)
+        {
+            peringatanKaprodiDitampilkan = true;
+            Debug.LogWarning("[Laptop] 'Tunggu Kaprodi Keluar' aktif, tapi Objek Kaprodi Di Kursi kosong. E baru aktif setelah KaprodiSudahKeluar() dipanggil. Isi slot objeknya, atau panggil fungsi itu dari event script dialog.");
+        }
+
+        return !kaprodiSudahKeluar;
+    }
+
+    // MC dikunci di kursi dosen selama menunggu Kaprodi keluar, dibuka otomatis begitu Kaprodi sudah keluar
+    private void KelolaKunciKursi()
+    {
+        if (kursiDosen == null) return;
+
+        bool perluKunci = kunciMCSaatMenunggu && tungguKaprodiKeluar && !modeBerulang && !isCompleted
+                          && kursiDosen.SedangDuduk && KaprodiMasihDiKursi();
+
+        if (perluKunci && !kursiDikunciLaptop)
+        {
+            kursiDosen.TerkunciEksternal = true;
+            kursiDikunciLaptop = true;
+        }
+        else if (!perluKunci && kursiDikunciLaptop)
+        {
+            kursiDosen.TerkunciEksternal = false;
+            kursiDikunciLaptop = false;
+        }
+    }
+
     // ---------- Sound effect mengetik ----------
     private void MulaiSuaraKetik()
     {
@@ -164,10 +227,17 @@ public class LaptopInteraction : MonoBehaviour
     void OnDisable()
     {
         HentikanSuaraKetik();
+
+        // Jangan tinggalkan kursi dalam keadaan terkunci kalau script ini dimatikan
+        if (kursiDikunciLaptop && kursiDosen != null) kursiDosen.TerkunciEksternal = false;
+        kursiDikunciLaptop = false;
     }
 
     void Update()
     {
+        // MC dikunci di kursi selama menunggu Kaprodi keluar (Level 1 Scene 1)
+        KelolaKunciKursi();
+
         // Level 2: laptop tetap terlihat, tapi RPS tidak berfungsi dan ikon E tidak muncul
         if (nonaktifDiLevel2 && !isWorking && Level2Aktif())
         {
@@ -194,13 +264,19 @@ public class LaptopInteraction : MonoBehaviour
                 indikatorBaterai.SetProgress(1f - (sisa / durasiCooldown));
         }
 
+        // Syarat duduk: kalau kursi dosen diisi, MC harus sedang duduk (bukan sekadar dekat)
+        bool duduk = (kursiDosen == null) || kursiDosen.SedangDuduk;
+        if (duduk && !dudukSebelumnya) waktuMulaiDuduk = Time.time;
+        dudukSebelumnya = duduk;
+        bool bolehTekan = duduk && (kursiDosen == null || Time.time - waktuMulaiDuduk >= jedaSetelahDuduk);
+
         // Selama cooldown (mode berulang), E tidak membuka pilihan
         if (Time.time < cooldownSelesaiPada)
         {
             if (petunjukTekanE != null) petunjukTekanE.SetActive(false);
 
             float jarakCooldown = Vector2.Distance(interactionPoint.position, playerTransform.position);
-            if (jarakCooldown <= interactionDistance && Input.GetKeyDown(interactKey) && teksLaptopIstirahat != null)
+            if (jarakCooldown <= interactionDistance && bolehTekan && Input.GetKeyDown(interactKey) && teksLaptopIstirahat != null)
             {
                 teksLaptopIstirahat.SetActive(true);
                 teksSembunyiPada = Time.time + lamaTeksIstirahat;
@@ -210,11 +286,14 @@ public class LaptopInteraction : MonoBehaviour
 
         float distance = Vector2.Distance(interactionPoint.position, playerTransform.position);
 
-        if (distance <= interactionDistance && isDialogDone)
+        // Pengerjaan RPS pertama (Level 1 Scene 1): E baru aktif setelah Kaprodi keluar dari kursi
+        bool kaprodiMenghalangi = !modeBerulang && tungguKaprodiKeluar && KaprodiMasihDiKursi();
+
+        if (distance <= interactionDistance && isDialogDone && !kaprodiMenghalangi && duduk)
         {
             if (petunjukTekanE != null) petunjukTekanE.SetActive(true);
 
-            if (Input.GetKeyDown(interactKey))
+            if (bolehTekan && Input.GetKeyDown(interactKey))
             {
                 if (petunjukTekanE != null) petunjukTekanE.SetActive(false);
 

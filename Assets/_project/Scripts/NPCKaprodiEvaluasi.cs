@@ -1,24 +1,19 @@
 using System.Collections;
 using UnityEngine;
 using UnityEngine.Events;
-using TMPro;
 
 /// <summary>
 /// Scene 5 - Evaluasi Level 1 (Kaprodi menemui player).
 /// Pasang di objek yang SELALU AKTIF (mis. empty object "ManagerKaprodiEvaluasi").
 /// InteractiveDesk memanggil CobaMulai() tiap player duduk di kursi dosen.
 /// Kalau Scene 4 sudah selesai: Kaprodi berjalan masuk dari pintu, berhenti di dekat player,
-/// dialog mulai OTOMATIS (lanjut Space), lalu Kaprodi berjalan keluar.
+/// dialog mulai OTOMATIS (box tampil satu per satu, lanjut Space), lalu Kaprodi berjalan keluar.
+///
+/// Box dialog dibuat sendiri di Hierarchy (gambar dan tulisannya sudah jadi), jadi script ini
+/// hanya menampilkan dan menyembunyikannya sesuai urutan di daftar Box Dialog.
 /// </summary>
 public class NPCKaprodiEvaluasi : MonoBehaviour
 {
-    [System.Serializable]
-    public class BarisDialog
-    {
-        public bool pembicaraKaprodi = true;   // true = box kaprodi, false = box pemain
-        [TextArea(2, 4)] public string teks;
-    }
-
     [Header("Syarat")]
     public NPCDosenSenior syaratScene4;      // Scene 5 baru terjadi setelah Scene 4 selesai
     public bool wajibScene4Selesai = true;
@@ -34,21 +29,8 @@ public class NPCKaprodiEvaluasi : MonoBehaviour
     public Animator animator;
     public string parameterJalan = "IsMoving";
 
-    [Header("Box Dialog")]
-    public GameObject boxKaprodi;
-    public TMP_Text teksKaprodi;
-    public GameObject boxPemain;
-    public TMP_Text teksPemain;
-
-    [Header("Isi Dialog (urut dari atas)")]
-    public BarisDialog[] baris = new BarisDialog[]
-    {
-        new BarisDialog { pembicaraKaprodi = true,  teks = "Bagaimana pengalaman pertama Anda sebagai Tenaga Pengajar?" },
-        new BarisDialog { pembicaraKaprodi = false, teks = "Banyak hal baru yang saya pelajari. Saya mulai memahami pentingnya mengatur waktu dan prioritas." },
-        new BarisDialog { pembicaraKaprodi = true,  teks = "Bagus. Perjalanan akademik membutuhkan keseimbangan antara mengajar, penelitian, dan pengembangan diri." },
-        new BarisDialog { pembicaraKaprodi = true,  teks = "Pertahankan konsistensi Anda. Jika memenuhi target, Anda siap menuju jenjang berikutnya." },
-        new BarisDialog { pembicaraKaprodi = false, teks = "Saya siap melanjutkan perjalanan akademik saya." }
-    };
+    [Header("Box Dialog (buatan sendiri, urut dari box pertama sampai terakhir)")]
+    public GameObject[] boxDialog;           // Tiap elemen = satu box (gambar + tulisan sudah jadi). Tampil satu per satu, Space untuk lanjut
 
     [Header("Lanjut Dialog")]
     public KeyCode tombolLanjut = KeyCode.Space;
@@ -66,8 +48,7 @@ public class NPCKaprodiEvaluasi : MonoBehaviour
     void Start()
     {
         if (kaprodi != null) kaprodi.SetActive(false);
-        if (boxKaprodi != null) boxKaprodi.SetActive(false);
-        if (boxPemain != null) boxPemain.SetActive(false);
+        SembunyikanBox();
     }
 
     // Dipanggil dari InteractiveDesk.SitDown()
@@ -116,18 +97,30 @@ public class NPCKaprodiEvaluasi : MonoBehaviour
 
         SetAnimasiJalan(false);
 
-        // ---------- Dialog otomatis ----------
-        for (int i = 0; i < baris.Length; i++)
+        // ---------- Dialog otomatis: box tampil satu per satu ----------
+        if (boxDialog == null || boxDialog.Length == 0)
         {
-            TampilkanBaris(baris[i]);
-
-            yield return new WaitForSeconds(i == 0 ? jedaTekanPertama : 0.1f);
-
-            while (!(Input.GetKeyDown(tombolLanjut) || (bolehKlikMouse && Input.GetMouseButtonDown(0))))
-                yield return null;
+            Debug.LogWarning("[NPCKaprodiEvaluasi] Box Dialog masih kosong di Inspector, dialog dilewati.");
         }
+        else
+        {
+            for (int i = 0; i < boxDialog.Length; i++)
+            {
+                GameObject box = boxDialog[i];
+                if (box == null) continue;
 
-        SembunyikanBox();
+                SembunyikanBox();
+                box.SetActive(true);
+                box.transform.SetAsLastSibling();   // selalu tampil paling depan di Canvas-nya
+
+                yield return new WaitForSeconds(i == 0 ? jedaTekanPertama : 0.1f);
+
+                while (!(Input.GetKeyDown(tombolLanjut) || (bolehKlikMouse && Input.GetMouseButtonDown(0))))
+                    yield return null;
+            }
+
+            SembunyikanBox();
+        }
 
         sudahTerjadi = true;
         KunciKursi(false);
@@ -165,26 +158,15 @@ public class NPCKaprodiEvaluasi : MonoBehaviour
         if (kursiDosen != null) kursiDosen.TerkunciEksternal = kunci;
     }
 
-    private void TampilkanBaris(BarisDialog b)
-    {
-        SembunyikanBox();
-
-        if (b.pembicaraKaprodi)
-        {
-            if (boxKaprodi != null) boxKaprodi.SetActive(true);
-            if (teksKaprodi != null) teksKaprodi.text = b.teks;
-        }
-        else
-        {
-            if (boxPemain != null) boxPemain.SetActive(true);
-            if (teksPemain != null) teksPemain.text = b.teks;
-        }
-    }
-
+    // Semua box dialog disembunyikan
     private void SembunyikanBox()
     {
-        if (boxKaprodi != null) boxKaprodi.SetActive(false);
-        if (boxPemain != null) boxPemain.SetActive(false);
+        if (boxDialog == null) return;
+
+        foreach (GameObject b in boxDialog)
+        {
+            if (b != null) b.SetActive(false);
+        }
     }
 
     private IEnumerator JalanKe(Vector3 tujuan, SpriteRenderer sr)

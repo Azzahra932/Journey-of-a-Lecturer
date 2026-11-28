@@ -36,6 +36,7 @@ public class AdeganLevel2Scene4 : MonoBehaviour
     public BukuInteraction bukuPerpus;          // Opsional: dimatikan sementara selama adegan supaya tombol E tidak bentrok
     public bool bukuTidakDipakaiLagi = true;    // true = setelah adegan selesai, aktivitas buku tidak menyala lagi (digantikan laptop)
     public LaptopPerpusInteraction laptopPerpus; // Aktivitas laptop berulang yang dibuka setelah adegan selesai
+    public bool laptopCooldownSetelahAdegan = true;   // true = setelah dipakai di adegan ini, laptop langsung cooldown (layar redup + baterai), baru bisa dipakai lagi setelah baterai terisi
 
     [Header("Laptop (Ikon E)")]
     public GameObject ikonE;                    // Ikon "E" di atas laptop perpustakaan
@@ -192,8 +193,9 @@ public class AdeganLevel2Scene4 : MonoBehaviour
         else
             yield return StartCoroutine(TampilkanBoxBerurutan(boxDialog));
 
-        // 2. MC bebas berjalan ke kursi perpustakaan
+        // 2. MC bebas berjalan ke kursi perpustakaan. Laptop sudah terlihat (E ditekan di laptop), aktivitas berulangnya baru terbuka di akhir
         KunciPemain(false);
+        if (laptopPerpus != null) laptopPerpus.TampilkanLaptop();
         if (panahKeKursi != null) panahKeKursi.SetActive(true);
 
         // 3. Tunggu MC duduk sendiri di kursi perpustakaan
@@ -281,9 +283,8 @@ public class AdeganLevel2Scene4 : MonoBehaviour
         if (boxTutorial != null && boxTutorial.Length > 0)
         {
             if (hentikanWaktuSaatTutorial) Time.timeScale = 0f;
-            if (overlayHitam != null) overlayHitam.SetActive(true);
-
-            yield return StartCoroutine(TampilkanBoxBerurutan(boxTutorial));
+            // Overlay dinyalakan per box di TampilkanBoxBerurutan, supaya box selalu tampil di ATAS overlay
+            yield return StartCoroutine(TampilkanBoxBerurutan(boxTutorial, overlayHitam));
 
             if (overlayHitam != null) overlayHitam.SetActive(false);
             if (hentikanWaktuSaatTutorial) Time.timeScale = 1f;
@@ -300,13 +301,17 @@ public class AdeganLevel2Scene4 : MonoBehaviour
     }
 
     // Box tampil satu per satu: Space (atau klik kiri) menutup box dan lanjut ke berikutnya
-    private IEnumerator TampilkanBoxBerurutan(GameObject[] daftar)
+    // Kalau overlay diisi: overlay ditaruh tepat di belakang box (box selalu di atas overlay, tidak tertutup)
+    private IEnumerator TampilkanBoxBerurutan(GameObject[] daftar, GameObject overlay = null)
     {
         foreach (GameObject box in daftar)
         {
             if (box == null) continue;
 
-            box.SetActive(true);
+            if (overlay != null)
+                UrutanUI.TampilkanDiAtasOverlay(overlay, box);   // overlay aktif, lalu box di atasnya
+            else
+                box.SetActive(true);
 
             // Jeda singkat (waktu nyata) supaya tombol yang masih tertekan tidak langsung menutup box
             yield return new WaitForSecondsRealtime(0.25f);
@@ -352,7 +357,11 @@ public class AdeganLevel2Scene4 : MonoBehaviour
         if (kursiPerpus != null) kursiPerpus.TerkunciEksternal = false;
         // Buku digantikan laptop: aktivitas buku tetap mati, aktivitas laptop berulang dibuka
         if (bukuPerpus != null && !bukuTidakDipakaiLagi) bukuPerpus.enabled = true;
-        if (laptopPerpus != null) laptopPerpus.BukaAktivitasBerulang();
+        if (laptopPerpus != null)
+        {
+            if (laptopCooldownSetelahAdegan) laptopPerpus.BukaDenganCooldown();
+            else laptopPerpus.BukaAktivitasBerulang();
+        }
 
         if (sembunyikanDosenSetelahSelesai && dosenSeniorObjek != null)
             dosenSeniorObjek.SetActive(false);

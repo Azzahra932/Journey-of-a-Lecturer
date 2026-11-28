@@ -200,6 +200,7 @@ public class PemulihProgres : MonoBehaviour
         if (energi != null) energi.IsiPenuh();
 
         // 4b. Centang daftar misi
+        DaftarMisi.levelAktif = level;
         if (daftarMisi != null)
         {
             foreach (DaftarMisi dm in daftarMisi)

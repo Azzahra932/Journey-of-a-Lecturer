@@ -32,6 +32,12 @@ public class GameTimeManager : MonoBehaviour
     // lalu pop-up penutup (PopupLevel5Selesai) yang muncul.
     public bool LevelTerakhirAktif { get; private set; }   // true setelah AktifkanModeLevelTerakhir() dipanggil
     public bool SudahJamPenutup { get; private set; }      // true saat jam level terakhir mencapai jam tidur (20.00)
+
+    [Header("Level Terakhir (Level 5)")]
+    [Tooltip("Centang (default) = di level terakhir permainan berakhir saat jam mencapai jam tidur (20.00). " +
+             "Hilangkan centang kalau permainan di level terakhir diakhiri lewat adegan (mis. selesai Scene 4 Level 5): " +
+             "jam berhenti sebelum jam tidur dan penutup tidak lagi dipicu oleh waktu.")]
+    public bool akhiriLevelTerakhirLewatJam = true;
     // =============================================================
 
     // Menyimpan total langkah waktu yang sudah berjalan
@@ -62,6 +68,14 @@ public class GameTimeManager : MonoBehaviour
     // Panggil fungsi ini jika ingin memajukan waktu secara manual (misal lewat interaksi/dialog)
     public void AdvanceTime()
     {
+        // Level terakhir yang diakhiri lewat adegan (bukan lewat jam): jam berhenti sebelum mencapai jam tidur
+        if (LevelTerakhirAktif && !akhiriLevelTerakhirLewatJam)
+        {
+            int menitBerikut = (startHour * 60) + startMinute + ((currentTimeStep + 1) * intervalMinutes);
+            int batas = (jamTidur * 60) + menitTidur;
+            if (menitBerikut >= batas) return;
+        }
+
         currentTimeStep++;
         UpdateClockUI();
 
@@ -95,6 +109,20 @@ public class GameTimeManager : MonoBehaviour
         Debug.Log("[GameTimeManager] Mode level terakhir aktif: jam " + jamTidur.ToString("D2") + "." + menitTidur.ToString("D2") + " memunculkan pop-up penutup, bukan tidur malam.");
     }
 
+    // Mengakhiri hari level terakhir SEKARANG, tanpa menunggu jam (mis. dipanggil setelah Scene 4 Level 5 selesai).
+    // Jam berhenti dan SudahJamPenutup jadi true, sama seperti saat jam 20.00 tercapai, jadi pop-up penutup muncul.
+    public void AkhiriHariSekarang()
+    {
+        if (SudahJamPenutup) return;
+
+        if (!LevelTerakhirAktif)
+            Debug.LogWarning("[GameTimeManager] AkhiriHariSekarang dipanggil, tapi mode level terakhir belum aktif (AktifkanModeLevelTerakhir belum dipanggil). Pop-up penutup mungkin tidak muncul.");
+
+        sudahDipicuHariIni = true;
+        SudahJamPenutup = true;
+        Debug.Log("[GameTimeManager] Hari diakhiri lewat adegan (bukan lewat jam), pop-up penutup akan muncul.");
+    }
+
     // Dipakai untuk mengecek waktu tidur: jam sekarang >= jam tidur (>= supaya tidak terlewat bila lompatan jam tidak pas 19.30)
     private void CekWaktuTidur()
     {
@@ -108,6 +136,9 @@ public class GameTimeManager : MonoBehaviour
         // Level terakhir: tidak tidur. Hari berakhir, jam berhenti, pop-up penutup yang muncul
         if (LevelTerakhirAktif)
         {
+            // Kalau level terakhir diakhiri lewat adegan, jam tidak memicu penutup
+            if (!akhiriLevelTerakhirLewatJam) return;
+
             sudahDipicuHariIni = true;
             SudahJamPenutup = true;
             Debug.Log("[GameTimeManager] Level terakhir: jam penutup tercapai, pop-up penutup akan muncul.");

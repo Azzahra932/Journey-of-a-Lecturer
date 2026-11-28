@@ -10,7 +10,9 @@ using UnityEngine.UI;
 //        - MC tadi menerima tawaran Dewan Profesor -> dialog "Terima"
 //        - MC tadi menolak tawaran Dewan Profesor  -> dialog "Tolak"
 //   4. Ikon E muncul. Tekan E: bar hijau berputar 15 detik -> poin +5 -> reward -> box tutorial (opsional) -> energi berkurang -> cooldown (bar bulat)
-//   5. Setelah cooldown selesai, kegiatan bisa dikerjakan lagi (tanpa dialog)
+//   5. Kegiatan pertama selesai -> kalau "Akhiri Permainan Setelah Kegiatan Pertama" dicentang: hari diakhiri,
+//      pop-up penutup Level 5 muncul (permainan selesai, tidak menunggu jam 20.00)
+//   6. Kalau permainan tidak diakhiri di sini: setelah cooldown selesai, kegiatan bisa dikerjakan lagi (tanpa dialog)
 //
 // Alurnya mirip Level 2 Scene 6. Pasang script ini di objek mana saja yang selalu aktif (mis. objek kosong "AdeganLevel5Scene4").
 // Cara menyambung dari Scene 3 Level 5: di event "Saat Adegan Selesai" Scene 3, tambahkan objek ini dan pilih fungsi SiapkanScene.
@@ -83,6 +85,12 @@ public class AdeganLevel5Scene4 : MonoBehaviour
     public GameObject bayanganKursi;            // Opsional: lapisan gelap semi-transparan di atas kursi (kalau kursi menyatu dengan peta)
     public Color warnaCooldown = new Color(0.45f, 0.45f, 0.45f, 1f);   // Warna kursi saat redup
 
+    [Header("Akhiri Permainan Setelah Scene 4 Selesai (tanpa menunggu jam 20.00)")]
+    [Tooltip("Centang = begitu kegiatan pertama Scene 4 Level 5 selesai, hari langsung diakhiri dan pop-up penutup Level 5 muncul, tidak menunggu jam 20.00. " +
+             "Supaya jam tidak mengakhiri permainan lebih dulu, hilangkan juga centang 'Akhiri Level Terakhir Lewat Jam' di GameTimeManager.")]
+    public bool akhiriPermainanSetelahKegiatanPertama = true;
+    public GameTimeManager timeManager;         // Kosong = dicari otomatis
+
     [Header("Setelah Kegiatan Pertama Selesai")]
     public UnityEvent saatKegiatanPertamaSelesai;   // Opsional: untuk menyambung ke scene berikutnya
 
@@ -119,6 +127,7 @@ public class AdeganLevel5Scene4 : MonoBehaviour
         if (objekDudukMCLevel5 != null) objekDudukMCLevel5.SetActive(false);
 
         if (energyBar == null) energyBar = FindFirstObjectByType<EnergyBar>();
+        if (timeManager == null) timeManager = FindFirstObjectByType<GameTimeManager>();
 
         if (spriteKursiRedup != null)
         {
@@ -515,6 +524,17 @@ public class AdeganLevel5Scene4 : MonoBehaviour
             kegiatanPertamaDilaporkan = true;
             saatKegiatanPertamaSelesai.Invoke();
             Debug.Log("[Adegan L5-S4] Kegiatan pertama selesai.");
+
+            // Scene 4 selesai = permainan selesai: hari diakhiri sekarang, pop-up penutup Level 5 muncul (tanpa menunggu jam 20.00)
+            if (akhiriPermainanSetelahKegiatanPertama)
+            {
+                if (timeManager == null) timeManager = FindFirstObjectByType<GameTimeManager>();
+
+                if (timeManager != null)
+                    timeManager.AkhiriHariSekarang();
+                else
+                    Debug.LogWarning("[Adegan L5-S4] GameTimeManager tidak ditemukan, permainan tidak bisa diakhiri dari sini.");
+            }
         }
     }
 

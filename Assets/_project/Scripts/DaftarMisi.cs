@@ -54,7 +54,22 @@ public class DaftarMisi : MonoBehaviour
     // ---------- Panel ----------
     public void Buka() { if (panelMisi != null) panelMisi.SetActive(true); }
     public void Tutup() { if (panelMisi != null) panelMisi.SetActive(false); }
-    public void Toggle() { if (panelMisi != null) panelMisi.SetActive(!panelMisi.activeSelf); }
+    // Level yang sedang berjalan. Hanya DaftarMisi dengan level ini yang membuka panel saat ikon diklik.
+    public static int levelAktif = 1;
+
+    // Panggil dari event "masuk level N" (mis. popup level selesai -> Saat Masuk) dengan nomor level baru
+    public void AturLevelAktif(int levelBaru) { levelAktif = levelBaru; }
+
+    public void Toggle()
+    {
+        if (panelMisi == null) return;
+        if (level != levelAktif)
+        {
+            panelMisi.SetActive(false);
+            return;
+        }
+        panelMisi.SetActive(!panelMisi.activeSelf);
+    }
 
     // ---------- Centang ----------
     /// <summary>Nomor misi 1 sampai 5. Panggil dari UnityEvent.</summary>

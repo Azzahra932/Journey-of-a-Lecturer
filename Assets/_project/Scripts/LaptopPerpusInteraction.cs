@@ -12,6 +12,12 @@ public class LaptopPerpusInteraction : MonoBehaviour
     [Header("Status")]
     public bool terbuka = false;                // Baru bisa dipakai setelah Scene 4 selesai
 
+    [Header("Sembunyikan Sebelum Terbuka (Level 1)")]
+    [Tooltip("Centang = laptop ini tidak terlihat dan tidak bisa menghalangi sebelum Scene 4 Level 2 selesai (jadi tidak muncul di Level 1), lalu muncul sendiri saat terbuka. Objeknya TETAP aktif di Hierarchy, jangan dimatikan manual.")]
+    public bool sembunyikanSebelumTerbuka = true;
+    [Tooltip("Objek tambahan yang ikut disembunyikan sebelum terbuka (mis. meja/laptop terpisah, ikon). Opsional.")]
+    public GameObject[] objekDisembunyikan;
+
     [Header("Syarat Duduk")]
     public KursiPerpusInteraction kursiPerpus;  // MC harus duduk di kursi perpustakaan
     public KeyCode tombolInteraksi = KeyCode.E;
@@ -57,6 +63,7 @@ public class LaptopPerpusInteraction : MonoBehaviour
     public Color warnaCooldown = new Color(0.45f, 0.45f, 0.45f, 1f);   // Layar redup
 
     private bool sedangBekerja = false;
+    private bool sedangTampil = true;
     private bool cooldownAktif = false;
     private float cooldownSelesaiPada = 0f;
     private float teksSembunyiPada = 0f;
@@ -77,6 +84,9 @@ public class LaptopPerpusInteraction : MonoBehaviour
 
         if (spriteLaptop == null) spriteLaptop = GetComponent<SpriteRenderer>();
         if (spriteLaptop != null) spriteLaptop.color = warnaNormal;
+
+        // Level 1: laptop belum ada. Terlihat lagi setelah terbuka (Scene 4 Level 2 selesai)
+        AturTampilan(terbuka || !sembunyikanSebelumTerbuka);
 
         if (energyBar == null) energyBar = FindFirstObjectByType<EnergyBar>();
 
@@ -120,9 +130,42 @@ public class LaptopPerpusInteraction : MonoBehaviour
             audioSource.Stop();
     }
 
+    // Tampilkan atau sembunyikan laptop (gambar, collider, dan objek tambahan) tanpa menonaktifkan objek ini
+    private void AturTampilan(bool tampil)
+    {
+        sedangTampil = tampil;
+        if (spriteLaptop != null) spriteLaptop.enabled = tampil;
+
+        foreach (Collider2D c in GetComponents<Collider2D>()) c.enabled = tampil;
+
+        if (objekDisembunyikan != null)
+        {
+            foreach (GameObject o in objekDisembunyikan)
+            {
+                if (o != null) o.SetActive(tampil);
+            }
+        }
+    }
+
+    // Hanya memunculkan laptop (gambar dan collider), aktivitas berulang BELUM terbuka.
+    // Dipanggil saat laptop harus terlihat tapi belum dipakai, mis. selama Scene 4 atau saat masuk Level 2.
+    public void TampilkanLaptop()
+    {
+        AturTampilan(true);
+    }
+
+    // Dipanggil setelah Scene 4 selesai kalau laptop baru saja dipakai di adegan:
+    // aktivitas berulang terbuka, tapi laptop langsung cooldown (layar redup + baterai terisi bertahap)
+    public void BukaDenganCooldown()
+    {
+        BukaAktivitasBerulang();
+        MulaiCooldown();
+    }
+
     // Dipanggil setelah Scene 4 selesai
     public void BukaAktivitasBerulang()
     {
+        AturTampilan(true);
         terbuka = true;
         waktuTerbuka = Time.time;
         cooldownSelesaiPada = 0f;
@@ -141,6 +184,9 @@ public class LaptopPerpusInteraction : MonoBehaviour
 
     void Update()
     {
+        // Terbuka dicentang kapan pun (termasuk saat Play di Inspector): laptop ikut muncul
+        if (terbuka && !sedangTampil) AturTampilan(true);
+
         // Teks "istirahat" hilang otomatis
         if (teksIstirahat != null && teksIstirahat.activeSelf && Time.time >= teksSembunyiPada)
             teksIstirahat.SetActive(false);

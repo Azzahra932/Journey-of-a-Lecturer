@@ -409,10 +409,8 @@ public class AdeganLevel2Scene3 : MonoBehaviour
 
         if (hentikanWaktuSaatTutorial) Time.timeScale = 0f;
 
-        // Urutan penting: overlay dulu, baru box (box harus tampil di atas overlay)
-        if (overlayHitam != null) overlayHitam.SetActive(true);
-
-        yield return StartCoroutine(TampilkanBoxBerurutan(daftar));
+        // Overlay dinyalakan per box di TampilkanBoxBerurutan, supaya box selalu tampil di ATAS overlay
+        yield return StartCoroutine(TampilkanBoxBerurutan(daftar, overlayHitam));
 
         if (overlayHitam != null) overlayHitam.SetActive(false);
 
@@ -420,13 +418,17 @@ public class AdeganLevel2Scene3 : MonoBehaviour
     }
 
     // Box tampil satu per satu: Space (atau klik kiri) menutup box dan lanjut ke berikutnya
-    private IEnumerator TampilkanBoxBerurutan(GameObject[] daftar)
+    // Kalau overlay diisi: overlay ditaruh tepat di belakang box (box selalu di atas overlay, tidak tertutup)
+    private IEnumerator TampilkanBoxBerurutan(GameObject[] daftar, GameObject overlay = null)
     {
         foreach (GameObject box in daftar)
         {
             if (box == null) continue;
 
-            box.SetActive(true);
+            if (overlay != null)
+                UrutanUI.TampilkanDiAtasOverlay(overlay, box);   // overlay aktif, lalu box di atasnya
+            else
+                box.SetActive(true);
 
             if (!box.activeInHierarchy)
                 Debug.LogWarning("[Adegan L2-S3] Box '" + box.name + "' sudah diaktifkan tapi induknya (Canvas) nonaktif, jadi tidak tampil. Aktifkan induknya di Hierarchy.");

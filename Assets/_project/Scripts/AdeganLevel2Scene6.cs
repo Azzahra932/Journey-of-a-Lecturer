@@ -33,6 +33,12 @@ public class AdeganLevel2Scene6 : MonoBehaviour
     public Image circularProgressBar;           // Image bar (Image Type: Filled)
     public float durasiBar = 5f;                // Lama bar berputar (detik)
 
+    [Header("Sound Effect Bar Berputar")]
+    public AudioClip suaraBar;                  // File suara. Kosong = tanpa suara
+    [Range(0f, 1f)] public float volumeSuaraBar = 1f;
+    public bool suaraDiulang = true;            // true = suara diulang terus selama bar berputar
+    public AudioSource audioSource;             // Kosong = dibuat otomatis di objek ini
+
     [Header("Hasil Setiap Selesai")]
     public int jumlahPoin = 5;                  // Poin yang didapat
     public int indexReward = 7;                 // Nomor reward di RewardManager (7 = Pengabdian, elemen ke-8; 6 = Seminar). -1 = tanpa reward
@@ -98,6 +104,36 @@ public class AdeganLevel2Scene6 : MonoBehaviour
         if (bayanganKursi != null) bayanganKursi.SetActive(false);
 
         if (mitraObjek != null) mitraObjek.SetActive(siap);
+    }
+
+    void OnDisable()
+    {
+        HentikanSuaraBar();
+    }
+
+    // ---------- Sound effect bar berputar ----------
+    private void MulaiSuaraBar()
+    {
+        if (suaraBar == null) return;
+        if (PengaturanAudio.SuaraMati) return;   // ikut pengaturan suara dari menu
+
+        if (audioSource == null)
+        {
+            audioSource = gameObject.AddComponent<AudioSource>();
+            audioSource.playOnAwake = false;
+            audioSource.spatialBlend = 0f;   // suara 2D: sama keras di mana pun posisi kamera
+        }
+
+        audioSource.clip = suaraBar;
+        audioSource.loop = suaraDiulang;
+        audioSource.volume = volumeSuaraBar;
+        audioSource.Play();
+    }
+
+    private void HentikanSuaraBar()
+    {
+        if (audioSource != null && audioSource.isPlaying && audioSource.clip == suaraBar)
+            audioSource.Stop();
     }
 
     // Dipanggil dari event scene sebelumnya (mis. "Saat Adegan Selesai" di Scene 5)
@@ -212,6 +248,9 @@ public class AdeganLevel2Scene6 : MonoBehaviour
         if (canvasProgressBar != null) canvasProgressBar.SetActive(true);
         if (circularProgressBar != null) circularProgressBar.fillAmount = 0f;
 
+        // Suara mulai bersamaan dengan bar berputar
+        MulaiSuaraBar();
+
         float timer = 0f;
         while (timer < durasiBar)
         {
@@ -219,6 +258,9 @@ public class AdeganLevel2Scene6 : MonoBehaviour
             if (circularProgressBar != null) circularProgressBar.fillAmount = timer / durasiBar;
             yield return null;
         }
+
+        // Suara berhenti saat bar penuh
+        HentikanSuaraBar();
 
         if (circularProgressBar != null) circularProgressBar.fillAmount = 1f;
         yield return new WaitForSeconds(0.3f);
@@ -254,9 +296,8 @@ public class AdeganLevel2Scene6 : MonoBehaviour
             tutorialSudahTampil = true;
 
             if (hentikanWaktuSaatTutorial) Time.timeScale = 0f;
-            if (overlayHitam != null) overlayHitam.SetActive(true);
-
-            yield return StartCoroutine(TampilkanBoxBerurutan(boxTutorial));
+            // Overlay dinyalakan per box di TampilkanBoxBerurutan, supaya box selalu tampil di ATAS overlay
+            yield return StartCoroutine(TampilkanBoxBerurutan(boxTutorial, overlayHitam));
 
             if (overlayHitam != null) overlayHitam.SetActive(false);
             if (hentikanWaktuSaatTutorial) Time.timeScale = 1f;
@@ -327,13 +368,17 @@ public class AdeganLevel2Scene6 : MonoBehaviour
     }
 
     // Box tampil satu per satu: Space (atau klik kiri) menutup box dan lanjut ke berikutnya
-    private IEnumerator TampilkanBoxBerurutan(GameObject[] daftar)
+    // Kalau overlay diisi: overlay ditaruh tepat di belakang box (box selalu di atas overlay, tidak tertutup)
+    private IEnumerator TampilkanBoxBerurutan(GameObject[] daftar, GameObject overlay = null)
     {
         foreach (GameObject box in daftar)
         {
             if (box == null) continue;
 
-            box.SetActive(true);
+            if (overlay != null)
+                UrutanUI.TampilkanDiAtasOverlay(overlay, box);   // overlay aktif, lalu box di atasnya
+            else
+                box.SetActive(true);
 
             // Jeda singkat (waktu nyata) supaya tombol yang masih tertekan tidak langsung menutup box
             yield return new WaitForSecondsRealtime(0.25f);

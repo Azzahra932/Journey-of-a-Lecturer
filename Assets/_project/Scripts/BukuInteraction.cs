@@ -7,12 +7,15 @@ public class BukuInteraction : MonoBehaviour
 {
     [Header("Pengaturan Interaksi")]
     public KeyCode interactKey = KeyCode.E;
-    public float interactionDistance = 1.2f;
+    public float interactionDistance = 1.2f;    // Hanya dipakai kalau "Wajib Duduk" dimatikan dan Kursi kosong
     public Transform interactionPoint;          // Kosong = pakai posisi objek ini
     public Transform playerTransform;           // Kosong = dicari otomatis (TPdiam / tag Player)
 
-    [Header("Syarat Duduk (Opsional)")]
-    public KursiPerpusInteraction kursi;        // Kalau diisi, E hanya aktif saat pemain sedang duduk di kursi
+    [Header("Syarat Duduk")]
+    [Tooltip("Centang = ikon E dan tombol E buku HANYA bekerja saat MC sedang duduk di kursi. Berdiri di dekat buku tidak memunculkan ikon dan E tidak melakukan apa-apa.")]
+    public bool wajibDuduk = true;
+    [Tooltip("Seret kursi perpustakaan (yang memasang KursiPerpusInteraction) ke sini. Kosong = dicari otomatis kalau di scene hanya ada satu kursi seperti itu.")]
+    public KursiPerpusInteraction kursi;
 
     [Header("Status")]
     public bool logDiagnosis = true;            // Tampilkan log status tiap E ditekan (matikan kalau sudah beres)
@@ -63,6 +66,12 @@ public class BukuInteraction : MonoBehaviour
     private bool cooldownAktif = false;
     private float cooldownSelesaiPada = 0f;
     private float teksSembunyiPada = 0f;
+    private bool peringatanKursiDitampilkan = false;
+
+    // Cegah tombol yang dipakai untuk DUDUK ikut terbaca sebagai E untuk buku
+    private bool dudukSebelumnya = false;
+    private float waktuMulaiDuduk = 0f;
+    private const float jedaSetelahDuduk = 0.3f;
 
     // True saat pilihan sedang tampil atau pemain sedang membaca (kursi tidak boleh dibangunkan)
     public bool SedangSibuk { get { return sedangMemilih || sedangMembaca; } }
@@ -81,6 +90,17 @@ public class BukuInteraction : MonoBehaviour
 
         if (interactionPoint == null) interactionPoint = transform;
         if (energyBar == null) energyBar = FindFirstObjectByType<EnergyBar>();
+
+        // Kursi kosong: dicari otomatis, tapi hanya kalau di scene cuma ada SATU kursi perpustakaan (supaya tidak salah pilih)
+        if (kursi == null && wajibDuduk)
+        {
+            KursiPerpusInteraction[] semuaKursi = FindObjectsByType<KursiPerpusInteraction>(FindObjectsInactive.Include, FindObjectsSortMode.None);
+            if (semuaKursi.Length == 1)
+            {
+                kursi = semuaKursi[0];
+                Debug.Log("[Buku] Slot Kursi kosong, dipakai satu-satunya kursi perpustakaan di scene: " + kursi.name);
+            }
+        }
 
         if (playerTransform == null)
         {
@@ -129,9 +149,33 @@ public class BukuInteraction : MonoBehaviour
             return;
         }
 
-        float distance = Vector2.Distance(interactionPoint.position, playerTransform.position);
-        // Kalau kursi diisi, syaratnya pemain sedang duduk (bukan sekadar dekat)
-        bool dekat = (kursi != null) ? kursi.sedangDuduk : (distance <= interactionDistance);
+        // Status duduk (dengan jeda singkat supaya tombol untuk duduk tidak ikut terbaca sebagai E buku)
+        bool duduk = kursi != null && kursi.sedangDuduk;
+        if (duduk && !dudukSebelumnya) waktuMulaiDuduk = Time.time;
+        dudukSebelumnya = duduk;
+
+        bool dekat;
+        if (kursi != null)
+        {
+            // Kursi ada: E hanya aktif saat MC sedang duduk (berdiri di dekat buku tidak berpengaruh)
+            dekat = duduk && (Time.time - waktuMulaiDuduk >= jedaSetelahDuduk);
+        }
+        else if (wajibDuduk)
+        {
+            // Wajib duduk, tapi kursinya tidak ditemukan: tidak ada interaksi sama sekali
+            if (!peringatanKursiDitampilkan)
+            {
+                peringatanKursiDitampilkan = true;
+                Debug.LogWarning("[Buku] 'Wajib Duduk' aktif tapi slot Kursi kosong dan kursi tidak bisa dicari otomatis (di scene ada lebih dari satu kursi perpustakaan). Seret kursi perpustakaan ke slot Kursi di Inspector, jadi buku tidak bisa dipakai.");
+            }
+            dekat = false;
+        }
+        else
+        {
+            // Wajib Duduk dimatikan: cukup berada dekat buku
+            float distance = Vector2.Distance(interactionPoint.position, playerTransform.position);
+            dekat = distance <= interactionDistance;
+        }
 
         // Selama cooldown, E tidak membuka pilihan
         if (Time.time < cooldownSelesaiPada)
